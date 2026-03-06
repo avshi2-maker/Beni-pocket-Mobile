@@ -16,20 +16,20 @@
    Built for a genius engineer with dirty hands on site. ── */
 
 :root {
-  --bg:       #0d1117;
-  --surface:  #161b22;
-  --surface2: #21262d;
-  --surface3: #30363d;
-  --border:   #30363d;
+  --bg:       #fdf6e3;
+  --surface:  #fffdf7;
+  --surface2: #fef9ec;
+  --surface3: #f0e8c8;
+  --border:   #e2d4a0;
   --orange:   #f97316;
   --orange2:  #ea580c;
   --green:    #22c55e;
   --red:      #ef4444;
   --blue:     #3b82f6;
   --yellow:   #eab308;
-  --text:     #e6edf3;
-  --text2:    #8b949e;
-  --text3:    #484f58;
+  --text:     #1a1a1a;
+  --text2:    #5a4a2a;
+  --text3:    #a09060;
   --r:        16px;
   --r-sm:     10px;
 }
@@ -49,7 +49,7 @@ body {
 /* ── SPLASH ── */
 #splash {
   position: fixed; inset: 0; z-index: 9999;
-  background: var(--bg);
+  background: #fdf6e3;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 20px;
 }
@@ -63,8 +63,8 @@ body {
   animation: pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{box-shadow:0 0 40px rgba(249,115,22,0.4)} 50%{box-shadow:0 0 60px rgba(249,115,22,0.7)} }
-.splash-name { font-size: 32px; font-weight: 900; color: var(--text); letter-spacing: -1px; }
-.splash-sub  { font-size: 14px; color: var(--text2); }
+.splash-name { font-size: 32px; font-weight: 900; color: #1a1a1a; letter-spacing: -1px; }
+.splash-sub  { font-size: 14px; color: #5a4a2a; }
 .splash-spin {
   width: 32px; height: 32px;
   border: 3px solid var(--surface3);
@@ -81,8 +81,8 @@ body {
 
 /* ── TOP BAR ── */
 .topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: #f5e9c4;
+  border-bottom: 2px solid #c9a84c;
   padding: 14px 18px 10px;
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
@@ -101,8 +101,8 @@ body {
 /* ── NAV TABS ── */
 .nav-tabs {
   display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: #f5e9c4;
+  border-bottom: 2px solid #c9a84c;
   overflow-x: auto; scrollbar-width: none;
 }
 .nav-tabs::-webkit-scrollbar { display: none; }
@@ -155,7 +155,7 @@ body {
   -webkit-appearance: none;
 }
 .inp:focus { outline: none; border-color: var(--orange); }
-.inp::placeholder { color: var(--text3); }
+.inp::placeholder { color: var(--text2); font-weight: 800; }
 
 /* ── QUICK REPLY BUTTONS ── */
 .quick-grid {
@@ -417,7 +417,7 @@ body {
         <div class="topbar-sub">בני פרסקי | ביצוע פרויקטים</div>
       </div>
     </div>
-    <div class="topbar-time" id="clock">00:00</div>
+    <div style="text-align:left;"><div class="topbar-time" id="clock">00:00</div><div style="font-size:11px;color:var(--text2);font-weight:700;text-align:left;" id="topbar-date"></div></div>
   </div>
 
   <!-- NAV TABS -->
@@ -444,13 +444,13 @@ body {
     <div class="sec-title">פרטי המתקשר</div>
     <div class="caller-form">
       <div class="form-row">
-        <input class="inp" id="caller-name" placeholder="שם המתקשר" type="text">
+        <input class="inp" id="caller-name" placeholder="שם המתקשר" type="text" style="font-weight:800;">
       </div>
       <div class="form-row">
-        <input class="inp" id="caller-phone" placeholder="מספר טלפון" type="tel" dir="ltr" style="text-align:right">
+        <input class="inp" id="caller-phone" placeholder="מספר טלפון" type="tel" dir="ltr" style="text-align:right;font-weight:800;">
       </div>
       <div class="form-row">
-        <input class="inp" id="caller-note" placeholder="הערה קצרה (אופציונלי)" type="text">
+        <input class="inp" id="caller-note" placeholder="הערה קצרה (אופציונלי)" type="text" style="font-weight:800;">
       </div>
     </div>
 
@@ -585,10 +585,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── CLOCK ─────────────────────────────────────────────────
 function startClock() {
+  const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const MONTHS = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
   const update = () => {
     const n = new Date();
     document.getElementById('clock').textContent =
       String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+    const dateEl = document.getElementById('topbar-date');
+    if (dateEl) dateEl.textContent =
+      'יום ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
   };
   update(); setInterval(update, 10000);
 }
