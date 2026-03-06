@@ -469,16 +469,18 @@ body {
   <div class="panel" id="panel-voice">
 
     <div class="voice-center">
-      <div class="mic-ring" id="mic-ring" onclick="toggleRecording()">
+      <div class="mic-ring" id="mic-ring"
+        onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()"
+        ontouchstart="startHold(event)" ontouchend="endHold(event)">
         <span class="mic-icon" id="mic-icon">🎙️</span>
       </div>
-      <div class="rec-timer" id="rec-timer">0:00</div>
-      <div class="rec-status" id="rec-status">לחץ להקלטה</div>
+      <div class="rec-timer" id="rec-timer" style="display:none">0:00</div>
+      <div class="rec-status" id="rec-status">לחץ והחזק להקלטה</div>
     </div>
 
     <div class="sec-title">תמליל</div>
     <div class="transcript-box" id="transcript-box">
-      <span class="transcript-placeholder" id="transcript-placeholder">התמליל יופיע כאן לאחר ההקלטה...</span>
+      <span class="transcript-placeholder" id="transcript-placeholder">לחץ והחזק את הכפתור ודבר. שחרר לסיום.</span>
       <span id="transcript-text"></span>
     </div>
 
@@ -723,61 +725,56 @@ function clearCallerForm() {
     document.getElementById(id).value = '');
 }
 
-// ══ VOICE / TRANSCRIPT ════════════════════════════════════
+// ══ VOICE / TRANSCRIPT — HOLD TO TALK ════════════════════
+// Uses continuous=false + hold gesture.
+// Each hold = one clean SpeechRecognition call = one result.
+// No duplicates possible. Works reliably on Android Chrome.
+
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     document.getElementById('rec-status').textContent = 'הדפדפן אינו תומך בזיהוי קול';
+    document.getElementById('mic-ring').style.opacity = '0.4';
     return;
   }
-  // NOTE: continuous=false, one utterance per tap.
-  // Android Chrome duplicates results with continuous=true.
-  recognition = new SR();
+  // Fresh instance created on each hold — avoids any state pollution
+  window._SR = SR;
+}
+
+function startHold(e) {
+  if (e) e.preventDefault();
+  if (!window._SR) { toast('זיהוי קול אינו נתמך'); return; }
+  if (isRecording) return;
+  isRecording = true;
+
+  // Fresh recognition instance every time — bulletproof on Android
+  recognition = new window._SR();
   recognition.lang = 'he-IL';
   recognition.continuous = false;
-  recognition.interimResults = false;  // final results only — no duplicates possible
+  recognition.interimResults = false;
 
-  recognition.onresult = (e) => {
-    const heard = e.results[0][0].transcript.trim();
+  recognition.onresult = (ev) => {
+    const heard = ev.results[0][0].transcript.trim();
     if (!heard) return;
     currentTranscript += (currentTranscript ? ' ' : '') + heard;
     document.getElementById('transcript-placeholder').style.display = 'none';
     document.getElementById('transcript-text').textContent = currentTranscript;
+    document.getElementById('transcript-actions').style.display = 'flex';
   };
 
-  recognition.onend = () => {
-    // Auto-restart while user has recording active
-    if (isRecording) {
-      try { recognition.start(); } catch(e) {}
-    }
+  recognition.onerror = (ev) => {
+    if (ev.error === 'no-speech' || ev.error === 'aborted') return;
+    toast('שגיאה: ' + ev.error);
   };
-
-  recognition.onerror = (e) => {
-    if (e.error === 'no-speech') return;  // silence is fine
-    if (e.error === 'aborted')  return;  // we stopped it ourselves
-    toast('שגיאת זיהוי קול: ' + e.error);
-  };
-}
-
-function toggleRecording() {
-  if (!recognition) { toast('זיהוי קול אינו נתמך בדפדפן זה'); return; }
-  if (!isRecording) startRecording();
-  else stopRecording();
-}
-
-function startRecording() {
-  isRecording = true;
-  currentTranscript = '';
-  recSeconds = 0;
-  document.getElementById('transcript-text').textContent = '';
-  document.getElementById('transcript-placeholder').style.display = 'inline';
-  document.getElementById('mic-ring').classList.add('recording');
-  document.getElementById('mic-icon').textContent = '⏹️';
-  document.getElementById('rec-status').textContent = 'מקליט... לחץ לעצירה';
-  document.getElementById('rec-timer').classList.add('on');
-  document.getElementById('transcript-actions').style.display = 'none';
 
   recognition.start();
+
+  // UI
+  document.getElementById('mic-ring').classList.add('recording');
+  document.getElementById('mic-icon').textContent = '⏹️';
+  document.getElementById('rec-status').textContent = 'מקליט... שחרר לסיום';
+  document.getElementById('rec-timer').style.display = 'block';
+  recSeconds = 0;
   recInterval = setInterval(() => {
     recSeconds++;
     const m = Math.floor(recSeconds/60);
@@ -786,21 +783,23 @@ function startRecording() {
   }, 1000);
 }
 
-async function stopRecording() {
+async function endHold(e) {
+  if (e) e.preventDefault();
+  if (!isRecording) return;
   isRecording = false;
-  recognition.stop();
+
+  try { recognition.stop(); } catch(err) {}
   clearInterval(recInterval);
+
+  // UI reset
   document.getElementById('mic-ring').classList.remove('recording');
   document.getElementById('mic-icon').textContent = '🎙️';
-  document.getElementById('rec-timer').classList.remove('on');
-  document.getElementById('rec-status').textContent = 'לחץ להקלטה';
+  document.getElementById('rec-status').textContent = 'לחץ והחזק להקלטה';
+  document.getElementById('rec-timer').style.display = 'none';
+  document.getElementById('rec-timer').textContent = '0:00';
 
   const text = currentTranscript.trim();
   if (text) {
-    document.getElementById('transcript-placeholder').style.display = 'none';
-    document.getElementById('transcript-text').textContent = text;
-    document.getElementById('transcript-actions').style.display = 'flex';
-
     // Save to Supabase
     try {
       await fetch(SB_URL + '/rest/v1/voice_memos', {
@@ -811,8 +810,8 @@ async function stopRecording() {
         },
         body: JSON.stringify({ transcript: text, duration_sec: recSeconds, created_at: new Date().toISOString() })
       });
-    } catch(e) {}
-    toast('🎙️ הקלטה נשמרה');
+    } catch(err) {}
+    toast('✅ נשמר');
   }
 }
 
