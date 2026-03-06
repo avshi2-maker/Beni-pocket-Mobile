@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<title>בני פוקט</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+/* ── DESIGN: Industrial dark, construction-site grade.
+   Big thumb-friendly buttons. Neon orange accent.
+   Built for a genius engineer with dirty hands on site. ── */
+
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --surface2: #21262d;
+  --surface3: #30363d;
+  --border:   #30363d;
+  --orange:   #f97316;
+  --orange2:  #ea580c;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --blue:     #3b82f6;
+  --yellow:   #eab308;
+  --text:     #e6edf3;
+  --text2:    #8b949e;
+  --text3:    #484f58;
+  --r:        16px;
+  --r-sm:     10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { font-size:16px; }
+body {
+  font-family: 'Heebo', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  direction: rtl;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SPLASH ── */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+}
+.splash-logo {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--orange), var(--orange2));
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  box-shadow: 0 0 40px rgba(249,115,22,0.4);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 40px rgba(249,115,22,0.4)} 50%{box-shadow:0 0 60px rgba(249,115,22,0.7)} }
+.splash-name { font-size: 32px; font-weight: 900; color: var(--text); letter-spacing: -1px; }
+.splash-sub  { font-size: 14px; color: var(--text2); }
+.splash-spin {
+  width: 32px; height: 32px;
+  border: 3px solid var(--surface3);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#splash.hidden { display: none; }
+
+/* ── APP SHELL ── */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+#app.ready { display: flex; }
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { display: flex; align-items: center; gap: 10px; }
+.topbar-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--orange), var(--orange2));
+  border-radius: 10px; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-name { font-size: 18px; font-weight: 900; color: var(--text); }
+.topbar-sub  { font-size: 10px; color: var(--text2); line-height: 1; }
+.topbar-time { font-size: 13px; font-weight: 700; color: var(--orange); font-variant-numeric: tabular-nums; }
+
+/* ── NAV TABS ── */
+.nav-tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  flex: 1; min-width: 0;
+  padding: 12px 6px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 700; color: var(--text2);
+  cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all 0.18s; user-select: none; white-space: nowrap;
+}
+.nav-tab .tab-icon { font-size: 20px; }
+.nav-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.nav-badge {
+  background: var(--red); color: white;
+  border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 800;
+  position: absolute; margin-top: -28px; margin-right: -20px;
+}
+
+/* ── PANELS ── */
+.panel { display: none; flex: 1; padding: 16px; padding-bottom: 24px; animation: fadeIn 0.2s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTION TITLE ── */
+.sec-title {
+  font-size: 12px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 10px; margin-top: 4px;
+}
+
+/* ── CALL PANEL ── */
+.caller-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.form-row:last-child { margin-bottom: 0; }
+.inp {
+  flex: 1; background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px; font-size: 15px;
+  font-family: 'Heebo', sans-serif;
+  color: var(--text); direction: rtl;
+  transition: border-color 0.18s;
+  -webkit-appearance: none;
+}
+.inp:focus { outline: none; border-color: var(--orange); }
+.inp::placeholder { color: var(--text3); }
+
+/* ── QUICK REPLY BUTTONS ── */
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.qbtn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 10px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: all 0.18s;
+  touch-action: manipulation;
+  min-height: 72px;
+}
+.qbtn .qemoji { font-size: 24px; }
+.qbtn:active, .qbtn.pressed {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: white;
+  transform: scale(0.96);
+}
+
+/* ── BIG BUTTONS ── */
+.big-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r);
+  border: none;
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px; font-weight: 800;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  gap: 10px; touch-action: manipulation;
+  transition: all 0.18s; margin-bottom: 10px;
+  -webkit-appearance: none;
+}
+.big-btn:active { transform: scale(0.97); }
+.btn-orange { background: linear-gradient(135deg, var(--orange), var(--orange2)); color: white; }
+.btn-green  { background: linear-gradient(135deg, #16a34a, var(--green)); color: white; }
+.btn-blue   { background: linear-gradient(135deg, #1d4ed8, var(--blue)); color: white; }
+.btn-red    { background: linear-gradient(135deg, #b91c1c, var(--red)); color: white; }
+.btn-surface{ background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+
+/* ── VOICE PANEL ── */
+.voice-center {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+  padding: 20px 0;
+}
+.mic-ring {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; cursor: pointer;
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
+.mic-ring.recording {
+  border-color: var(--red);
+  background: rgba(239,68,68,0.1);
+  animation: ring-pulse 1s ease-in-out infinite;
+}
+@keyframes ring-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%      { box-shadow: 0 0 0 20px rgba(239,68,68,0); }
+}
+.mic-icon { font-size: 52px; }
+.rec-timer {
+  font-size: 28px; font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--red);
+  display: none;
+}
+.rec-timer.on { display: block; }
+.rec-status { font-size: 14px; color: var(--text2); font-weight: 600; }
+
+.transcript-box {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  min-height: 100px;
+  font-size: 15px; line-height: 1.6;
+  color: var(--text); direction: rtl;
+  position: relative;
+}
+.transcript-placeholder { color: var(--text3); font-style: italic; }
+.transcript-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+/* ── TODO PANEL ── */
+.todo-input-row {
+  display: flex; gap: 10px; margin-bottom: 16px; align-items: stretch;
+}
+.todo-input-row .inp { flex: 1; }
+.add-btn {
+  width: 52px; height: 52px; min-height: 52px;
+  background: var(--orange);
+  border: none; border-radius: var(--r-sm);
+  font-size: 24px; color: white;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; touch-action: manipulation;
+  transition: all 0.15s;
+}
+.add-btn:active { transform: scale(0.93); background: var(--orange2); }
+
+.todo-list { display: flex; flex-direction: column; gap: 8px; }
+.todo-item {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: all 0.2s;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:translateX(0)} }
+.todo-item.done { opacity: 0.45; }
+.todo-check {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.18s; font-size: 14px;
+  touch-action: manipulation;
+}
+.todo-check.checked { background: var(--green); border-color: var(--green); }
+.todo-text { flex: 1; font-size: 14px; line-height: 1.4; }
+.todo-item.done .todo-text { text-decoration: line-through; color: var(--text2); }
+.todo-time { font-size: 10px; color: var(--text3); white-space: nowrap; }
+.todo-del {
+  width: 32px; height: 32px;
+  background: none; border: none;
+  color: var(--text3); font-size: 16px;
+  cursor: pointer; touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; transition: all 0.15s;
+}
+.todo-del:active { background: rgba(239,68,68,0.2); color: var(--red); }
+
+.priority-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.p-high   { background: var(--red); }
+.p-normal { background: var(--orange); }
+.p-low    { background: var(--text3); }
+
+/* ── LOG PANEL ── */
+.log-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex; align-items: flex-start; gap: 12px;
+  animation: slideIn 0.2s ease;
+}
+.log-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--surface2), var(--surface3));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.log-info { flex: 1; min-width: 0; }
+.log-name { font-size: 14px; font-weight: 700; }
+.log-phone { font-size: 12px; color: var(--text2); direction: ltr; text-align: right; }
+.log-reply { font-size: 12px; color: var(--orange); margin-top: 2px; }
+.log-time  { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.log-wa-badge {
+  font-size: 11px; background: rgba(34,197,94,0.15);
+  color: var(--green); border-radius: 6px; padding: 2px 7px;
+  font-weight: 700; margin-top: 4px; display: inline-block;
+}
+.empty-state {
+  text-align: center; padding: 48px 20px;
+  color: var(--text3); font-size: 14px;
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.7);
+  align-items: flex-end; justify-content: center;
+  animation: fadeIn 0.2s;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  width: 100%; max-height: 85vh;
+  padding: 20px 18px 32px;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--surface3); border-radius: 2px;
+  margin: 0 auto 18px;
+}
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+.modal-msg {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px; font-size: 14px; line-height: 1.6;
+  color: var(--text2); margin-bottom: 16px;
+  white-space: pre-wrap; direction: rtl;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface); color: var(--text);
+  padding: 12px 20px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border);
+  z-index: 9000; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none;
+  white-space: nowrap; max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+#toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">📱</div>
+  <div class="splash-name">בני פוקט</div>
+  <div class="splash-sub">מערכת ניהול שיחות ומשימות</div>
+  <div class="splash-spin"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-icon">📱</div>
+      <div>
+        <div class="topbar-name">בני פוקט</div>
+        <div class="topbar-sub">בני פרסקי | ביצוע פרויקטים</div>
+      </div>
+    </div>
+    <div class="topbar-time" id="clock">00:00</div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('call')" id="tab-call">
+      <span class="tab-icon">📞</span>שיחה
+    </div>
+    <div class="nav-tab" onclick="switchTab('voice')" id="tab-voice">
+      <span class="tab-icon">🎙️</span>הקלטה
+    </div>
+    <div class="nav-tab" onclick="switchTab('todo')" id="tab-todo">
+      <span class="tab-icon">✅</span>
+      <span>משימות</span>
+      <span class="nav-badge" id="todo-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('log')" id="tab-log">
+      <span class="tab-icon">📋</span>יומן
+    </div>
+  </div>
+
+  <!-- ══ CALL PANEL ══ -->
+  <div class="panel active" id="panel-call">
+
+    <div class="sec-title">פרטי המתקשר</div>
+    <div class="caller-form">
+      <div class="form-row">
+        <input class="inp" id="caller-name" placeholder="שם המתקשר" type="text">
+      </div>
+      <div class="form-row">
+        <input class="inp" id="caller-phone" placeholder="מספר טלפון" type="tel" dir="ltr" style="text-align:right">
+      </div>
+      <div class="form-row">
+        <input class="inp" id="caller-note" placeholder="הערה קצרה (אופציונלי)" type="text">
+      </div>
+    </div>
+
+    <div class="sec-title">תשובה מהירה — שלח מיד לוואטסאפ</div>
+    <div class="quick-grid" id="quick-grid">
+      <!-- loaded from Supabase -->
+    </div>
+
+    <div class="sec-title">פעולות נוספות</div>
+    <button class="big-btn btn-surface" onclick="openCustomReply()">✏️ תשובה מותאמת אישית</button>
+    <button class="big-btn btn-surface" onclick="logCallOnly()">📝 שמור שיחה ללא שליחה</button>
+
+  </div>
+
+  <!-- ══ VOICE PANEL ══ -->
+  <div class="panel" id="panel-voice">
+
+    <div class="voice-center">
+      <div class="mic-ring" id="mic-ring" onclick="toggleRecording()">
+        <span class="mic-icon" id="mic-icon">🎙️</span>
+      </div>
+      <div class="rec-timer" id="rec-timer">0:00</div>
+      <div class="rec-status" id="rec-status">לחץ להקלטה</div>
+    </div>
+
+    <div class="sec-title">תמליל</div>
+    <div class="transcript-box" id="transcript-box">
+      <span class="transcript-placeholder" id="transcript-placeholder">התמליל יופיע כאן לאחר ההקלטה...</span>
+      <span id="transcript-text"></span>
+    </div>
+
+    <div class="transcript-actions" id="transcript-actions" style="display:none">
+      <button class="big-btn btn-green" style="margin:0;flex:1" onclick="saveMemoAsReminder()">✅ שמור כמשימה</button>
+      <button class="big-btn btn-orange" style="margin:0;flex:1" onclick="sendMemoWA()">💬 שלח וואטסאפ</button>
+    </div>
+    <div style="height:12px"></div>
+    <button class="big-btn btn-surface" onclick="clearTranscript()">🗑️ נקה</button>
+
+  </div>
+
+  <!-- ══ TODO PANEL ══ -->
+  <div class="panel" id="panel-todo">
+
+    <div class="todo-input-row">
+      <input class="inp" id="todo-input" placeholder="משימה חדשה..." type="text"
+        onkeydown="if(event.key==='Enter') addTodo()">
+      <button class="add-btn" onclick="addTodo()">+</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button onclick="filterTodos('all')"    id="f-all"    style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--orange);background:var(--orange);color:white;font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">הכל</button>
+      <button onclick="filterTodos('active')" id="f-active" style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">פעילות</button>
+      <button onclick="filterTodos('done')"   id="f-done"   style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">הושלמו</button>
+    </div>
+
+    <div class="todo-list" id="todo-list"></div>
+    <div class="empty-state" id="todo-empty" style="display:none">
+      <div class="empty-icon">✅</div>
+      אין משימות פעילות — כל הכבוד!
+    </div>
+
+  </div>
+
+  <!-- ══ LOG PANEL ══ -->
+  <div class="panel" id="panel-log">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="sec-title" style="margin:0">יומן שיחות</div>
+      <button onclick="loadLog()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;">🔄 רענן</button>
+    </div>
+    <div id="log-list"></div>
+    <div class="empty-state" id="log-empty" style="display:none">
+      <div class="empty-icon">📋</div>
+      אין שיחות מוקלטות עדיין
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- QUICK REPLY MODAL -->
+<div class="modal-overlay" id="modal-reply">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-reply-title">תשובה מהירה</div>
+    <div class="modal-msg" id="modal-msg" contenteditable="true" dir="rtl"></div>
+    <button class="big-btn btn-green" onclick="sendQuickWA()">💬 שלח וואטסאפ</button>
+    <button class="big-btn btn-surface" onclick="closeModal('modal-reply')">ביטול</button>
+  </div>
+</div>
+
+<!-- CUSTOM REPLY MODAL -->
+<div class="modal-overlay" id="modal-custom">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">תשובה מותאמת אישית</div>
+    <textarea class="inp" id="custom-msg" rows="5" style="width:100%;resize:none;margin-bottom:14px;"
+      placeholder="כתוב כאן את ההודעה לשליחה..."></textarea>
+    <button class="big-btn btn-green" onclick="sendCustomWA()">💬 שלח וואטסאפ</button>
+    <button class="big-btn btn-surface" onclick="closeModal('modal-custom')">ביטול</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG — replace with real Supabase URL + key after setup
+// ══════════════════════════════════════════════════════════
+const SB_URL = 'https://mspsrwruxvcnqmucvler.supabase.co';   // e.g. https://xxxx.supabase.co
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcHNyd3J1eHZjbnFtdWN2bGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzY0NjMsImV4cCI6MjA4ODM1MjQ2M30.sY97QkvUEbX4HCHHOuqQV58xqQzU2JdH4VyBMikeIXY';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ── STATE ─────────────────────────────────────────────────
+let quickReplies  = [];
+let todos         = [];
+let todoFilter    = 'all';
+let isRecording   = false;
+let recognition   = null;
+let recInterval   = null;
+let recSeconds    = 0;
+let currentTranscript = '';
+let pendingReplyLabel = '';
+let pendingPhone      = '';
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  startClock();
+  await Promise.all([loadQuickReplies(), loadTodos(), loadLog()]);
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.add('ready');
+  initSpeechRecognition();
+});
+
+// ── CLOCK ─────────────────────────────────────────────────
+function startClock() {
+  const update = () => {
+    const n = new Date();
+    document.getElementById('clock').textContent =
+      String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  };
+  update(); setInterval(update, 10000);
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'log') loadLog();
+}
+
+// ══ QUICK REPLIES ═════════════════════════════════════════
+async function loadQuickReplies() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    quickReplies = await res.json();
+  } catch(e) {
+    // fallback defaults if Supabase not yet configured
+    quickReplies = [
+      { id:1, label:'אחזור אליך',    emoji:'📞', message:'שלום, קיבלתי את שיחתך. אחזור אליך בהקדם. תודה — בני' },
+      { id:2, label:'שלח פרטים',    emoji:'📋', message:'שלום, אנא שלח לי את הפרטים בוואטסאפ. תודה — בני' },
+      { id:3, label:'בישיבה',        emoji:'🤝', message:'שלום, אני כרגע בישיבה. אחזור אליך בסיומה. תודה — בני' },
+      { id:4, label:'שלח תמונה',    emoji:'📸', message:'שלום, אנא שלח לי תמונה בוואטסאפ. תודה — בני' },
+      { id:5, label:'מחר בבוקר',    emoji:'🌅', message:'שלום, אטפל בנושא מחר בבוקר. תודה — בני' },
+      { id:6, label:'לא זמין היום', emoji:'🔕', message:'שלום, אינני זמין היום. ניצור קשר מחר. תודה — בני' },
+    ];
+  }
+  renderQuickGrid();
+}
+
+function renderQuickGrid() {
+  const grid = document.getElementById('quick-grid');
+  grid.innerHTML = quickReplies.map(r => `
+    <button class="qbtn" onclick="openReplyModal('${r.id}')">
+      <span class="qemoji">${r.emoji}</span>
+      ${r.label}
+    </button>`).join('');
+}
+
+function openReplyModal(replyId) {
+  const reply = quickReplies.find(r => String(r.id) === String(replyId));
+  if (!reply) return;
+  const name  = document.getElementById('caller-name').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim();
+  let msg = reply.message;
+  if (name) msg = msg.replace('שלום,', `שלום ${name},`);
+  document.getElementById('modal-reply-title').textContent = reply.label + ' ' + reply.emoji;
+  document.getElementById('modal-msg').textContent = msg;
+  pendingReplyLabel = reply.label;
+  pendingPhone = phone;
+  document.getElementById('modal-reply').classList.add('open');
+}
+
+async function sendQuickWA() {
+  const msg   = document.getElementById('modal-msg').textContent.trim();
+  const phone = pendingPhone.replace(/\D/g,'');
+  const name  = document.getElementById('caller-name').value.trim();
+  const note  = document.getElementById('caller-note').value.trim();
+
+  // Save to log
+  await saveCallLog(name, pendingPhone, pendingReplyLabel, note, true);
+
+  // Open WhatsApp
+  const url = phone
+    ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+
+  closeModal('modal-reply');
+  clearCallerForm();
+  toast('✅ נשלח לוואטסאפ ונשמר ביומן');
+}
+
+function openCustomReply() {
+  document.getElementById('custom-msg').value = '';
+  document.getElementById('modal-custom').classList.add('open');
+}
+
+async function sendCustomWA() {
+  const msg   = document.getElementById('custom-msg').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim().replace(/\D/g,'');
+  const name  = document.getElementById('caller-name').value.trim();
+  if (!msg) { toast('כתוב הודעה תחילה'); return; }
+  await saveCallLog(name, document.getElementById('caller-phone').value, 'מותאם אישית', msg, true);
+  const url = phone
+    ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  closeModal('modal-custom');
+  clearCallerForm();
+  toast('✅ נשלח לוואטסאפ');
+}
+
+async function logCallOnly() {
+  const name  = document.getElementById('caller-name').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim();
+  const note  = document.getElementById('caller-note').value.trim();
+  if (!name && !phone) { toast('הכנס שם או מספר טלפון'); return; }
+  await saveCallLog(name, phone, '', note, false);
+  clearCallerForm();
+  toast('📝 שיחה נשמרה ביומן');
+}
+
+async function saveCallLog(name, phone, replyLabel, notes, waSent) {
+  try {
+    await fetch(SB_URL + '/rest/v1/call_log', {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        caller_name: name || 'לא ידוע',
+        phone, quick_reply: replyLabel, notes,
+        wa_sent: waSent, wa_sent_at: waSent ? new Date().toISOString() : null,
+        created_at: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.error('Save call log error:', e); }
+}
+
+function clearCallerForm() {
+  ['caller-name','caller-phone','caller-note'].forEach(id =>
+    document.getElementById(id).value = '');
+}
+
+// ══ VOICE / TRANSCRIPT ════════════════════════════════════
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('rec-status').textContent = 'הדפדפן אינו תומך בזיהוי קול';
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'he-IL';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    currentTranscript += final;
+    document.getElementById('transcript-placeholder').style.display = 'none';
+    document.getElementById('transcript-text').textContent = currentTranscript + interim;
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'no-speech') toast('שגיאת זיהוי קול: ' + e.error);
+  };
+}
+
+function toggleRecording() {
+  if (!recognition) { toast('זיהוי קול אינו נתמך בדפדפן זה'); return; }
+  if (!isRecording) startRecording();
+  else stopRecording();
+}
+
+function startRecording() {
+  isRecording = true;
+  currentTranscript = '';
+  recSeconds = 0;
+  document.getElementById('transcript-text').textContent = '';
+  document.getElementById('transcript-placeholder').style.display = 'inline';
+  document.getElementById('mic-ring').classList.add('recording');
+  document.getElementById('mic-icon').textContent = '⏹️';
+  document.getElementById('rec-status').textContent = 'מקליט... לחץ לעצירה';
+  document.getElementById('rec-timer').classList.add('on');
+  document.getElementById('transcript-actions').style.display = 'none';
+
+  recognition.start();
+  recInterval = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds/60);
+    const s = recSeconds % 60;
+    document.getElementById('rec-timer').textContent = m + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+async function stopRecording() {
+  isRecording = false;
+  recognition.stop();
+  clearInterval(recInterval);
+  document.getElementById('mic-ring').classList.remove('recording');
+  document.getElementById('mic-icon').textContent = '🎙️';
+  document.getElementById('rec-timer').classList.remove('on');
+  document.getElementById('rec-status').textContent = 'לחץ להקלטה';
+
+  const text = currentTranscript.trim();
+  if (text) {
+    document.getElementById('transcript-placeholder').style.display = 'none';
+    document.getElementById('transcript-text').textContent = text;
+    document.getElementById('transcript-actions').style.display = 'flex';
+
+    // Save to Supabase
+    try {
+      await fetch(SB_URL + '/rest/v1/voice_memos', {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json', Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ transcript: text, duration_sec: recSeconds, created_at: new Date().toISOString() })
+      });
+    } catch(e) {}
+    toast('🎙️ הקלטה נשמרה');
+  }
+}
+
+function clearTranscript() {
+  currentTranscript = '';
+  document.getElementById('transcript-text').textContent = '';
+  document.getElementById('transcript-placeholder').style.display = 'inline';
+  document.getElementById('transcript-actions').style.display = 'none';
+  document.getElementById('rec-timer').textContent = '0:00';
+}
+
+async function saveMemoAsReminder() {
+  const text = currentTranscript.trim();
+  if (!text) { toast('אין תמליל לשמירה'); return; }
+  await addReminderToDB(text, 'voice');
+  await loadTodos();
+  switchTab('todo');
+  toast('✅ נשמר כמשימה');
+}
+
+function sendMemoWA() {
+  const text = currentTranscript.trim();
+  if (!text) { toast('אין תמליל לשליחה'); return; }
+  const url = `https://wa.me/?text=${encodeURIComponent('📝 תזכורת:\n' + text)}`;
+  window.open(url, '_blank');
+}
+
+// ══ TODO ══════════════════════════════════════════════════
+async function loadTodos() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/reminders?order=created_at.desc',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    todos = await res.json();
+  } catch(e) { todos = []; }
+  renderTodos();
+  updateTodoBadge();
+}
+
+function renderTodos() {
+  const list = document.getElementById('todo-list');
+  const empty = document.getElementById('todo-empty');
+  let filtered = todos;
+  if (todoFilter === 'active') filtered = todos.filter(t => !t.is_done);
+  if (todoFilter === 'done')   filtered = todos.filter(t =>  t.is_done);
+
+  if (filtered.length === 0) {
+    list.innerHTML = ''; empty.style.display = 'block'; return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = filtered.map(t => `
+    <div class="todo-item ${t.is_done?'done':''}" id="todo-${t.id}">
+      <div class="priority-dot p-${t.priority||'normal'}"></div>
+      <div class="todo-check ${t.is_done?'checked':''}" onclick="toggleTodo('${t.id}',${t.is_done})">
+        ${t.is_done ? '✓' : ''}
+      </div>
+      <div class="todo-text">${escHtml(t.text)}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <div class="todo-time">${timeAgo(t.created_at)}</div>
+        <button class="todo-del" onclick="deleteTodo('${t.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateTodoBadge() {
+  const active = todos.filter(t => !t.is_done).length;
+  const badge = document.getElementById('todo-badge');
+  if (active > 0) { badge.textContent = active; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+}
+
+async function addTodo() {
+  const inp = document.getElementById('todo-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  await addReminderToDB(text, 'manual');
+  await loadTodos();
+}
+
+async function addReminderToDB(text, source='manual', priority='normal') {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders', {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ text, source, priority, is_done: false, created_at: new Date().toISOString() })
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function toggleTodo(id, isDone) {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ is_done: !isDone, done_at: !isDone ? new Date().toISOString() : null })
+    });
+    await loadTodos();
+  } catch(e) {}
+}
+
+async function deleteTodo(id) {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+    });
+    await loadTodos();
+  } catch(e) {}
+}
+
+function filterTodos(f) {
+  todoFilter = f;
+  ['all','active','done'].forEach(x => {
+    const btn = document.getElementById('f-' + x);
+    if (x === f) { btn.style.background = 'var(--orange)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--orange)'; }
+    else { btn.style.background = 'transparent'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border)'; }
+  });
+  renderTodos();
+}
+
+// ══ CALL LOG ══════════════════════════════════════════════
+async function loadLog() {
+  const list = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+  list.innerHTML = '<div style="color:var(--text3);padding:20px;text-align:center;font-size:13px;">טוען...</div>';
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    const logs = await res.json();
+    if (!logs || logs.length === 0) {
+      list.innerHTML = ''; empty.style.display = 'block'; return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = logs.map(l => `
+      <div class="log-item">
+        <div class="log-avatar">👤</div>
+        <div class="log-info">
+          <div class="log-name">${escHtml(l.caller_name||'לא ידוע')}</div>
+          <div class="log-phone">${escHtml(l.phone||'')}</div>
+          ${l.quick_reply ? `<div class="log-reply">💬 ${escHtml(l.quick_reply)}</div>` : ''}
+          ${l.notes ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${escHtml(l.notes)}</div>` : ''}
+          ${l.wa_sent ? '<span class="log-wa-badge">✓ נשלח וואטסאפ</span>' : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <div class="log-time">${timeAgo(l.created_at)}</div>
+          ${l.phone ? `<button onclick="callBack('${l.phone}')" style="background:var(--green);border:none;color:white;padding:5px 10px;border-radius:7px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">📞 חזור</button>` : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center;font-size:13px;">שגיאה בטעינת יומן</div>';
+  }
+}
+
+function callBack(phone) {
+  const p = phone.replace(/\D/g,'');
+  window.location.href = 'tel:' + (p.startsWith('0') ? p : '0' + p);
+}
+
+// ══ HELPERS ═══════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60) return 'עכשיו';
+  if (diff < 3600) return Math.floor(diff/60) + ' דק׳';
+  if (diff < 86400) return Math.floor(diff/3600) + ' שע׳';
+  return Math.floor(diff/86400) + ' ימים';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('on'), 2800);
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
