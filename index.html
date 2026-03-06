@@ -730,30 +730,32 @@ function initSpeechRecognition() {
     document.getElementById('rec-status').textContent = 'הדפדפן אינו תומך בזיהוי קול';
     return;
   }
+  // NOTE: continuous=false, one utterance per tap.
+  // Android Chrome duplicates results with continuous=true.
   recognition = new SR();
   recognition.lang = 'he-IL';
-  recognition.continuous = true;
-  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.interimResults = false;  // final results only — no duplicates possible
 
   recognition.onresult = (e) => {
-    // Only process NEW results from resultIndex onwards
-    let newFinal = '';
-    let interim  = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) newFinal += t;
-      else interim += t;
-    }
-    // Append only truly new final text
-    if (newFinal) currentTranscript += (currentTranscript ? ' ' : '') + newFinal.trim();
+    const heard = e.results[0][0].transcript.trim();
+    if (!heard) return;
+    currentTranscript += (currentTranscript ? ' ' : '') + heard;
     document.getElementById('transcript-placeholder').style.display = 'none';
-    // Show committed text + live interim preview
-    document.getElementById('transcript-text').textContent =
-      currentTranscript + (interim ? ' ' + interim : '');
+    document.getElementById('transcript-text').textContent = currentTranscript;
+  };
+
+  recognition.onend = () => {
+    // Auto-restart while user has recording active
+    if (isRecording) {
+      try { recognition.start(); } catch(e) {}
+    }
   };
 
   recognition.onerror = (e) => {
-    if (e.error !== 'no-speech') toast('שגיאת זיהוי קול: ' + e.error);
+    if (e.error === 'no-speech') return;  // silence is fine
+    if (e.error === 'aborted')  return;  // we stopped it ourselves
+    toast('שגיאת זיהוי קול: ' + e.error);
   };
 }
 
