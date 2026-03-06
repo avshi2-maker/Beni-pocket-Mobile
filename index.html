@@ -558,8 +558,8 @@ body {
 // ══════════════════════════════════════════════════════════
 // CONFIG — replace with real Supabase URL + key after setup
 // ══════════════════════════════════════════════════════════
-const SB_URL = 'https://mspsrwruxvcnqmucvler.supabase.co';   // e.g. https://xxxx.supabase.co
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zcHNyd3J1eHZjbnFtdWN2bGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzY0NjMsImV4cCI6MjA4ODM1MjQ2M30.sY97QkvUEbX4HCHHOuqQV58xqQzU2JdH4VyBMikeIXY';
+const SB_URL = 'https://vmcipofovheztbjmhwsl.supabase.co';   // e.g. https://xxxx.supabase.co
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2lwb2ZvdmhlenRiam1od3NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjE2MTcsImV4cCI6MjA4NzAzNzYxN30.LPq5N2Xo8iEqjgz2UhmdzUdh5tpGT3EYzSxJcYBEJ1w';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── STATE ─────────────────────────────────────────────────
@@ -736,15 +736,20 @@ function initSpeechRecognition() {
   recognition.interimResults = true;
 
   recognition.onresult = (e) => {
-    let interim = '', final = '';
+    // Only process NEW results from resultIndex onwards
+    let newFinal = '';
+    let interim  = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) final += t;
+      if (e.results[i].isFinal) newFinal += t;
       else interim += t;
     }
-    currentTranscript += final;
+    // Append only truly new final text
+    if (newFinal) currentTranscript += (currentTranscript ? ' ' : '') + newFinal.trim();
     document.getElementById('transcript-placeholder').style.display = 'none';
-    document.getElementById('transcript-text').textContent = currentTranscript + interim;
+    // Show committed text + live interim preview
+    document.getElementById('transcript-text').textContent =
+      currentTranscript + (interim ? ' ' + interim : '');
   };
 
   recognition.onerror = (e) => {
