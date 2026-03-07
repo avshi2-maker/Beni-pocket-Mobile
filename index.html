@@ -393,6 +393,50 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 #toast.on { opacity: 1; }
+
+/* ══ DIRECTION BUTTONS ══ */
+.dir-btn{
+  flex:1;padding:9px 4px;border:1.5px solid var(--border);
+  border-radius:8px;background:var(--surface2);
+  font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;
+  color:var(--text2);cursor:pointer;transition:all 0.15s;
+}
+.dir-active{background:var(--orange);color:white;border-color:var(--orange);}
+
+/* ══ CALL LOG CARDS ══ */
+.call-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:10px;
+}
+.call-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.call-name{font-size:14px;font-weight:800;color:var(--text);}
+.call-time{font-size:11px;color:var(--text3);}
+.call-phone{font-size:12px;color:var(--text2);margin-bottom:6px;direction:ltr;text-align:right;}
+.call-dir-badge{
+  font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;
+}
+.dir-in  {background:rgba(34,197,94,0.15);color:#15803d;}
+.dir-out {background:rgba(59,130,246,0.15);color:#1d4ed8;}
+.dir-miss{background:rgba(239,68,68,0.15);color:#dc2626;}
+.call-wa-badge{font-size:10px;background:rgba(37,211,102,0.15);color:#128c7e;padding:2px 8px;border-radius:10px;font-weight:700;}
+.call-note{font-size:12px;color:var(--text3);margin-top:4px;font-style:italic;}
+.call-actions{display:flex;gap:6px;margin-top:8px;}
+.call-act-btn{
+  flex:1;padding:7px;border:1px solid var(--border);border-radius:7px;
+  background:none;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;
+  color:var(--text2);cursor:pointer;
+}
+.call-act-btn:hover{background:var(--surface2);}
+
+/* ══ LOG FILTER TABS ══ */
+.log-filter{display:flex;gap:6px;margin-bottom:14px;}
+.log-ftab{
+  flex:1;padding:8px 4px;border:1.5px solid var(--border);
+  border-radius:8px;background:none;
+  font-family:'Heebo',sans-serif;font-size:11px;font-weight:700;
+  color:var(--text3);cursor:pointer;text-align:center;
+}
+.log-ftab.active{background:var(--orange);color:white;border-color:var(--orange);}
 </style>
 </head>
 <body>
@@ -446,8 +490,18 @@ body {
       <div class="form-row">
         <input class="inp" id="caller-name" placeholder="שם המתקשר" type="text" style="font-weight:800;">
       </div>
-      <div class="form-row">
-        <input class="inp" id="caller-phone" placeholder="מספר טלפון" type="tel" dir="ltr" style="text-align:right;font-weight:800;">
+      <div class="form-row" style="position:relative;">
+        <input class="inp" id="caller-phone" placeholder="מספר טלפון — הדבק מיחיד האחרון" type="tel" dir="ltr" 
+          style="text-align:right;font-weight:800;padding-left:44px;"
+          oninput="autoLookupPhone(this.value)">
+        <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;opacity:0.4;pointer-events:none;">🔍</div>
+      </div>
+      <div id="lookup-result" style="display:none;margin-top:-8px;margin-bottom:8px;padding:8px 12px;background:#f0fff4;border:1px solid #22c55e;border-radius:8px;font-size:12px;color:#15803d;font-weight:700;cursor:pointer;" onclick="applyLookup()">
+      </div>
+      <div class="form-row" style="display:flex;gap:8px;">
+        <button id="dir-in"  onclick="setDir('incoming')"  class="dir-btn dir-active">📞 נכנסת</button>
+        <button id="dir-out" onclick="setDir('outgoing')"  class="dir-btn">📲 יוצאת</button>
+        <button id="dir-miss"onclick="setDir('missed')"    class="dir-btn">📵 לא נענה</button>
       </div>
       <div class="form-row">
         <input class="inp" id="caller-note" placeholder="הערה קצרה (אופציונלי)" type="text" style="font-weight:800;">
@@ -518,10 +572,39 @@ body {
 
   <!-- ══ LOG PANEL ══ -->
   <div class="panel" id="panel-log">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div class="sec-title" style="margin:0">יומן שיחות</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="sec-title" style="margin:0">יומן שיחות יומי</div>
       <button onclick="loadLog()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;">🔄 רענן</button>
     </div>
+
+    <!-- DAILY STATS -->
+    <div id="log-stats" style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:#15803d;" id="stat-in">0</div>
+        <div style="font-size:10px;color:#15803d;font-weight:700;">נכנסות</div>
+      </div>
+      <div style="flex:1;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:#1d4ed8;" id="stat-out">0</div>
+        <div style="font-size:10px;color:#1d4ed8;font-weight:700;">יוצאות</div>
+      </div>
+      <div style="flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:#dc2626;" id="stat-miss">0</div>
+        <div style="font-size:10px;color:#dc2626;font-weight:700;">לא נענו</div>
+      </div>
+      <div style="flex:1;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:#128c7e;" id="stat-wa">0</div>
+        <div style="font-size:10px;color:#128c7e;font-weight:700;">וואטסאפ</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="log-filter">
+      <button class="log-ftab active" id="lf-all"  onclick="filterLog('all')">הכל</button>
+      <button class="log-ftab" id="lf-in"   onclick="filterLog('incoming')">📞 נכנסות</button>
+      <button class="log-ftab" id="lf-out"  onclick="filterLog('outgoing')">📲 יוצאות</button>
+      <button class="log-ftab" id="lf-miss" onclick="filterLog('missed')">📵 לא נענו</button>
+    </div>
+
     <div id="log-list"></div>
     <div class="empty-state" id="log-empty" style="display:none">
       <div class="empty-icon">📋</div>
@@ -713,6 +796,564 @@ async function saveCallLog(name, phone, replyLabel, notes, waSent) {
       body: JSON.stringify({
         caller_name: name || 'לא ידוע',
         phone, quick_reply: replyLabel, notes,
+        direction: currentDirection,
+        wa_sent: waSent, wa_sent_at: waSent ? new Date().toISOString() : null,
+        created_at: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.error('Save call log error:', e); }
+}
+
+function clearCallerForm() {
+  ['caller-name','caller-phone','caller-note'].forEach(id =>
+    document.getElementById(id).value = '');
+}
+
+// ══ VOICE / TRANSCRIPT — HOLD TO TALK ════════════════════
+// Uses continuous=false + hold gesture.
+// Each hold = one clean SpeechRecognition call = one result.
+// No duplicates possible. Works reliably on Android Chrome.
+
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('rec-status').textContent = 'הדפדפן אינו תומך בזיהוי קול';
+    document.getElementById('mic-ring').style.opacity = '0.4';
+    return;
+  }
+  // Fresh instance created on each hold — avoids any state pollution
+  window._SR = SR;
+}
+
+function startHold(e) {
+  if (e) e.preventDefault();
+  if (!window._SR) { toast('זיהוי קול אינו נתמך'); return; }
+  if (isRecording) return;
+  isRecording = true;
+
+  // Fresh recognition instance every time — bulletproof on Android
+  recognition = new window._SR();
+  recognition.lang = 'he-IL';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = (ev) => {
+    const heard = ev.results[0][0].transcript.trim();
+    if (!heard) return;
+    currentTranscript += (currentTranscript ? ' ' : '') + heard;
+    document.getElementById('transcript-placeholder').style.display = 'none';
+    document.getElementById('transcript-text').textContent = currentTranscript;
+    document.getElementById('transcript-actions').style.display = 'flex';
+  };
+
+  recognition.onerror = (ev) => {
+    if (ev.error === 'no-speech' || ev.error === 'aborted') return;
+    toast('שגיאה: ' + ev.error);
+  };
+
+  recognition.start();
+
+  // UI
+  document.getElementById('mic-ring').classList.add('recording');
+  document.getElementById('mic-icon').textContent = '⏹️';
+  document.getElementById('rec-status').textContent = 'מקליט... שחרר לסיום';
+  document.getElementById('rec-timer').style.display = 'block';
+  recSeconds = 0;
+  recInterval = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds/60);
+    const s = recSeconds % 60;
+    document.getElementById('rec-timer').textContent = m + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+async function endHold(e) {
+  if (e) e.preventDefault();
+  if (!isRecording) return;
+  isRecording = false;
+
+  try { recognition.stop(); } catch(err) {}
+  clearInterval(recInterval);
+
+  // UI reset
+  document.getElementById('mic-ring').classList.remove('recording');
+  document.getElementById('mic-icon').textContent = '🎙️';
+  document.getElementById('rec-status').textContent = 'לחץ והחזק להקלטה';
+  document.getElementById('rec-timer').style.display = 'none';
+  document.getElementById('rec-timer').textContent = '0:00';
+
+  const text = currentTranscript.trim();
+  if (text) {
+    // Save to Supabase
+    try {
+      await fetch(SB_URL + '/rest/v1/voice_memos', {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json', Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ transcript: text, duration_sec: recSeconds, created_at: new Date().toISOString() })
+      });
+    } catch(err) {}
+    toast('✅ נשמר');
+  }
+}
+
+function clearTranscript() {
+  currentTranscript = '';
+  document.getElementById('transcript-text').textContent = '';
+  document.getElementById('transcript-placeholder').style.display = 'inline';
+  document.getElementById('transcript-actions').style.display = 'none';
+  document.getElementById('rec-timer').textContent = '0:00';
+}
+
+async function saveMemoAsReminder() {
+  const text = currentTranscript.trim();
+  if (!text) { toast('אין תמליל לשמירה'); return; }
+  await addReminderToDB(text, 'voice');
+  await loadTodos();
+  switchTab('todo');
+  toast('✅ נשמר כמשימה');
+}
+
+function sendMemoWA() {
+  const text = currentTranscript.trim();
+  if (!text) { toast('אין תמליל לשליחה'); return; }
+  const url = `https://wa.me/?text=${encodeURIComponent('📝 תזכורת:\n' + text)}`;
+  window.open(url, '_blank');
+}
+
+// ══ TODO ══════════════════════════════════════════════════
+async function loadTodos() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/reminders?order=created_at.desc',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    todos = await res.json();
+  } catch(e) { todos = []; }
+  renderTodos();
+  updateTodoBadge();
+}
+
+function renderTodos() {
+  const list = document.getElementById('todo-list');
+  const empty = document.getElementById('todo-empty');
+  let filtered = todos;
+  if (todoFilter === 'active') filtered = todos.filter(t => !t.is_done);
+  if (todoFilter === 'done')   filtered = todos.filter(t =>  t.is_done);
+
+  if (filtered.length === 0) {
+    list.innerHTML = ''; empty.style.display = 'block'; return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = filtered.map(t => `
+    <div class="todo-item ${t.is_done?'done':''}" id="todo-${t.id}">
+      <div class="priority-dot p-${t.priority||'normal'}"></div>
+      <div class="todo-check ${t.is_done?'checked':''}" onclick="toggleTodo('${t.id}',${t.is_done})">
+        ${t.is_done ? '✓' : ''}
+      </div>
+      <div class="todo-text">${escHtml(t.text)}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <div class="todo-time">${timeAgo(t.created_at)}</div>
+        <button class="todo-del" onclick="deleteTodo('${t.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateTodoBadge() {
+  const active = todos.filter(t => !t.is_done).length;
+  const badge = document.getElementById('todo-badge');
+  if (active > 0) { badge.textContent = active; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+}
+
+async function addTodo() {
+  const inp = document.getElementById('todo-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  await addReminderToDB(text, 'manual');
+  await loadTodos();
+}
+
+async function addReminderToDB(text, source='manual', priority='normal') {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders', {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ text, source, priority, is_done: false, created_at: new Date().toISOString() })
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function toggleTodo(id, isDone) {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ is_done: !isDone, done_at: !isDone ? new Date().toISOString() : null })
+    });
+    await loadTodos();
+  } catch(e) {}
+}
+
+async function deleteTodo(id) {
+  try {
+    await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+    });
+    await loadTodos();
+  } catch(e) {}
+}
+
+function filterTodos(f) {
+  todoFilter = f;
+  ['all','active','done'].forEach(x => {
+    const btn = document.getElementById('f-' + x);
+    if (x === f) { btn.style.background = 'var(--orange)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--orange)'; }
+    else { btn.style.background = 'transparent'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border)'; }
+  });
+  renderTodos();
+}
+
+// ══ CALL LOG ══════════════════════════════════════════════
+async function loadLog() {
+  const list = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+  list.innerHTML = '<div style="color:var(--text3);padding:20px;text-align:center;font-size:13px;">טוען...</div>';
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    const logs = await res.json();
+    if (!logs || logs.length === 0) {
+      list.innerHTML = ''; empty.style.display = 'block'; return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = logs.map(l => `
+      <div class="log-item">
+        <div class="log-avatar">👤</div>
+        <div class="log-info">
+          <div class="log-name">${escHtml(l.caller_name||'לא ידוע')}</div>
+          <div class="log-phone">${escHtml(l.phone||'')}</div>
+          ${l.quick_reply ? `<div class="log-reply">💬 ${escHtml(l.quick_reply)}</div>` : ''}
+          ${l.notes ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${escHtml(l.notes)}</div>` : ''}
+          ${l.wa_sent ? '<span class="log-wa-badge">✓ נשלח וואטסאפ</span>' : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <div class="log-time">${timeAgo(l.created_at)}</div>
+          ${l.phone ? `<button onclick="callBack('${l.phone}')" style="background:var(--green);border:none;color:white;padding:5px 10px;border-radius:7px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">📞 חזור</button>` : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center;font-size:13px;">שגיאה בטעינת יומן</div>';
+  }
+}
+
+function callBack(phone) {
+  const p = phone.replace(/\D/g,'');
+  window.location.href = 'tel:' + (p.startsWith('0') ? p : '0' + p);
+}
+
+// ══ HELPERS ═══════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60) return 'עכשיו';
+  if (diff < 3600) return Math.floor(diff/60) + ' דק׳';
+  if (diff < 86400) return Math.floor(diff/3600) + ' שע׳';
+  return Math.floor(diff/86400) + ' ימים';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('on'), 2800);
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+</script>
+</body>
+</html>// ══ LOAD CALL LOG ════════════════════════════════════════
+let allCallLogs = [];
+let currentLogFilter = 'all';
+let currentDirection = 'incoming';
+
+function setDir(dir) {
+  currentDirection = dir;
+  ['in','out','miss'].forEach(d => {
+    const btn = document.getElementById('dir-' + d);
+    if (btn) btn.classList.remove('dir-active');
+  });
+  const map = {incoming:'in', outgoing:'out', missed:'miss'};
+  const btn = document.getElementById('dir-' + map[dir]);
+  if (btn) btn.classList.add('dir-active');
+}
+
+let _lookupTimeout = null;
+let _lookupResult  = null;
+
+async function autoLookupPhone(val) {
+  const clean = val.replace(/\D/g,'');
+  const box   = document.getElementById('lookup-result');
+  if (clean.length < 7) { box.style.display='none'; _lookupResult=null; return; }
+  clearTimeout(_lookupTimeout);
+  _lookupTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        SB_URL + '/rest/v1/call_log?phone=ilike.*' + clean + '*&order=created_at.desc&limit=1&select=caller_name,phone',
+        { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+      );
+      const rows = await res.json();
+      if (rows && rows.length > 0 && rows[0].caller_name && rows[0].caller_name !== 'לא ידוע') {
+        _lookupResult = rows[0];
+        box.textContent = '✅ נמצא: ' + rows[0].caller_name + ' — לחץ למילוי אוטומטי';
+        box.style.display = 'block';
+      } else {
+        box.style.display = 'none';
+        _lookupResult = null;
+      }
+    } catch(e) { box.style.display='none'; }
+  }, 400);
+}
+
+function applyLookup() {
+  if (!_lookupResult) return;
+  document.getElementById('caller-name').value  = _lookupResult.caller_name;
+  document.getElementById('caller-phone').value = _lookupResult.phone;
+  document.getElementById('lookup-result').style.display = 'none';
+  _lookupResult = null;
+}
+
+function filterLog(f) {
+  currentLogFilter = f;
+  ['all','in','out','miss'].forEach(t => {
+    const el = document.getElementById('lf-' + t);
+    if (el) el.classList.remove('active');
+  });
+  const map = {all:'all', incoming:'in', outgoing:'out', missed:'miss'};
+  const el = document.getElementById('lf-' + map[f]);
+  if (el) el.classList.add('active');
+  renderLog(allCallLogs);
+}
+
+async function loadLog() {
+  const list  = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">טוען...</div>';
+
+  // Load today's calls
+  const todayStart = new Date();
+  todayStart.setHours(0,0,0,0);
+
+  try {
+    const res = await fetch(
+      SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    allCallLogs = await res.json();
+
+    // Stats for today
+    const today = allCallLogs.filter(r => new Date(r.created_at) >= todayStart);
+    document.getElementById('stat-in').textContent   = today.filter(r=>r.direction==='incoming').length;
+    document.getElementById('stat-out').textContent  = today.filter(r=>r.direction==='outgoing').length;
+    document.getElementById('stat-miss').textContent = today.filter(r=>r.direction==='missed').length;
+    document.getElementById('stat-wa').textContent   = today.filter(r=>r.wa_sent).length;
+
+    renderLog(allCallLogs);
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center;font-size:13px;">שגיאה: ' + e.message + '</div>';
+  }
+}
+
+function renderLog(logs) {
+  const list  = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+
+  let filtered = logs;
+  if (currentLogFilter !== 'all') {
+    filtered = logs.filter(r => r.direction === currentLogFilter);
+  }
+
+  if (!filtered || filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Group by date
+  const groups = {};
+  filtered.forEach(r => {
+    const d = new Date(r.created_at);
+    const key = d.toLocaleDateString('he-IL', {weekday:'long', day:'numeric', month:'long'});
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  const dirLabel = {incoming:'📞 נכנסת', outgoing:'📲 יוצאת', missed:'📵 לא נענה'};
+  const dirClass = {incoming:'dir-in', outgoing:'dir-out', missed:'dir-miss'};
+
+  list.innerHTML = Object.entries(groups).map(([date, items]) => {
+    const cards = items.map(r => {
+      const t    = new Date(r.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const dir  = r.direction || 'incoming';
+      const name = (r.caller_name||'לא ידוע').replace(/</g,'&lt;');
+      const ph   = (r.phone||'').replace(/</g,'&lt;');
+      const note = r.notes ? '<div class="call-note">📝 ' + r.notes.replace(/</g,'&lt;') + '</div>' : '';
+      const wa   = r.wa_sent ? '<span class="call-wa-badge">✅ וואטסאפ נשלח</span>' : '';
+      const reply = r.quick_reply ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">תשובה: ' + r.quick_reply.replace(/</g,'&lt;') + '</div>' : '';
+
+      return '<div class="call-card">' +
+        '<div class="call-card-hdr">' +
+          '<div>' +
+            '<span class="call-name">' + name + '</span>' +
+            '<span class="call-dir-badge ' + dirClass[dir] + '" style="margin-right:8px;">' + (dirLabel[dir]||dir) + '</span>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">' +
+            '<span class="call-time">' + t + '</span>' +
+            wa +
+          '</div>' +
+        '</div>' +
+        '<div class="call-phone">' + ph + '</div>' +
+        reply + note +
+        '<div class="call-actions">' +
+          '<button class="call-act-btn" onclick="window.open('tel:' + ph + '')">📞 התקשר</button>' +
+          '<button class="call-act-btn" onclick="prefillCaller('' + name.replace(/'/g,"\'") + '','' + ph.replace(/'/g,"\'") + '')">✏️ מלא טופס</button>' +
+          (ph ? '<button class="call-act-btn" onclick="window.open('https://wa.me/' + ph.replace(/\D/g,'') + '','_blank')">💬 וואטסאפ</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<div style="font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">' + date + '</div>' + cards;
+  }).join('');
+}
+
+function prefillCaller(name, phone) {
+  document.getElementById('caller-name').value  = name;
+  document.getElementById('caller-phone').value = phone;
+  switchPanel(0); // go to call panel
+  toast('✅ הטופס מולא — בחר תשובה מהירה');
+}
+
+
+async function loadQuickReplies() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    quickReplies = await res.json();
+  } catch(e) {
+    // fallback defaults if Supabase not yet configured
+    quickReplies = [
+      { id:1, label:'אחזור אליך',    emoji:'📞', message:'שלום, קיבלתי את שיחתך. אחזור אליך בהקדם. תודה — בני' },
+      { id:2, label:'שלח פרטים',    emoji:'📋', message:'שלום, אנא שלח לי את הפרטים בוואטסאפ. תודה — בני' },
+      { id:3, label:'בישיבה',        emoji:'🤝', message:'שלום, אני כרגע בישיבה. אחזור אליך בסיומה. תודה — בני' },
+      { id:4, label:'שלח תמונה',    emoji:'📸', message:'שלום, אנא שלח לי תמונה בוואטסאפ. תודה — בני' },
+      { id:5, label:'מחר בבוקר',    emoji:'🌅', message:'שלום, אטפל בנושא מחר בבוקר. תודה — בני' },
+      { id:6, label:'לא זמין היום', emoji:'🔕', message:'שלום, אינני זמין היום. ניצור קשר מחר. תודה — בני' },
+    ];
+  }
+  renderQuickGrid();
+}
+
+function renderQuickGrid() {
+  const grid = document.getElementById('quick-grid');
+  grid.innerHTML = quickReplies.map(r => `
+    <button class="qbtn" onclick="openReplyModal('${r.id}')">
+      <span class="qemoji">${r.emoji}</span>
+      ${r.label}
+    </button>`).join('');
+}
+
+function openReplyModal(replyId) {
+  const reply = quickReplies.find(r => String(r.id) === String(replyId));
+  if (!reply) return;
+  const name  = document.getElementById('caller-name').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim();
+  let msg = reply.message;
+  if (name) msg = msg.replace('שלום,', `שלום ${name},`);
+  document.getElementById('modal-reply-title').textContent = reply.label + ' ' + reply.emoji;
+  document.getElementById('modal-msg').textContent = msg;
+  pendingReplyLabel = reply.label;
+  pendingPhone = phone;
+  document.getElementById('modal-reply').classList.add('open');
+}
+
+async function sendQuickWA() {
+  const msg   = document.getElementById('modal-msg').textContent.trim();
+  const phone = pendingPhone.replace(/\D/g,'');
+  const name  = document.getElementById('caller-name').value.trim();
+  const note  = document.getElementById('caller-note').value.trim();
+
+  // Save to log
+  await saveCallLog(name, pendingPhone, pendingReplyLabel, note, true);
+
+  // Open WhatsApp
+  const url = phone
+    ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+
+  closeModal('modal-reply');
+  clearCallerForm();
+  toast('✅ נשלח לוואטסאפ ונשמר ביומן');
+}
+
+function openCustomReply() {
+  document.getElementById('custom-msg').value = '';
+  document.getElementById('modal-custom').classList.add('open');
+}
+
+async function sendCustomWA() {
+  const msg   = document.getElementById('custom-msg').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim().replace(/\D/g,'');
+  const name  = document.getElementById('caller-name').value.trim();
+  if (!msg) { toast('כתוב הודעה תחילה'); return; }
+  await saveCallLog(name, document.getElementById('caller-phone').value, 'מותאם אישית', msg, true);
+  const url = phone
+    ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  closeModal('modal-custom');
+  clearCallerForm();
+  toast('✅ נשלח לוואטסאפ');
+}
+
+async function logCallOnly() {
+  const name  = document.getElementById('caller-name').value.trim();
+  const phone = document.getElementById('caller-phone').value.trim();
+  const note  = document.getElementById('caller-note').value.trim();
+  if (!name && !phone) { toast('הכנס שם או מספר טלפון'); return; }
+  await saveCallLog(name, phone, '', note, false);
+  clearCallerForm();
+  toast('📝 שיחה נשמרה ביומן');
+}
+
+async function saveCallLog(name, phone, replyLabel, notes, waSent) {
+  try {
+    await fetch(SB_URL + '/rest/v1/call_log', {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        caller_name: name || 'לא ידוע',
+        phone, quick_reply: replyLabel, notes,
+        direction: currentDirection,
         wa_sent: waSent, wa_sent_at: waSent ? new Date().toISOString() : null,
         created_at: new Date().toISOString()
       })
