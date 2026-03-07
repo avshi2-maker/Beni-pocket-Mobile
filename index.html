@@ -1084,9 +1084,8 @@ function toast(msg) {
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
-</script>
-</body>
-</html>// ══ LOAD CALL LOG ════════════════════════════════════════
+
+// ══ LOAD CALL LOG ════════════════════════════════════════
 let allCallLogs = [];
 let currentLogFilter = 'all';
 let currentDirection = 'incoming';
@@ -1195,10 +1194,9 @@ function renderLog(logs) {
   }
   empty.style.display = 'none';
 
-  // Group by date
   const groups = {};
   filtered.forEach(r => {
-    const d = new Date(r.created_at);
+    const d   = new Date(r.created_at);
     const key = d.toLocaleDateString('he-IL', {weekday:'long', day:'numeric', month:'long'});
     if (!groups[key]) groups[key] = [];
     groups[key].push(r);
@@ -1207,47 +1205,67 @@ function renderLog(logs) {
   const dirLabel = {incoming:'📞 נכנסת', outgoing:'📲 יוצאת', missed:'📵 לא נענה'};
   const dirClass = {incoming:'dir-in', outgoing:'dir-out', missed:'dir-miss'};
 
-  list.innerHTML = Object.entries(groups).map(([date, items]) => {
-    const cards = items.map(r => {
-      const t    = new Date(r.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-      const dir  = r.direction || 'incoming';
-      const name = (r.caller_name||'לא ידוע').replace(/</g,'&lt;');
-      const ph   = (r.phone||'').replace(/</g,'&lt;');
-      const note = r.notes ? '<div class="call-note">📝 ' + r.notes.replace(/</g,'&lt;') + '</div>' : '';
-      const wa   = r.wa_sent ? '<span class="call-wa-badge">✅ וואטסאפ נשלח</span>' : '';
+  // Store call data in a lookup so onclick can reference by index — avoids ALL quote nesting
+  window._callData = {};
+
+  let html = '';
+  Object.entries(groups).forEach(([date, items]) => {
+    html += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">' + date + '</div>';
+    items.forEach(r => {
+      const id   = r.id || Math.random().toString(36).slice(2);
+      window._callData[id] = { name: r.caller_name || 'לא ידוע', phone: r.phone || '' };
+
+      const t     = new Date(r.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const dir   = r.direction || 'incoming';
+      const name  = (r.caller_name||'לא ידוע').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      const ph    = (r.phone||'').replace(/</g,'&lt;');
+      const note  = r.notes  ? '<div class="call-note">📝 ' + r.notes.replace(/</g,'&lt;') + '</div>' : '';
+      const wa    = r.wa_sent ? '<span class="call-wa-badge">✅ וואטסאפ נשלח</span>' : '';
       const reply = r.quick_reply ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">תשובה: ' + r.quick_reply.replace(/</g,'&lt;') + '</div>' : '';
 
-      return '<div class="call-card">' +
-        '<div class="call-card-hdr">' +
-          '<div>' +
-            '<span class="call-name">' + name + '</span>' +
-            '<span class="call-dir-badge ' + dirClass[dir] + '" style="margin-right:8px;">' + (dirLabel[dir]||dir) + '</span>' +
+      html +=
+        '<div class="call-card">' +
+          '<div class="call-card-hdr">' +
+            '<div>' +
+              '<span class="call-name">' + name + '</span>' +
+              '<span class="call-dir-badge ' + dirClass[dir] + '" style="margin-right:8px;">' + (dirLabel[dir]||dir) + '</span>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">' +
+              '<span class="call-time">' + t + '</span>' +
+              wa +
+            '</div>' +
           '</div>' +
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">' +
-            '<span class="call-time">' + t + '</span>' +
-            wa +
+          '<div class="call-phone">' + ph + '</div>' +
+          reply + note +
+          '<div class="call-actions">' +
+            '<button class="call-act-btn" onclick="_callPhone(\'' + id + '\')">📞 התקשר</button>' +
+            '<button class="call-act-btn" onclick="_prefillFromLog(\'' + id + '\')">✏️ מלא טופס</button>' +
+            '<button class="call-act-btn" onclick="_waFromLog(\'' + id + '\')">💬 וואטסאפ</button>' +
           '</div>' +
-        '</div>' +
-        '<div class="call-phone">' + ph + '</div>' +
-        reply + note +
-        '<div class="call-actions">' +
-          '<button class="call-act-btn" onclick="window.open('tel:' + ph + '')">📞 התקשר</button>' +
-          '<button class="call-act-btn" onclick="prefillCaller('' + name.replace(/'/g,"\'") + '','' + ph.replace(/'/g,"\'") + '')">✏️ מלא טופס</button>' +
-          (ph ? '<button class="call-act-btn" onclick="window.open('https://wa.me/' + ph.replace(/\D/g,'') + '','_blank')">💬 וואטסאפ</button>' : '') +
-        '</div>' +
-      '</div>';
-    }).join('');
-
-    return '<div style="font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">' + date + '</div>' + cards;
-  }).join('');
+        '</div>';
+    });
+  });
+  list.innerHTML = html;
 }
 
-function prefillCaller(name, phone) {
-  document.getElementById('caller-name').value  = name;
-  document.getElementById('caller-phone').value = phone;
-  switchPanel(0); // go to call panel
+function _callPhone(id) {
+  const d = window._callData && window._callData[id];
+  if (d && d.phone) window.location.href = 'tel:' + d.phone;
+}
+function _prefillFromLog(id) {
+  const d = window._callData && window._callData[id];
+  if (!d) return;
+  document.getElementById('caller-name').value  = d.name;
+  document.getElementById('caller-phone').value = d.phone;
+  switchPanel(0);
   toast('✅ הטופס מולא — בחר תשובה מהירה');
 }
+function _waFromLog(id) {
+  const d = window._callData && window._callData[id];
+  if (d && d.phone) window.open('https://wa.me/' + d.phone.replace(/\D/g,''), '_blank');
+}
+
+
 
 
 async function loadQuickReplies() {
@@ -1641,6 +1659,7 @@ function toast(msg) {
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
+
 </script>
 </body>
 </html>
