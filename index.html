@@ -43,7 +43,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── SPLASH ── */
 #splash {
   position: fixed; inset: 0; z-index: 9999;
   background: #fdf6e3;
@@ -72,11 +71,9 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 #splash.hidden { display: none; }
 
-/* ── APP SHELL ── */
 #app { display: none; flex-direction: column; min-height: 100vh; }
 #app.ready { display: flex; }
 
-/* ── TOP BAR ── */
 .topbar {
   background: #f5e9c4;
   border-bottom: 2px solid #c9a84c;
@@ -95,7 +92,6 @@ body {
 .topbar-sub  { font-size: 10px; color: var(--text2); line-height: 1; }
 .topbar-time { font-size: 13px; font-weight: 700; color: var(--orange); font-variant-numeric: tabular-nums; }
 
-/* ── NAV TABS ── */
 .nav-tabs {
   display: flex;
   background: #f5e9c4;
@@ -120,19 +116,16 @@ body {
   position: absolute; margin-top: -28px; margin-right: -20px;
 }
 
-/* ── PANELS ── */
 .panel { display: none; flex: 1; padding: 16px; padding-bottom: 24px; animation: fadeIn 0.2s ease; }
 .panel.active { display: block; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
-/* ── SECTION TITLE ── */
 .sec-title {
   font-size: 12px; font-weight: 700; color: var(--text2);
   text-transform: uppercase; letter-spacing: 1px;
   margin-bottom: 10px; margin-top: 4px;
 }
 
-/* ── CALL PANEL ── */
 .caller-form {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -155,7 +148,6 @@ body {
 .inp:focus { outline: none; border-color: var(--orange); }
 .inp::placeholder { color: var(--text2); font-weight: 800; }
 
-/* ── QUICK REPLY BUTTONS ── */
 .quick-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -184,7 +176,6 @@ body {
   transform: scale(0.96);
 }
 
-/* ── BIG BUTTONS ── */
 .big-btn {
   width: 100%;
   padding: 16px;
@@ -206,7 +197,6 @@ body {
 .btn-purple { background: linear-gradient(135deg, #6d28d9, var(--purple)); color: white; }
 .btn-surface{ background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
 
-/* ── VOICE PANEL ── */
 .voice-center {
   display: flex; flex-direction: column;
   align-items: center; gap: 20px;
@@ -264,7 +254,6 @@ body {
 .transcript-placeholder { color: var(--text3); font-style: italic; }
 .transcript-actions { display: flex; gap: 10px; margin-top: 10px; }
 
-/* ── AI ANALYSIS CARD ── */
 .ai-card {
   width: 100%;
   background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08));
@@ -312,7 +301,6 @@ body {
   vertical-align: middle; margin-left: 6px;
 }
 
-/* ── END OF DAY PANEL ── */
 .eod-memo {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -329,7 +317,6 @@ body {
 .eod-memo-raw     { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; font-style: italic; }
 .eod-memo-actions { font-size: 11px; color: var(--orange); margin-top: 4px; }
 
-/* ── TODO PANEL ── */
 .todo-input-row {
   display: flex; gap: 10px; margin-bottom: 16px; align-items: stretch;
 }
@@ -384,7 +371,6 @@ body {
 .p-normal { background: var(--orange); }
 .p-low    { background: var(--text3); }
 
-/* ── LOG PANEL ── */
 .log-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -394,30 +380,12 @@ body {
   display: flex; align-items: flex-start; gap: 12px;
   animation: slideIn 0.2s ease;
 }
-.log-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--surface2), var(--surface3));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-  border: 1px solid var(--border);
-}
-.log-info { flex: 1; min-width: 0; }
-.log-name { font-size: 14px; font-weight: 700; }
-.log-phone { font-size: 12px; color: var(--text2); direction: ltr; text-align: right; }
-.log-reply { font-size: 12px; color: var(--orange); margin-top: 2px; }
-.log-time  { font-size: 11px; color: var(--text3); white-space: nowrap; }
-.log-wa-badge {
-  font-size: 11px; background: rgba(34,197,94,0.15);
-  color: var(--green); border-radius: 6px; padding: 2px 7px;
-  font-weight: 700; margin-top: 4px; display: inline-block;
-}
 .empty-state {
   text-align: center; padding: 48px 20px;
   color: var(--text3); font-size: 14px;
 }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 
-/* ── MODAL ── */
 .modal-overlay {
   display: none; position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.7);
@@ -449,7 +417,6 @@ body {
   white-space: pre-wrap; direction: rtl;
 }
 
-/* ── TOAST ── */
 #toast {
   position: fixed; bottom: 80px; left: 50%;
   transform: translateX(-50%);
@@ -464,7 +431,6 @@ body {
 }
 #toast.on { opacity: 1; }
 
-/* ══ DIRECTION BUTTONS ══ */
 .dir-btn{
   flex:1;padding:9px 4px;border:1.5px solid var(--border);
   border-radius:8px;background:var(--surface2);
@@ -473,7 +439,6 @@ body {
 }
 .dir-active{background:var(--orange);color:white;border-color:var(--orange);}
 
-/* ══ CALL LOG CARDS ══ */
 .call-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:10px;padding:12px 14px;margin-bottom:10px;
@@ -496,7 +461,6 @@ body {
 }
 .call-act-btn:hover{background:var(--surface2);}
 
-/* ══ LOG FILTER TABS ══ */
 .log-filter{display:flex;gap:6px;margin-bottom:14px;}
 .log-ftab{
   flex:1;padding:8px 4px;border:1.5px solid var(--border);
@@ -506,7 +470,6 @@ body {
 }
 .log-ftab.active{background:var(--orange);color:white;border-color:var(--orange);}
 
-/* ══ EOD STATS BAR ══ */
 .eod-stats {
   display: flex; gap: 8px; margin-bottom: 16px;
 }
@@ -521,7 +484,6 @@ body {
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
   <div class="splash-logo">📱</div>
   <div class="splash-name">בני פוקט</div>
@@ -529,10 +491,7 @@ body {
   <div class="splash-spin"></div>
 </div>
 
-<!-- APP -->
 <div id="app">
-
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-logo">
       <div class="topbar-icon">📱</div>
@@ -547,7 +506,6 @@ body {
     </div>
   </div>
 
-  <!-- NAV TABS -->
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="switchTab('call')" id="tab-call">
       <span class="tab-icon">📞</span>שיחה
@@ -570,7 +528,7 @@ body {
     </div>
   </div>
 
-  <!-- ══ CALL PANEL ══ -->
+  <!-- CALL PANEL -->
   <div class="panel active" id="panel-call">
     <div class="sec-title">פרטי המתקשר</div>
     <div class="caller-form">
@@ -578,7 +536,7 @@ body {
         <input class="inp" id="caller-name" placeholder="שם המתקשר" type="text" style="font-weight:800;">
       </div>
       <div class="form-row" style="position:relative;">
-        <input class="inp" id="caller-phone" placeholder="מספר טלפון — הדבק מיחיד האחרון" type="tel" dir="ltr"
+        <input class="inp" id="caller-phone" placeholder="מספר טלפון" type="tel" dir="ltr"
           style="text-align:right;font-weight:800;padding-left:44px;"
           oninput="autoLookupPhone(this.value)">
         <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;opacity:0.4;pointer-events:none;">🔍</div>
@@ -593,18 +551,15 @@ body {
         <input class="inp" id="caller-note" placeholder="הערה קצרה (אופציונלי)" type="text" style="font-weight:800;">
       </div>
     </div>
-
     <div class="sec-title">תשובה מהירה — שלח מיד לוואטסאפ</div>
     <div class="quick-grid" id="quick-grid"></div>
-
     <div class="sec-title">פעולות נוספות</div>
     <button class="big-btn btn-surface" onclick="openCustomReply()">✏️ תשובה מותאמת אישית</button>
     <button class="big-btn btn-surface" onclick="logCallOnly()">📝 שמור שיחה ללא שליחה</button>
   </div>
 
-  <!-- ══ VOICE PANEL ══ -->
+  <!-- VOICE PANEL -->
   <div class="panel" id="panel-voice">
-
     <div class="voice-center">
       <div class="mic-ring" id="mic-ring"
         onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()"
@@ -614,31 +569,27 @@ body {
       <div class="rec-timer" id="rec-timer" style="display:none">0:00</div>
       <div class="rec-status" id="rec-status">לחץ והחזק להקלטה</div>
     </div>
-
     <div class="sec-title">תמליל</div>
     <div class="transcript-box" id="transcript-box">
       <span class="transcript-placeholder" id="transcript-placeholder">לחץ והחזק את הכפתור ודבר. שחרר לסיום.</span>
       <span id="transcript-text"></span>
     </div>
-
-    <!-- AI ANALYSIS CARD — shown after analysis -->
     <div class="ai-card" id="ai-card">
       <div class="ai-card-header">🧠 ניתוח AI <span id="ai-spinner" class="ai-spinner" style="display:none"></span></div>
       <div class="ai-summary" id="ai-summary"></div>
       <div class="ai-meta" id="ai-meta"></div>
       <div class="ai-actions-list" id="ai-actions-list"></div>
     </div>
-
     <div class="transcript-actions" id="transcript-actions" style="display:none">
-      <button class="big-btn btn-green"   style="margin:0;flex:1" onclick="saveMemoAsReminder()">✅ שמור כמשימה</button>
-      <button class="big-btn btn-orange"  style="margin:0;flex:1" onclick="sendMemoWA()">💬 וואטסאפ</button>
+      <button class="big-btn btn-green"  style="margin:0;flex:1" onclick="saveMemoAsReminder()">✅ שמור כמשימה</button>
+      <button class="big-btn btn-orange" style="margin:0;flex:1" onclick="sendMemoWA()">💬 וואטסאפ</button>
     </div>
     <div style="height:10px"></div>
     <button class="big-btn btn-purple" onclick="saveToEOD()">🧠 שמור לסוף יום</button>
     <button class="big-btn btn-surface" onclick="clearTranscript()">🗑️ נקה</button>
   </div>
 
-  <!-- ══ TODO PANEL ══ -->
+  <!-- TODO PANEL -->
   <div class="panel" id="panel-todo">
     <div class="todo-input-row">
       <input class="inp" id="todo-input" placeholder="משימה חדשה..." type="text"
@@ -657,7 +608,7 @@ body {
     </div>
   </div>
 
-  <!-- ══ LOG PANEL ══ -->
+  <!-- LOG PANEL -->
   <div class="panel" id="panel-log">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="sec-title" style="margin:0">יומן שיחות יומי</div>
@@ -694,36 +645,22 @@ body {
     </div>
   </div>
 
-  <!-- ══ END OF DAY PANEL ══ -->
+  <!-- EOD PANEL -->
   <div class="panel" id="panel-eod">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div class="sec-title" style="margin:0">🧠 סיכום יום — מוח AI</div>
       <button onclick="clearEOD()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;">נקה הכל</button>
     </div>
-
-    <!-- Stats -->
     <div class="eod-stats" id="eod-stats">
-      <div class="eod-stat">
-        <div class="eod-stat-num" id="eod-count">0</div>
-        <div class="eod-stat-label">הקלטות</div>
-      </div>
-      <div class="eod-stat">
-        <div class="eod-stat-num" id="eod-tasks">0</div>
-        <div class="eod-stat-label">משימות</div>
-      </div>
-      <div class="eod-stat">
-        <div class="eod-stat-num" id="eod-high">0</div>
-        <div class="eod-stat-label">דחוף</div>
-      </div>
+      <div class="eod-stat"><div class="eod-stat-num" id="eod-count">0</div><div class="eod-stat-label">הקלטות</div></div>
+      <div class="eod-stat"><div class="eod-stat-num" id="eod-tasks">0</div><div class="eod-stat-label">משימות</div></div>
+      <div class="eod-stat"><div class="eod-stat-num" id="eod-high">0</div><div class="eod-stat-label">דחוף</div></div>
     </div>
-
     <div id="eod-list"></div>
     <div class="empty-state" id="eod-empty">
       <div class="empty-icon">🧠</div>
       הקלט משהו ולחץ "שמור לסוף יום"<br>הכל יופיע כאן מסודר ומנותח
     </div>
-
-    <!-- Send to CRM -->
     <div id="eod-send-section" style="display:none;margin-top:16px;">
       <div style="background:rgba(139,92,246,0.08);border:1.5px solid rgba(139,92,246,0.25);border-radius:12px;padding:14px;margin-bottom:12px;">
         <div style="font-size:12px;font-weight:800;color:var(--purple);margin-bottom:6px;">📤 שלח ל-Stonhard CRM</div>
@@ -734,10 +671,9 @@ body {
       <button class="big-btn btn-surface" onclick="shareEODSummary()">📤 שתף סיכום יום</button>
     </div>
   </div>
+</div>
 
-</div><!-- /app -->
-
-<!-- QUICK REPLY MODAL -->
+<!-- MODALS -->
 <div class="modal-overlay" id="modal-reply">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -747,8 +683,6 @@ body {
     <button class="big-btn btn-surface" onclick="closeModal('modal-reply')">ביטול</button>
   </div>
 </div>
-
-<!-- CUSTOM REPLY MODAL -->
 <div class="modal-overlay" id="modal-custom">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -764,12 +698,13 @@ body {
 
 <script>
 // ══════════════════════════════════════════════════════════
-// CONFIG
+// CONFIG — Stonhard CRM Supabase (work-journal project)
 // ══════════════════════════════════════════════════════════
-const SB_URL      = 'https://vmcipofovheztbjmhwsl.supabase.co';
-const SB_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2lwb2ZvdmhlenRiam1od3NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjE2MTcsImV4cCI6MjA4NzAzNzYxN30.LPq5N2Xo8iEqjgz2UhmdzUdh5tpGT3EYzSxJcYBEJ1w';
+const SB_URL        = 'https://vmcipofovheztbjmhwsl.supabase.co';
+const SB_KEY        = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2lwb2ZvdmhlenRiam1od3NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjE2MTcsImV4cCI6MjA4NzAzNzYxN30.LPq5N2Xo8iEqjgz2UhmdzUdh5tpGT3EYzSxJcYBEJ1w';
 const ANTHROPIC_KEY = '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';
-// ── STATE ─────────────────────────────────────────────────
+
+// ── STATE ──
 let quickReplies      = [];
 let todos             = [];
 let todoFilter        = 'all';
@@ -783,10 +718,10 @@ let pendingPhone      = '';
 let currentDirection  = 'incoming';
 let allCallLogs       = [];
 let currentLogFilter  = 'all';
-let currentAIResult   = null;  // last Claude analysis
-let eodMemos          = [];    // end-of-day memo list (in memory)
+let currentAIResult   = null;
+let eodMemos          = [];
 
-// ── INIT ──────────────────────────────────────────────────
+// ── INIT ──
 document.addEventListener('DOMContentLoaded', async () => {
   startClock();
   await Promise.all([loadQuickReplies(), loadTodos(), loadLog()]);
@@ -796,7 +731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSpeechRecognition();
 });
 
-// ── CLOCK ─────────────────────────────────────────────────
+// ── CLOCK ──
 function startClock() {
   const DAYS   = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
   const MONTHS = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
@@ -811,7 +746,7 @@ function startClock() {
   update(); setInterval(update, 10000);
 }
 
-// ── TAB SWITCHING ─────────────────────────────────────────
+// ── TAB SWITCHING ──
 function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -821,9 +756,7 @@ function switchTab(tab) {
   if (tab === 'eod') renderEOD();
 }
 
-// ══════════════════════════════════════════════════════════
-// 🧠 CLAUDE AI ANALYSIS
-// ══════════════════════════════════════════════════════════
+// ── CLAUDE AI ──
 async function analyzeWithClaude(transcript) {
   const prompt = `אתה עוזר אישי בשטח לקבלן בנייה. נתחו את ההקלטה הבאה והחזר JSON בלבד.
 
@@ -868,36 +801,24 @@ async function analyzeWithClaude(transcript) {
 function renderAICard(result) {
   if (!result) return;
   currentAIResult = result;
-
   const priorityClass = { 'גבוה': 'badge-high', 'רגיל': 'badge-normal', 'נמוך': 'badge-low' };
   const priorityEmoji = { 'גבוה': '🔴', 'רגיל': '🟠', 'נמוך': '⚪' };
-
   document.getElementById('ai-summary').textContent = result.summary || '';
-
   let meta = '';
-  if (result.category) meta += `<span class="ai-badge badge-cat">📂 ${result.category}</span>`;
-  if (result.priority) meta += `<span class="ai-badge ${priorityClass[result.priority]||'badge-normal'}">${priorityEmoji[result.priority]||''} ${result.priority}</span>`;
+  if (result.category)     meta += `<span class="ai-badge badge-cat">📂 ${result.category}</span>`;
+  if (result.priority)     meta += `<span class="ai-badge ${priorityClass[result.priority]||'badge-normal'}">${priorityEmoji[result.priority]||''} ${result.priority}</span>`;
   if (result.project_hint) meta += `<span class="ai-badge badge-project">🏗️ ${result.project_hint}</span>`;
-  if (result.tags && result.tags.length) {
-    result.tags.forEach(t => { meta += `<span class="ai-badge badge-tag">#${t}</span>`; });
-  }
+  if (result.tags && result.tags.length) result.tags.forEach(t => { meta += `<span class="ai-badge badge-tag">#${t}</span>`; });
   document.getElementById('ai-meta').innerHTML = meta;
-
   let actions = '';
-  if (result.action_items && result.action_items.length) {
-    actions = result.action_items.map(a =>
-      `<div class="ai-action-item"><span>▸</span><span>${escHtml(a)}</span></div>`
-    ).join('');
-  }
+  if (result.action_items && result.action_items.length)
+    actions = result.action_items.map(a => `<div class="ai-action-item"><span>▸</span><span>${escHtml(a)}</span></div>`).join('');
   document.getElementById('ai-actions-list').innerHTML = actions;
-
   document.getElementById('ai-spinner').style.display = 'none';
   document.getElementById('ai-card').classList.add('visible');
 }
 
-// ══════════════════════════════════════════════════════════
-// 🎙️ VOICE / TRANSCRIPT
-// ══════════════════════════════════════════════════════════
+// ── VOICE ──
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -913,12 +834,10 @@ function startHold(e) {
   if (!window._SR) { toast('זיהוי קול אינו נתמך'); return; }
   if (isRecording) return;
   isRecording = true;
-
   recognition = new window._SR();
   recognition.lang = 'he-IL';
   recognition.continuous = false;
   recognition.interimResults = false;
-
   recognition.onresult = (ev) => {
     const heard = ev.results[0][0].transcript.trim();
     if (!heard) return;
@@ -927,14 +846,11 @@ function startHold(e) {
     document.getElementById('transcript-text').textContent = currentTranscript;
     document.getElementById('transcript-actions').style.display = 'flex';
   };
-
   recognition.onerror = (ev) => {
     if (ev.error === 'no-speech' || ev.error === 'aborted') return;
     toast('שגיאה: ' + ev.error);
   };
-
   recognition.start();
-
   document.getElementById('mic-ring').classList.add('recording');
   document.getElementById('mic-icon').textContent = '⏹️';
   document.getElementById('rec-status').textContent = 'מקליט... שחרר לסיום';
@@ -952,55 +868,39 @@ async function endHold(e) {
   if (e) e.preventDefault();
   if (!isRecording) return;
   isRecording = false;
-
   try { recognition.stop(); } catch(err) {}
   clearInterval(recInterval);
-
-  // UI → analyzing state
   document.getElementById('mic-ring').classList.remove('recording');
   document.getElementById('mic-ring').classList.add('analyzing');
   document.getElementById('mic-icon').textContent = '🧠';
   document.getElementById('rec-status').textContent = 'מנתח עם AI...';
   document.getElementById('rec-timer').style.display = 'none';
   document.getElementById('rec-timer').textContent = '0:00';
-
   const text = currentTranscript.trim();
-
   if (text) {
-    // Show spinner in AI card
     document.getElementById('ai-card').classList.add('visible');
     document.getElementById('ai-spinner').style.display = 'inline-block';
     document.getElementById('ai-summary').textContent = 'מנתח...';
     document.getElementById('ai-meta').innerHTML = '';
     document.getElementById('ai-actions-list').innerHTML = '';
-
-    // Save raw to Supabase
     try {
       await fetch(SB_URL + '/rest/v1/voice_memos', {
         method: 'POST',
-        headers: {
-          apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-          'Content-Type': 'application/json', Prefer: 'return=minimal'
-        },
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ transcript: text, duration_sec: recSeconds, created_at: new Date().toISOString() })
       });
     } catch(err) {}
-
-    // Call Claude
     const result = await analyzeWithClaude(text);
     renderAICard(result);
     toast('🧠 ניתוח AI הושלם');
   }
-
-  // UI reset
   document.getElementById('mic-ring').classList.remove('analyzing');
   document.getElementById('mic-icon').textContent = '🎙️';
   document.getElementById('rec-status').textContent = 'לחץ והחזק להקלטה';
 }
 
 function clearTranscript() {
-  currentTranscript = '';
-  currentAIResult   = null;
+  currentTranscript = ''; currentAIResult = null;
   document.getElementById('transcript-text').textContent = '';
   document.getElementById('transcript-placeholder').style.display = 'inline';
   document.getElementById('transcript-actions').style.display = 'none';
@@ -1012,10 +912,8 @@ async function saveMemoAsReminder() {
   const text = currentTranscript.trim();
   if (!text) { toast('אין תמליל לשמירה'); return; }
   const label = currentAIResult ? currentAIResult.summary : text;
-  await addReminderToDB(label, 'voice', currentAIResult ? currentAIResult.priority === 'גבוה' ? 'high' : 'normal' : 'normal');
-  await loadTodos();
-  switchTab('todo');
-  toast('✅ נשמר כמשימה');
+  await addReminderToDB(label, 'voice', currentAIResult && currentAIResult.priority === 'גבוה' ? 'high' : 'normal');
+  await loadTodos(); switchTab('todo'); toast('✅ נשמר כמשימה');
 }
 
 function sendMemoWA() {
@@ -1024,70 +922,44 @@ function sendMemoWA() {
   let msg = '📝 תזכורת:\n' + text;
   if (currentAIResult) {
     msg += '\n\n🧠 סיכום AI: ' + currentAIResult.summary;
-    if (currentAIResult.action_items && currentAIResult.action_items.length) {
+    if (currentAIResult.action_items && currentAIResult.action_items.length)
       msg += '\n\nמשימות:\n' + currentAIResult.action_items.map(a => '• ' + a).join('\n');
-    }
   }
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// ══════════════════════════════════════════════════════════
-// 🧠 END OF DAY
-// ══════════════════════════════════════════════════════════
+// ── EOD ──
 function loadEODFromStorage() {
-  try {
-    const saved = sessionStorage.getItem('beni_eod_memos');
-    eodMemos = saved ? JSON.parse(saved) : [];
-  } catch(e) { eodMemos = []; }
+  try { const saved = sessionStorage.getItem('beni_eod_memos'); eodMemos = saved ? JSON.parse(saved) : []; }
+  catch(e) { eodMemos = []; }
   updateEODBadge();
 }
-
 function saveEODToStorage() {
   try { sessionStorage.setItem('beni_eod_memos', JSON.stringify(eodMemos)); } catch(e) {}
 }
-
 function saveToEOD() {
   const text = currentTranscript.trim();
   if (!text) { toast('אין תמליל לשמירה'); return; }
-
-  const memo = {
-    id: Date.now(),
-    transcript: text,
-    ai: currentAIResult || null,
-    time: new Date().toISOString()
-  };
-  eodMemos.push(memo);
-  saveEODToStorage();
-  updateEODBadge();
-  toast('🧠 נשמר לסוף יום');
-  clearTranscript();
+  eodMemos.push({ id: Date.now(), transcript: text, ai: currentAIResult || null, time: new Date().toISOString() });
+  saveEODToStorage(); updateEODBadge(); toast('🧠 נשמר לסוף יום'); clearTranscript();
 }
-
 function updateEODBadge() {
   const badge = document.getElementById('eod-badge');
   if (eodMemos.length > 0) { badge.textContent = eodMemos.length; badge.style.display = 'inline'; }
   else badge.style.display = 'none';
 }
-
 function renderEOD() {
-  const list  = document.getElementById('eod-list');
+  const list = document.getElementById('eod-list');
   const empty = document.getElementById('eod-empty');
   const send  = document.getElementById('eod-send-section');
-
   if (eodMemos.length === 0) {
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    send.style.display = 'none';
+    list.innerHTML = ''; empty.style.display = 'block'; send.style.display = 'none';
     document.getElementById('eod-count').textContent = '0';
     document.getElementById('eod-tasks').textContent = '0';
     document.getElementById('eod-high').textContent  = '0';
     return;
   }
-
-  empty.style.display = 'none';
-  send.style.display  = 'block';
-
-  // Stats
+  empty.style.display = 'none'; send.style.display = 'block';
   let totalTasks = 0, highCount = 0;
   eodMemos.forEach(m => {
     if (m.ai && m.ai.action_items) totalTasks += m.ai.action_items.length;
@@ -1096,16 +968,12 @@ function renderEOD() {
   document.getElementById('eod-count').textContent = eodMemos.length;
   document.getElementById('eod-tasks').textContent = totalTasks;
   document.getElementById('eod-high').textContent  = highCount;
-
   list.innerHTML = eodMemos.map((m, i) => {
     const t = new Date(m.time).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const summary = m.ai ? m.ai.summary : m.transcript.substring(0,80) + (m.transcript.length>80?'...':'');
-    const actions = m.ai && m.ai.action_items && m.ai.action_items.length
-      ? '▸ ' + m.ai.action_items.join(' | ')
-      : '';
+    const actions = m.ai && m.ai.action_items && m.ai.action_items.length ? '▸ ' + m.ai.action_items.join(' | ') : '';
     const catBadge = m.ai && m.ai.category ? `<span class="ai-badge badge-cat" style="font-size:10px;padding:2px 7px;">${m.ai.category}</span>` : '';
     const priColor = m.ai && m.ai.priority === 'גבוה' ? 'var(--red)' : 'var(--border)';
-
     return `<div class="eod-memo" style="border-right:3px solid ${priColor}">
       <div class="eod-memo-header">
         <div class="eod-memo-summary">${escHtml(summary)}</div>
@@ -1120,85 +988,49 @@ function renderEOD() {
     </div>`;
   }).join('');
 }
-
 function removeEODMemo(index) {
-  eodMemos.splice(index, 1);
-  saveEODToStorage();
-  updateEODBadge();
-  renderEOD();
+  eodMemos.splice(index, 1); saveEODToStorage(); updateEODBadge(); renderEOD();
 }
-
 function clearEOD() {
   if (!confirm('למחוק את כל ההקלטות של היום?')) return;
-  eodMemos = [];
-  saveEODToStorage();
-  updateEODBadge();
-  renderEOD();
+  eodMemos = []; saveEODToStorage(); updateEODBadge(); renderEOD();
 }
-
 async function sendToCRM() {
   if (eodMemos.length === 0) { toast('אין הקלטות לשליחה'); return; }
-
   toast('📤 שולח ל-CRM...');
-
-  // Build a combined Smart Note content
   const date = new Date().toLocaleDateString('he-IL');
   let content = `📱 סיכום בני פוקט — ${date}\n\n`;
-
-  eodMemos.forEach((m, i) => {
+  eodMemos.forEach((m) => {
     const t = new Date(m.time).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     content += `[${t}] `;
     if (m.ai) {
       content += `${m.ai.category || ''}: ${m.ai.summary}\n`;
-      if (m.ai.action_items && m.ai.action_items.length) {
+      if (m.ai.action_items && m.ai.action_items.length)
         content += m.ai.action_items.map(a => `  • ${a}`).join('\n') + '\n';
-      }
-    } else {
-      content += m.transcript + '\n';
-    }
+    } else { content += m.transcript + '\n'; }
     content += '\n';
   });
-
   try {
     await fetch(SB_URL + '/rest/v1/reports', {
       method: 'POST',
-      headers: {
-        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({
-        title: `בני פוקט — סיכום ${date}`,
-        content: content,
-        report_type: 'beni_eod',
-        created_at: new Date().toISOString()
-      })
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ title: `בני פוקט — סיכום ${date}`, content, report_type: 'beni_eod', created_at: new Date().toISOString() })
     });
-    toast('✅ נשלח ל-CRM בהצלחה!');
-    clearEOD();
-  } catch(e) {
-    toast('❌ שגיאה בשליחה — בדוק חיבור');
-  }
+    toast('✅ נשלח ל-CRM בהצלחה!'); clearEOD();
+  } catch(e) { toast('❌ שגיאה בשליחה — בדוק חיבור'); }
 }
-
 async function sendAllAsReminders() {
   if (eodMemos.length === 0) { toast('אין הקלטות'); return; }
   let count = 0;
   for (const m of eodMemos) {
     if (m.ai && m.ai.action_items && m.ai.action_items.length) {
       for (const action of m.ai.action_items) {
-        await addReminderToDB(action, 'eod_ai', m.ai.priority === 'גבוה' ? 'high' : 'normal');
-        count++;
+        await addReminderToDB(action, 'eod_ai', m.ai.priority === 'גבוה' ? 'high' : 'normal'); count++;
       }
-    } else {
-      await addReminderToDB(m.ai ? m.ai.summary : m.transcript, 'eod_voice', 'normal');
-      count++;
-    }
+    } else { await addReminderToDB(m.ai ? m.ai.summary : m.transcript, 'eod_voice', 'normal'); count++; }
   }
-  await loadTodos();
-  toast(`✅ ${count} משימות נוספו`);
-  switchTab('todo');
+  await loadTodos(); toast(`✅ ${count} משימות נוספו`); switchTab('todo');
 }
-
 function shareEODSummary() {
   if (eodMemos.length === 0) { toast('אין הקלטות לשיתוף'); return; }
   const date = new Date().toLocaleDateString('he-IL');
@@ -1206,16 +1038,13 @@ function shareEODSummary() {
   eodMemos.forEach((m, i) => {
     const t = new Date(m.time).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     text += `${i+1}. [${t}] ${m.ai ? m.ai.summary : m.transcript.substring(0,60)}\n`;
-    if (m.ai && m.ai.action_items && m.ai.action_items.length) {
+    if (m.ai && m.ai.action_items && m.ai.action_items.length)
       text += m.ai.action_items.map(a => `   ▸ ${a}`).join('\n') + '\n';
-    }
   });
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
-// ══════════════════════════════════════════════════════════
-// QUICK REPLIES
-// ══════════════════════════════════════════════════════════
+// ── QUICK REPLIES ──
 async function loadQuickReplies() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
@@ -1234,15 +1063,11 @@ async function loadQuickReplies() {
   }
   renderQuickGrid();
 }
-
 function renderQuickGrid() {
-  const grid = document.getElementById('quick-grid');
-  grid.innerHTML = quickReplies.map(r => `
-    <button class="qbtn" onclick="openReplyModal('${r.id}')">
-      <span class="qemoji">${r.emoji}</span>${r.label}
-    </button>`).join('');
+  document.getElementById('quick-grid').innerHTML = quickReplies.map(r =>
+    `<button class="qbtn" onclick="openReplyModal('${r.id}')"><span class="qemoji">${r.emoji}</span>${r.label}</button>`
+  ).join('');
 }
-
 function openReplyModal(replyId) {
   const reply = quickReplies.find(r => String(r.id) === String(replyId));
   if (!reply) return;
@@ -1252,11 +1077,9 @@ function openReplyModal(replyId) {
   if (name) msg = msg.replace('שלום,', `שלום ${name},`);
   document.getElementById('modal-reply-title').textContent = reply.label + ' ' + reply.emoji;
   document.getElementById('modal-msg').textContent = msg;
-  pendingReplyLabel = reply.label;
-  pendingPhone = phone;
+  pendingReplyLabel = reply.label; pendingPhone = phone;
   document.getElementById('modal-reply').classList.add('open');
 }
-
 async function sendQuickWA() {
   const msg   = document.getElementById('modal-msg').textContent.trim();
   const phone = pendingPhone.replace(/\D/g,'');
@@ -1267,16 +1090,13 @@ async function sendQuickWA() {
     ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
-  closeModal('modal-reply');
-  clearCallerForm();
+  closeModal('modal-reply'); clearCallerForm();
   toast('✅ נשלח לוואטסאפ ונשמר ביומן');
 }
-
 function openCustomReply() {
   document.getElementById('custom-msg').value = '';
   document.getElementById('modal-custom').classList.add('open');
 }
-
 async function sendCustomWA() {
   const msg   = document.getElementById('custom-msg').value.trim();
   const phone = document.getElementById('caller-phone').value.trim().replace(/\D/g,'');
@@ -1287,60 +1107,45 @@ async function sendCustomWA() {
     ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
-  closeModal('modal-custom');
-  clearCallerForm();
-  toast('✅ נשלח לוואטסאפ');
+  closeModal('modal-custom'); clearCallerForm(); toast('✅ נשלח לוואטסאפ');
 }
-
 async function logCallOnly() {
   const name  = document.getElementById('caller-name').value.trim();
   const phone = document.getElementById('caller-phone').value.trim();
   const note  = document.getElementById('caller-note').value.trim();
   if (!name && !phone) { toast('הכנס שם או מספר טלפון'); return; }
   await saveCallLog(name, phone, '', note, false);
-  clearCallerForm();
-  toast('📝 שיחה נשמרה ביומן');
+  clearCallerForm(); toast('📝 שיחה נשמרה ביומן');
 }
-
 async function saveCallLog(name, phone, replyLabel, notes, waSent) {
   try {
     await fetch(SB_URL + '/rest/v1/call_log', {
       method: 'POST',
-      headers: {
-        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', Prefer: 'return=minimal'
-      },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({
-        caller_name: name || 'לא ידוע', phone,
-        quick_reply: replyLabel, notes,
-        direction: currentDirection,
-        wa_sent: waSent, wa_sent_at: waSent ? new Date().toISOString() : null,
+        caller_name: name || 'לא ידוע', phone, quick_reply: replyLabel, notes,
+        direction: currentDirection, wa_sent: waSent,
+        wa_sent_at: waSent ? new Date().toISOString() : null,
         created_at: new Date().toISOString()
       })
     });
   } catch(e) { console.error('Save call log error:', e); }
 }
-
 function clearCallerForm() {
-  ['caller-name','caller-phone','caller-note'].forEach(id =>
-    document.getElementById(id).value = '');
+  ['caller-name','caller-phone','caller-note'].forEach(id => document.getElementById(id).value = '');
 }
 
-// ══════════════════════════════════════════════════════════
-// TODO
-// ══════════════════════════════════════════════════════════
+// ── TODO ──
 async function loadTodos() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/reminders?order=created_at.desc',
       { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     todos = await res.json();
   } catch(e) { todos = []; }
-  renderTodos();
-  updateTodoBadge();
+  renderTodos(); updateTodoBadge();
 }
-
 function renderTodos() {
-  const list  = document.getElementById('todo-list');
+  const list = document.getElementById('todo-list');
   const empty = document.getElementById('todo-empty');
   let filtered = todos;
   if (todoFilter === 'active') filtered = todos.filter(t => !t.is_done);
@@ -1350,9 +1155,7 @@ function renderTodos() {
   list.innerHTML = filtered.map(t => `
     <div class="todo-item ${t.is_done?'done':''}" id="todo-${t.id}">
       <div class="priority-dot p-${t.priority||'normal'}"></div>
-      <div class="todo-check ${t.is_done?'checked':''}" onclick="toggleTodo('${t.id}',${t.is_done})">
-        ${t.is_done ? '✓' : ''}
-      </div>
+      <div class="todo-check ${t.is_done?'checked':''}" onclick="toggleTodo('${t.id}',${t.is_done})">${t.is_done ? '✓' : ''}</div>
       <div class="todo-text">${escHtml(t.text)}</div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
         <div class="todo-time">${timeAgo(t.created_at)}</div>
@@ -1360,60 +1163,47 @@ function renderTodos() {
       </div>
     </div>`).join('');
 }
-
 function updateTodoBadge() {
   const active = todos.filter(t => !t.is_done).length;
   const badge  = document.getElementById('todo-badge');
   if (active > 0) { badge.textContent = active; badge.style.display = 'inline'; }
   else badge.style.display = 'none';
 }
-
 async function addTodo() {
-  const inp  = document.getElementById('todo-input');
+  const inp = document.getElementById('todo-input');
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
   await addReminderToDB(text, 'manual');
   await loadTodos();
 }
-
 async function addReminderToDB(text, source='manual', priority='normal') {
   try {
     await fetch(SB_URL + '/rest/v1/reminders', {
       method: 'POST',
-      headers: {
-        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', Prefer: 'return=minimal'
-      },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ text, source, priority, is_done: false, created_at: new Date().toISOString() })
     });
   } catch(e) { console.error(e); }
 }
-
 async function toggleTodo(id, isDone) {
   try {
     await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
       method: 'PATCH',
-      headers: {
-        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', Prefer: 'return=minimal'
-      },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ is_done: !isDone, done_at: !isDone ? new Date().toISOString() : null })
     });
     await loadTodos();
   } catch(e) {}
 }
-
 async function deleteTodo(id) {
   try {
     await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
-      method: 'DELETE',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+      method: 'DELETE', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
     });
     await loadTodos();
   } catch(e) {}
 }
-
 function filterTodos(f) {
   todoFilter = f;
   ['all','active','done'].forEach(x => {
@@ -1424,84 +1214,71 @@ function filterTodos(f) {
   renderTodos();
 }
 
-// ══════════════════════════════════════════════════════════
-// CALL LOG
-// ══════════════════════════════════════════════════════════
+// ── CALL LOG ──
 async function loadLog() {
   const list  = document.getElementById('log-list');
   const empty = document.getElementById('log-empty');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">טוען...</div>';
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   try {
-    const res = await fetch(
-      SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
-      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
-    );
+    const res = await fetch(SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     allCallLogs = await res.json();
-
     const today = allCallLogs.filter(r => new Date(r.created_at) >= todayStart);
     document.getElementById('stat-in').textContent   = today.filter(r=>r.direction==='incoming').length;
     document.getElementById('stat-out').textContent  = today.filter(r=>r.direction==='outgoing').length;
     document.getElementById('stat-miss').textContent = today.filter(r=>r.direction==='missed').length;
     document.getElementById('stat-wa').textContent   = today.filter(r=>r.wa_sent).length;
-
     renderLog(allCallLogs);
   } catch(e) {
     list.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center;font-size:13px;">שגיאה: ' + e.message + '</div>';
   }
 }
-
 function renderLog(logs) {
   const list  = document.getElementById('log-list');
   const empty = document.getElementById('log-empty');
   let filtered = currentLogFilter === 'all' ? logs : logs.filter(r => r.direction === currentLogFilter);
   if (!filtered || filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'flex'; return; }
   empty.style.display = 'none';
-
   const groups = {};
   filtered.forEach(r => {
     const key = new Date(r.created_at).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
     if (!groups[key]) groups[key] = [];
     groups[key].push(r);
   });
-
   const dirLabel = {incoming:'📞 נכנסת', outgoing:'📲 יוצאת', missed:'📵 לא נענה'};
   const dirClass = {incoming:'dir-in', outgoing:'dir-out', missed:'dir-miss'};
   window._callData = {};
   let html = '';
-
   Object.entries(groups).forEach(([date, items]) => {
     html += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">' + date + '</div>';
     items.forEach(r => {
       const id = r.id || Math.random().toString(36).slice(2);
       window._callData[id] = { name: r.caller_name||'לא ידוע', phone: r.phone||'' };
-      const t     = new Date(r.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-      const dir   = r.direction || 'incoming';
-      const name  = escHtml(r.caller_name||'לא ידוע');
-      const ph    = escHtml(r.phone||'');
-      const note  = r.notes   ? '<div class="call-note">📝 ' + escHtml(r.notes) + '</div>' : '';
-      const wa    = r.wa_sent ? '<span class="call-wa-badge">✅ וואטסאפ נשלח</span>' : '';
-      const reply = r.quick_reply ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">תשובה: ' + escHtml(r.quick_reply) + '</div>' : '';
-      html +=
-        '<div class="call-card">' +
-          '<div class="call-card-hdr">' +
-            '<div><span class="call-name">' + name + '</span>' +
-            '<span class="call-dir-badge ' + dirClass[dir] + '" style="margin-right:8px;">' + (dirLabel[dir]||dir) + '</span></div>' +
-            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="call-time">' + t + '</span>' + wa + '</div>' +
-          '</div>' +
-          '<div class="call-phone">' + ph + '</div>' + reply + note +
-          '<div class="call-actions">' +
-            '<button class="call-act-btn" onclick="_callPhone(\'' + id + '\')">📞 התקשר</button>' +
-            '<button class="call-act-btn" onclick="_prefillFromLog(\'' + id + '\')">✏️ מלא טופס</button>' +
-            '<button class="call-act-btn" onclick="_waFromLog(\'' + id + '\')">💬 וואטסאפ</button>' +
-          '</div>' +
-        '</div>';
+      const t    = new Date(r.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const dir  = r.direction || 'incoming';
+      const name = escHtml(r.caller_name||'לא ידוע');
+      const ph   = escHtml(r.phone||'');
+      const note = r.notes    ? '<div class="call-note">📝 ' + escHtml(r.notes) + '</div>' : '';
+      const wa   = r.wa_sent  ? '<span class="call-wa-badge">✅ וואטסאפ נשלח</span>' : '';
+      const reply= r.quick_reply ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">תשובה: ' + escHtml(r.quick_reply) + '</div>' : '';
+      html += '<div class="call-card">' +
+        '<div class="call-card-hdr">' +
+          '<div><span class="call-name">' + name + '</span>' +
+          '<span class="call-dir-badge ' + dirClass[dir] + '" style="margin-right:8px;">' + (dirLabel[dir]||dir) + '</span></div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="call-time">' + t + '</span>' + wa + '</div>' +
+        '</div>' +
+        '<div class="call-phone">' + ph + '</div>' + reply + note +
+        '<div class="call-actions">' +
+          '<button class="call-act-btn" onclick="_callPhone(\'' + id + '\')">📞 התקשר</button>' +
+          '<button class="call-act-btn" onclick="_prefillFromLog(\'' + id + '\')">✏️ מלא טופס</button>' +
+          '<button class="call-act-btn" onclick="_waFromLog(\'' + id + '\')">💬 וואטסאפ</button>' +
+        '</div></div>';
     });
   });
   list.innerHTML = html;
 }
-
 function filterLog(f) {
   currentLogFilter = f;
   ['all','in','out','miss'].forEach(t => { const el=document.getElementById('lf-'+t); if(el) el.classList.remove('active'); });
@@ -1510,27 +1287,16 @@ function filterLog(f) {
   if (el) el.classList.add('active');
   renderLog(allCallLogs);
 }
-
-function _callPhone(id) {
-  const d = window._callData && window._callData[id];
-  if (d && d.phone) window.location.href = 'tel:' + d.phone;
-}
+function _callPhone(id) { const d=window._callData&&window._callData[id]; if(d&&d.phone) window.location.href='tel:'+d.phone; }
 function _prefillFromLog(id) {
-  const d = window._callData && window._callData[id];
-  if (!d) return;
-  document.getElementById('caller-name').value  = d.name;
-  document.getElementById('caller-phone').value = d.phone;
-  switchTab('call');
-  toast('✅ הטופס מולא — בחר תשובה מהירה');
+  const d=window._callData&&window._callData[id]; if(!d) return;
+  document.getElementById('caller-name').value=d.name;
+  document.getElementById('caller-phone').value=d.phone;
+  switchTab('call'); toast('✅ הטופס מולא — בחר תשובה מהירה');
 }
-function _waFromLog(id) {
-  const d = window._callData && window._callData[id];
-  if (d && d.phone) window.open('https://wa.me/' + d.phone.replace(/\D/g,''), '_blank');
-}
+function _waFromLog(id) { const d=window._callData&&window._callData[id]; if(d&&d.phone) window.open('https://wa.me/'+d.phone.replace(/\D/g,''),'_blank'); }
 
-// ══════════════════════════════════════════════════════════
-// DIRECTION
-// ══════════════════════════════════════════════════════════
+// ── DIRECTION ──
 function setDir(dir) {
   currentDirection = dir;
   ['in','out','miss'].forEach(d => { const btn=document.getElementById('dir-'+d); if(btn) btn.classList.remove('dir-active'); });
@@ -1539,12 +1305,8 @@ function setDir(dir) {
   if (btn) btn.classList.add('dir-active');
 }
 
-// ══════════════════════════════════════════════════════════
-// PHONE LOOKUP
-// ══════════════════════════════════════════════════════════
-let _lookupTimeout = null;
-let _lookupResult  = null;
-
+// ── PHONE LOOKUP ──
+let _lookupTimeout = null, _lookupResult = null;
 async function autoLookupPhone(val) {
   const clean = val.replace(/\D/g,'');
   const box   = document.getElementById('lookup-result');
@@ -1554,8 +1316,7 @@ async function autoLookupPhone(val) {
     try {
       const res = await fetch(
         SB_URL + '/rest/v1/call_log?phone=ilike.*' + clean + '*&order=created_at.desc&limit=1&select=caller_name,phone',
-        { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
-      );
+        { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
       const rows = await res.json();
       if (rows && rows.length > 0 && rows[0].caller_name && rows[0].caller_name !== 'לא ידוע') {
         _lookupResult = rows[0];
@@ -1565,7 +1326,6 @@ async function autoLookupPhone(val) {
     } catch(e) { box.style.display='none'; }
   }, 400);
 }
-
 function applyLookup() {
   if (!_lookupResult) return;
   document.getElementById('caller-name').value  = _lookupResult.caller_name;
@@ -1574,12 +1334,9 @@ function applyLookup() {
   _lookupResult = null;
 }
 
-// ══════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════
+// ── HELPERS ──
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 function timeAgo(iso) {
   if (!iso) return '';
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
@@ -1588,14 +1345,12 @@ function timeAgo(iso) {
   if (diff < 86400) return Math.floor(diff/3600) + ' שע׳';
   return Math.floor(diff/86400) + ' ימים';
 }
-
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('on');
   clearTimeout(window._tt);
   window._tt = setTimeout(() => t.classList.remove('on'), 2800);
 }
-
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
