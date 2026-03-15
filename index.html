@@ -536,9 +536,9 @@ body {
     <button class="ks-btn" onclick="saveKeys()">✅ שמור ופתח את האפליקציה</button>
     <div class="ks-err" id="ks-err">נא להזין את שני המפתחות</div>
     <div class="ks-note">
-      🔒 המפתחות נשמרים ב-sessionStorage של הדפדפן בלבד.<br>
+      🔒 המפתחות נשמרים בטלפון שלך בלבד — פעם אחת לתמיד.<br>
       הם אינם נשלחים לשום מקום ואינם נשמרים בקוד.<br>
-      בסגירת הדפדפן — יש להזין שוב.
+      ✅ לא תצטרך להזין שוב.
     </div>
   </div>
 </div>
@@ -785,8 +785,8 @@ let eodMemos          = [];
 function getKey(name) { return sessionStorage.getItem(name) || ''; }
 
 function checkKeysOnLoad() {
-  const sb  = sessionStorage.getItem('BENI_SB_KEY');
-  const ant = sessionStorage.getItem('BENI_ANTHROPIC_KEY');
+  const sb  = localStorage.getItem('BENI_SB_KEY');
+  const ant = localStorage.getItem('BENI_ANTHROPIC_KEY');
   if (sb && ant) {
     document.getElementById('key-setup').classList.add('hidden');
   }
@@ -798,12 +798,13 @@ function saveKeys() {
   const ant = document.getElementById('ks-ant').value.trim();
   const err = document.getElementById('ks-err');
   if (!sb || !ant) { err.classList.add('show'); return; }
+  if (sb.length < 20) { err.textContent = 'Supabase key נראה קצר מדי'; err.classList.add('show'); return; }
+  if (!ant.startsWith('sk-ant-')) { err.textContent = 'Anthropic key חייב להתחיל ב-sk-ant-'; err.classList.add('show'); return; }
   err.classList.remove('show');
-  sessionStorage.setItem('BENI_SB_KEY', sb);
-  sessionStorage.setItem('BENI_ANTHROPIC_KEY', ant);
-  document.getElementById('key-setup').classList.add('hidden');
-  // Re-init app with real keys now available
-  initApp();
+  localStorage.setItem('BENI_SB_KEY', sb);
+  localStorage.setItem('BENI_ANTHROPIC_KEY', ant);
+  // Reload page — keys now in sessionStorage, app will init cleanly
+  location.reload();
 }
 
 // Wrap original init
@@ -820,7 +821,7 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', () => {
   checkKeysOnLoad();
   // Only auto-init if keys already stored
-  const sb = sessionStorage.getItem('BENI_SB_KEY');
+  const sb = localStorage.getItem('BENI_SB_KEY');
   if (sb) initApp();
 });
 
@@ -1142,7 +1143,7 @@ async function loadQuickReplies() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
       { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
-    quickReplies = await res.json();
+    const qrData = await res.json(); quickReplies = Array.isArray(qrData) ? qrData : [];
     if (!Array.isArray(quickReplies) || quickReplies.length === 0) throw new Error('empty');
   } catch(e) {
     quickReplies = [
@@ -1235,11 +1236,13 @@ async function loadTodos() {
       { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
     todos = await res.json();
   } catch(e) { todos = []; }
+  if (!Array.isArray(todos)) todos = [];
   renderTodos(); updateTodoBadge();
 }
 function renderTodos() {
   const list = document.getElementById('todo-list');
   const empty = document.getElementById('todo-empty');
+  if (!Array.isArray(todos)) todos = [];
   let filtered = todos;
   if (todoFilter === 'active') filtered = todos.filter(t => !t.is_done);
   if (todoFilter === 'done')   filtered = todos.filter(t =>  t.is_done);
@@ -1317,7 +1320,7 @@ async function loadLog() {
     const res = await fetch(SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
       { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    allCallLogs = await res.json();
+    const logData = await res.json(); allCallLogs = Array.isArray(logData) ? logData : [];
     const today = allCallLogs.filter(r => new Date(r.created_at) >= todayStart);
     document.getElementById('stat-in').textContent   = today.filter(r=>r.direction==='incoming').length;
     document.getElementById('stat-out').textContent  = today.filter(r=>r.direction==='outgoing').length;
