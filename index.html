@@ -925,7 +925,7 @@ function sendMemoWA() {
     if (currentAIResult.action_items && currentAIResult.action_items.length)
       msg += '\n\nמשימות:\n' + currentAIResult.action_items.map(a => '• ' + a).join('\n');
   }
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
 }
 
 // ── EOD ──
@@ -1041,7 +1041,7 @@ function shareEODSummary() {
     if (m.ai && m.ai.action_items && m.ai.action_items.length)
       text += m.ai.action_items.map(a => `   ▸ ${a}`).join('\n') + '\n';
   });
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
 // ── QUICK REPLIES ──
@@ -1089,7 +1089,7 @@ async function sendQuickWA() {
   const url = phone
     ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  window.location.href = url;
   closeModal('modal-reply'); clearCallerForm();
   toast('✅ נשלח לוואטסאפ ונשמר ביומן');
 }
@@ -1106,7 +1106,7 @@ async function sendCustomWA() {
   const url = phone
     ? `https://wa.me/972${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  window.location.href = url;
   closeModal('modal-custom'); clearCallerForm(); toast('✅ נשלח לוואטסאפ');
 }
 async function logCallOnly() {
@@ -1296,7 +1296,7 @@ function _prefillFromLog(id) {
   document.getElementById('caller-phone').value=d.phone;
   switchTab('call'); toast('✅ הטופס מולא — בחר תשובה מהירה');
 }
-function _waFromLog(id) { const d=window._callData&&window._callData[id]; if(d&&d.phone) window.open('https://wa.me/'+d.phone.replace(/\D/g,''),'_blank'); }
+function _waFromLog(id) { const d=window._callData&&window._callData[id]; if(d&&d.phone) window.location.href='https://wa.me/'+d.phone.replace(/\D/g,''); }
 
 // ── DIRECTION ──
 function setDir(dir) {
