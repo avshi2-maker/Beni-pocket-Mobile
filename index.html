@@ -480,68 +480,9 @@ body {
 }
 .eod-stat-num { font-size: 22px; font-weight: 900; color: var(--orange); }
 .eod-stat-label { font-size: 10px; color: var(--text3); font-weight: 700; margin-top: 2px; }
-
-/* ── KEY SETUP SCREEN ── */
-#key-setup {
-  position: fixed; inset: 0; z-index: 99999;
-  background: #fdf6e3;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 24px; gap: 0;
-}
-#key-setup.hidden { display: none; }
-.ks-card {
-  background: #fffdf7; border: 2px solid #e2d4a0;
-  border-radius: 20px; padding: 28px 24px;
-  width: 100%; max-width: 420px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-}
-.ks-logo { font-size: 48px; text-align: center; margin-bottom: 8px; }
-.ks-title { font-size: 22px; font-weight: 900; color: #1a1a1a; text-align: center; margin-bottom: 4px; }
-.ks-sub { font-size: 13px; color: #a09060; text-align: center; margin-bottom: 24px; line-height: 1.6; }
-.ks-label { font-size: 11px; font-weight: 700; color: #5a4a2a; letter-spacing: 1px; margin-bottom: 6px; display: block; }
-.ks-input {
-  width: 100%; padding: 12px 14px; border-radius: 10px;
-  border: 1.5px solid #e2d4a0; background: white;
-  font-size: 13px; font-family: monospace; color: #1a1a1a;
-  direction: ltr; text-align: left; outline: none;
-  transition: border-color .2s; margin-bottom: 16px;
-}
-.ks-input:focus { border-color: #f97316; }
-.ks-btn {
-  width: 100%; padding: 14px; border-radius: 12px; border: none;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white; font-size: 16px; font-weight: 800;
-  cursor: pointer; transition: all .2s; margin-top: 4px;
-}
-.ks-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,0.4); }
-.ks-note { font-size: 11px; color: #a09060; text-align: center; margin-top: 14px; line-height: 1.7; }
-.ks-err { font-size: 12px; color: #ef4444; text-align: center; margin-top: 8px; display: none; }
-.ks-err.show { display: block; }
 </style>
 </head>
 <body>
-
-
-<!-- ══ KEY SETUP SCREEN (shown on first launch only) ══ -->
-<div id="key-setup">
-  <div class="ks-card">
-    <div class="ks-logo">🔐</div>
-    <div class="ks-title">בני פוקט — הגדרה ראשונה</div>
-    <div class="ks-sub">הזן את המפתחות פעם אחת.<br>הם יישמרו בטלפון שלך בלבד — לא בקוד.</div>
-    <label class="ks-label">🗄️ SUPABASE ANON KEY</label>
-    <input class="ks-input" id="ks-sb" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." autocomplete="off" spellcheck="false">
-    <label class="ks-label">🤖 ANTHROPIC API KEY</label>
-    <input class="ks-input" id="ks-ant" type="password" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-    <button class="ks-btn" onclick="saveKeys()">✅ שמור ופתח את האפליקציה</button>
-    <div class="ks-err" id="ks-err">נא להזין את שני המפתחות</div>
-    <div class="ks-note">
-      🔒 המפתחות נשמרים בטלפון שלך בלבד — פעם אחת לתמיד.<br>
-      הם אינם נשלחים לשום מקום ואינם נשמרים בקוד.<br>
-      ✅ לא תצטרך להזין שוב.
-    </div>
-  </div>
-</div>
 
 <div id="splash">
   <div class="splash-logo">📱</div>
@@ -759,8 +700,9 @@ body {
 // ══════════════════════════════════════════════════════════
 // CONFIG — Stonhard CRM Supabase (work-journal project)
 // ══════════════════════════════════════════════════════════
-const SB_URL = 'https://vmcipofovheztbjmhwsl.supabase.co';
-// Keys loaded securely from sessionStorage — set once at first launch
+const SB_URL        = 'https://vmcipofovheztbjmhwsl.supabase.co';
+const SB_KEY        = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2lwb2ZvdmhlenRiam1od3NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjE2MTcsImV4cCI6MjA4NzAzNzYxN30.LPq5N2Xo8iEqjgz2UhmdzUdh5tpGT3EYzSxJcYBEJ1w';
+const ANTHROPIC_KEY = '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';
 
 // ── STATE ──
 let quickReplies      = [];
@@ -780,49 +722,13 @@ let currentAIResult   = null;
 let eodMemos          = [];
 
 // ── INIT ──
-
-// ── KEY SETUP ──────────────────────────────────────────────
-function getKey(name) { return sessionStorage.getItem(name) || ''; }
-
-function checkKeysOnLoad() {
-  const sb  = localStorage.getItem('BENI_SB_KEY');
-  const ant = localStorage.getItem('BENI_ANTHROPIC_KEY');
-  if (sb && ant) {
-    document.getElementById('key-setup').classList.add('hidden');
-  }
-  // else: setup screen stays visible
-}
-
-function saveKeys() {
-  const sb  = document.getElementById('ks-sb').value.trim();
-  const ant = document.getElementById('ks-ant').value.trim();
-  const err = document.getElementById('ks-err');
-  if (!sb || !ant) { err.classList.add('show'); return; }
-  if (sb.length < 20) { err.textContent = 'Supabase key נראה קצר מדי'; err.classList.add('show'); return; }
-  if (!ant.startsWith('sk-ant-')) { err.textContent = 'Anthropic key חייב להתחיל ב-sk-ant-'; err.classList.add('show'); return; }
-  err.classList.remove('show');
-  localStorage.setItem('BENI_SB_KEY', sb);
-  localStorage.setItem('BENI_ANTHROPIC_KEY', ant);
-  // Reload page — keys now in sessionStorage, app will init cleanly
-  location.reload();
-}
-
-// Wrap original init
-function initApp() {
+document.addEventListener('DOMContentLoaded', async () => {
   startClock();
-  Promise.all([loadQuickReplies(), loadTodos(), loadLog()]).then(() => {
-    loadEODFromStorage();
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('app').classList.add('ready');
-    initSpeechRecognition();
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  checkKeysOnLoad();
-  // Only auto-init if keys already stored
-  const sb = localStorage.getItem('BENI_SB_KEY');
-  if (sb) initApp();
+  await Promise.all([loadQuickReplies(), loadTodos(), loadLog()]);
+  loadEODFromStorage();
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.add('ready');
+  initSpeechRecognition();
 });
 
 // ── CLOCK ──
@@ -873,7 +779,7 @@ async function analyzeWithClaude(transcript) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': getKey('BENI_ANTHROPIC_KEY'),
+        'x-api-key': ANTHROPIC_KEY,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -980,7 +886,7 @@ async function endHold(e) {
     try {
       await fetch(SB_URL + '/rest/v1/voice_memos', {
         method: 'POST',
-        headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY'), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ transcript: text, duration_sec: recSeconds, created_at: new Date().toISOString() })
       });
     } catch(err) {}
@@ -1107,7 +1013,7 @@ async function sendToCRM() {
   try {
     await fetch(SB_URL + '/rest/v1/reports', {
       method: 'POST',
-      headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY'), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ title: `בני פוקט — סיכום ${date}`, content, report_type: 'beni_eod', created_at: new Date().toISOString() })
     });
     toast('✅ נשלח ל-CRM בהצלחה!'); clearEOD();
@@ -1142,7 +1048,7 @@ function shareEODSummary() {
 async function loadQuickReplies() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
-      { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     const qrData = await res.json(); quickReplies = Array.isArray(qrData) ? qrData : [];
     if (!Array.isArray(quickReplies) || quickReplies.length === 0) throw new Error('empty');
   } catch(e) {
@@ -1215,7 +1121,7 @@ async function saveCallLog(name, phone, replyLabel, notes, waSent) {
   try {
     await fetch(SB_URL + '/rest/v1/call_log', {
       method: 'POST',
-      headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY'), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({
         caller_name: name || 'לא ידוע', phone, quick_reply: replyLabel, notes,
         direction: currentDirection, wa_sent: waSent,
@@ -1233,7 +1139,7 @@ function clearCallerForm() {
 async function loadTodos() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/reminders?order=created_at.desc',
-      { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     todos = await res.json();
   } catch(e) { todos = []; }
   if (!Array.isArray(todos)) todos = [];
@@ -1277,7 +1183,7 @@ async function addReminderToDB(text, source='manual', priority='normal') {
   try {
     await fetch(SB_URL + '/rest/v1/reminders', {
       method: 'POST',
-      headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY'), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ text, source, priority, is_done: false, created_at: new Date().toISOString() })
     });
   } catch(e) { console.error(e); }
@@ -1286,7 +1192,7 @@ async function toggleTodo(id, isDone) {
   try {
     await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
       method: 'PATCH',
-      headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY'), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ is_done: !isDone, done_at: !isDone ? new Date().toISOString() : null })
     });
     await loadTodos();
@@ -1295,7 +1201,7 @@ async function toggleTodo(id, isDone) {
 async function deleteTodo(id) {
   try {
     await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
-      method: 'DELETE', headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') }
+      method: 'DELETE', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
     });
     await loadTodos();
   } catch(e) {}
@@ -1318,7 +1224,7 @@ async function loadLog() {
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   try {
     const res = await fetch(SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=50',
-      { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const logData = await res.json(); allCallLogs = Array.isArray(logData) ? logData : [];
     const today = allCallLogs.filter(r => new Date(r.created_at) >= todayStart);
@@ -1412,7 +1318,7 @@ async function autoLookupPhone(val) {
     try {
       const res = await fetch(
         SB_URL + '/rest/v1/call_log?phone=ilike.*' + clean + '*&order=created_at.desc&limit=1&select=caller_name,phone',
-        { headers: { apikey: getKey('BENI_SB_KEY'), Authorization: 'Bearer ' + getKey('BENI_SB_KEY') } });
+        { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
       const rows = await res.json();
       if (rows && rows.length > 0 && rows[0].caller_name && rows[0].caller_name !== 'לא ידוע') {
         _lookupResult = rows[0];
