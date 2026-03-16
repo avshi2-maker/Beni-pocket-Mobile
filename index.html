@@ -230,7 +230,42 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <span class="transcript-placeholder" id="transcript-placeholder">לחץ והחזק את הכפתור ודבר. שחרר לסיום.</span>
       <span id="transcript-text"></span>
     </div>
-    <div class="ai-card" id="ai-card">
+    <!-- OCR: Photo → Hebrew text -->
+    <div style="background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">📷</span> קרא טקסט מתמונה (OCR עברית)
+      </div>
+      <div style="display:flex;gap:8px;">
+        <label for="ocr-file-input" style="flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;color:var(--text2);">
+          📁 בחר תמונה
+          <input type="file" id="ocr-file-input" accept="image/*" capture="environment" style="display:none;" onchange="ocrProcessImage(this)">
+        </label>
+        <label for="ocr-camera-input" style="flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;color:white;">
+          📸 צלם עכשיו
+          <input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="ocrProcessImage(this)">
+        </label>
+      </div>
+      <div id="ocr-result" style="display:none;margin-top:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;">טקסט שזוהה:</div>
+        <textarea id="ocr-text" rows="4"
+          style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;
+                 font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface);
+                 color:var(--text);resize:vertical;line-height:1.6;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="ocrToTranscript()" style="flex:1;padding:10px;background:var(--orange);color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+            🎙️ שלח לניתוח AI
+          </button>
+          <button onclick="ocrToNote()" style="flex:1;padding:10px;background:linear-gradient(135deg,#9a6f00,#c9a84c);color:#1a1a2e;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+            📝 שמור ביומן חכם
+          </button>
+        </div>
+      </div>
+      <div id="ocr-loading" style="display:none;text-align:center;padding:12px;color:var(--text3);font-size:13px;">
+        <span style="animation:spin 1s linear infinite;display:inline-block;">⏳</span> קורא את הטקסט...
+      </div>
+    </div>
+
+        <div class="ai-card" id="ai-card">
       <div class="ai-card-header">🧠 ניתוח AI <span id="ai-spinner" class="ai-spinner" style="display:none"></span></div>
       <div class="ai-summary" id="ai-summary"></div>
       <div class="ai-meta" id="ai-meta"></div>
@@ -240,6 +275,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="big-btn btn-green"  style="margin:0;flex:1" onclick="saveMemoAsReminder()">✅ שמור כמשימה</button>
       <button class="big-btn btn-orange" style="margin:0;flex:1" onclick="sendMemoWA()">💬 וואטסאפ</button>
     </div>
+    <button class="big-btn" style="background:linear-gradient(135deg,#1a73e8,#0d47a1);color:white;width:100%;margin-top:8px;" onclick="voiceCreateCalendarEvent()">📅 צור פגישה ביומן Google</button>
     <div style="height:10px"></div>
     <button class="big-btn btn-purple" onclick="saveToEOD()">🧠 שמור לסוף יום</button>
     <button class="big-btn btn-surface" onclick="clearTranscript()">🗑️ נקה</button>
@@ -257,7 +293,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="todo-list" id="todo-list"></div>
     <div class="empty-state" id="todo-empty" style="display:none"><div class="empty-icon">✅</div>אין משימות פעילות — כל הכבוד!</div>
 </div>
-id="panel-gtasks" class="panel" style="padding:0;overflow:hidden;">
+<div id="panel-gtasks" class="panel" style="padding:0;overflow:hidden;">
 
     <!-- NOT CONNECTED STATE -->
     <div id="gtasks-connect-screen" style="padding:30px 20px;text-align:center;">
@@ -350,7 +386,7 @@ id="panel-gtasks" class="panel" style="padding:0;overflow:hidden;">
     <div id="log-list"></div>
     <div class="empty-state" id="log-empty" style="display:none"><div class="empty-icon">📋</div>אין שיחות מוקלטות עדיין</div>
 </div>
-id="panel-gcal"  class="panel" style="padding:0;display:flex;flex-direction:column;">
+<div id="panel-gcal"  class="panel" style="padding:0;display:flex;flex-direction:column;">
     <div style="display:flex;gap:6px;padding:12px 14px 8px;background:var(--bg);">
       <button class="gcal-view-btn active-gcal-btn" data-view="agenda" onclick="switchGcalMobile('agenda')"
         style="flex:1;padding:8px 4px;border:1.5px solid var(--orange);background:var(--orange);color:white;border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
@@ -1039,7 +1075,7 @@ function switchGcalMobile(view) {
 
 // ⚠️  Replace with your real Client ID from Google Cloud Console
 const GTASKS_CLIENT_ID = '900160560035-th3ok333jm84e5clvs38k2fo3v7dbnki.apps.googleusercontent.com';
-const GTASKS_SCOPE = 'https://www.googleapis.com/auth/tasks';
+const GTASKS_SCOPE = 'https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/calendar.events';
 const GTASKS_API   = 'https://tasks.googleapis.com/tasks/v1';
 
 let gtasksToken      = null;   // OAuth access token
@@ -1343,6 +1379,280 @@ async function gtasksPushFromMemo(title, dueDate, notes) {
     }
   );
   toast('✅ מטלה נוספה ל-Google Tasks');
+}
+
+
+// ══════════════════════════════════════════════════════
+// FEATURE 1: VOICE → GOOGLE CALENDAR EVENT
+// ══════════════════════════════════════════════════════
+
+const GCAL_API = 'https://www.googleapis.com/calendar/v3';
+
+async function voiceCreateCalendarEvent() {
+  const transcript = document.getElementById('transcript-text')?.textContent?.trim();
+  if (!transcript) { toast('אין טקסט להמרה'); return; }
+
+  // Check if connected to Google
+  if (!gtasksToken) {
+    toast('⚠️ יש להתחבר תחילה ב-☑️ מטלות Google');
+    switchTab('gtasks');
+    return;
+  }
+
+  toast('🧠 מנתח פגישה...');
+
+  const ANTHROPIC_KEY = window.APP?.config?.anthropic_key;
+  if (!ANTHROPIC_KEY) { toast('❌ אין מפתח Anthropic'); return; }
+
+  // Ask Claude to extract meeting details from Hebrew text
+  const prompt = `אתה עוזר שמחלץ פרטי פגישה מטקסט עברי.
+טקסט: "${transcript}"
+תאריך היום: ${new Date().toLocaleDateString('he-IL', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}
+מחר: ${new Date(Date.now()+86400000).toISOString().split('T')[0]}
+
+החזר JSON בלבד:
+{
+  "title": "כותרת הפגישה",
+  "date": "YYYY-MM-DD",
+  "time": "HH:MM",
+  "duration_minutes": 60,
+  "location": "",
+  "description": "",
+  "attendee": ""
+}
+אם אין תאריך ברור — השתמש במחר. אם אין שעה — השתמש ב-10:00.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const raw  = data.content?.[0]?.text || '{}';
+    let event;
+    try { event = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { toast('❌ לא הצלחתי לנתח את הפגישה'); return; }
+
+    // Show confirmation modal before creating
+    calShowConfirm(event);
+  } catch(e) {
+    toast('שגיאה: ' + e.message);
+  }
+}
+
+// Show confirm modal
+function calShowConfirm(event) {
+  // Create modal dynamically
+  const existing = document.getElementById('cal-confirm-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'cal-confirm-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
+  modal.innerHTML = [
+    '<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;direction:rtl;max-height:85vh;overflow-y:auto;">',
+      '<div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;">',
+        '<span style="font-size:22px;">📅</span> אשר יצירת פגישה',
+      '</div>',
+      '<div style="display:grid;gap:10px;margin-bottom:20px;">',
+        '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">כותרת</label>',
+        '<input id="cal-title" value="' + event.title + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;"></div>',
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">',
+          '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">תאריך</label>',
+          '<input id="cal-date" type="date" value="' + (event.date||new Date().toISOString().split('T')[0]) + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+          '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">שעה</label>',
+          '<input id="cal-time" type="time" value="' + (event.time||'10:00') + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+        '</div>',
+        '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">משך (דקות)</label>',
+        '<input id="cal-duration" type="number" value="' + (event.duration_minutes||60) + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+        '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">מיקום (אופציונלי)</label>',
+        '<input id="cal-location" value="' + (event.location||'') + '" placeholder="כתובת / קישור" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;"></div>',
+      '</div>',
+      '<div style="display:flex;gap:10px;">',
+        '<button class="cal-cancel-btn" style="flex:1;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;color:var(--text2);">ביטול</button>',
+        '<button onclick="calCreateEvent()" style="flex:2;padding:14px;background:linear-gradient(135deg,#1a73e8,#0d47a1);border:none;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;color:white;">📅 צור פגישה</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  // Cancel button inside modal
+  setTimeout(function() {
+    var cancelBtn = modal.querySelector('.cal-cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { modal.remove(); });
+  }, 50);
+}
+
+async function calCreateEvent() {
+  const title    = document.getElementById('cal-title')?.value?.trim();
+  const date     = document.getElementById('cal-date')?.value;
+  const time     = document.getElementById('cal-time')?.value || '10:00';
+  const duration = parseInt(document.getElementById('cal-duration')?.value) || 60;
+  const location = document.getElementById('cal-location')?.value?.trim() || '';
+
+  if (!title || !date) { toast('נא למלא כותרת ותאריך'); return; }
+
+  const startDt = new Date(date + 'T' + time + ':00');
+  const endDt   = new Date(startDt.getTime() + duration * 60000);
+
+  const body = {
+    summary:  title,
+    location: location || undefined,
+    start:    { dateTime: startDt.toISOString(), timeZone: 'Asia/Jerusalem' },
+    end:      { dateTime: endDt.toISOString(),   timeZone: 'Asia/Jerusalem' },
+  };
+
+  try {
+    const res = await fetch(GCAL_API + '/calendars/primary/events', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + gtasksToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.status === 401) { gtasksSignOut(); toast('פג תוקף החיבור — התחבר שוב'); return; }
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || res.status); }
+
+    document.getElementById('cal-confirm-modal')?.remove();
+    toast('✅ פגישה נוצרה ביומן Google!');
+
+    // Also save to beni_notes as record
+    try {
+      await sb.from('beni_notes').insert({
+                note_text: "📅 " + title + " | " + new Date(startDt).toLocaleString("he-IL") + (location ? " | " + location : ""),
+
+        color: 'blue',
+        project_id: null
+      });
+    } catch(e) {}
+
+  } catch(e) {
+    toast('שגיאה ביצירת פגישה: ' + e.message);
+  }
+}
+
+
+// ══════════════════════════════════════════════════════
+// FEATURE 2: PHOTO OCR → HEBREW TEXT
+// ══════════════════════════════════════════════════════
+
+async function ocrProcessImage(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  const ANTHROPIC_KEY = window.APP?.config?.anthropic_key;
+  if (!ANTHROPIC_KEY) { toast('❌ אין מפתח Anthropic'); return; }
+
+  const loadingEl = document.getElementById('ocr-loading');
+  const resultEl  = document.getElementById('ocr-result');
+  const textEl    = document.getElementById('ocr-text');
+
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (resultEl)  resultEl.style.display  = 'none';
+
+  try {
+    // Convert image to base64
+    const base64 = await new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload  = function(e) { resolve(e.target.result.split(',')[1]); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    // Detect media type
+    const mediaType = file.type || 'image/jpeg';
+
+    // Send to Claude Vision
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: 'אנא קרא את כל הטקסט בתמונה הזו. כתוב אותו בדיוק כפי שהוא כתוב, כולל עברית ואנגלית. החזר רק את הטקסט שזיהית, ללא הסברים נוספים.'
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+
+    if (loadingEl) loadingEl.style.display = 'none';
+
+    if (text.trim()) {
+      if (textEl)   textEl.value = text.trim();
+      if (resultEl) resultEl.style.display = 'block';
+      toast('✅ טקסט זוהה בהצלחה');
+    } else {
+      toast('⚠️ לא זוהה טקסט בתמונה');
+    }
+
+  } catch(e) {
+    if (loadingEl) loadingEl.style.display = 'none';
+    toast('שגיאה: ' + e.message);
+  }
+
+  // Reset file input so same file can be selected again
+  input.value = '';
+}
+
+// Send OCR text to voice transcript for AI analysis
+function ocrToTranscript() {
+  const text = document.getElementById('ocr-text')?.value?.trim();
+  if (!text) return;
+
+  // Populate transcript
+  const transcriptEl = document.getElementById('transcript-text');
+  const placeholderEl = document.getElementById('transcript-placeholder');
+  const actionsEl = document.getElementById('transcript-actions');
+
+  if (transcriptEl)   transcriptEl.textContent = text;
+  if (placeholderEl)  placeholderEl.style.display = 'none';
+  if (actionsEl)      actionsEl.style.display = 'flex';
+
+  // Set global transcript and trigger AI analysis
+  window.currentTranscript = text;
+  toast('🧠 שולח לניתוח AI...');
+
+  // Trigger Claude analysis same as voice
+  if (typeof analyzeWithClaude === 'function') {
+    analyzeWithClaude(text).then(function(result) {
+      if (typeof renderAICard === 'function') renderAICard(result);
+    });
+  }
+}
+
+// Save OCR text directly to Smart Notes
+async function ocrToNote() {
+  const text = document.getElementById('ocr-text')?.value?.trim();
+  if (!text) return;
+  try {
+    await sb.from('beni_notes').insert({
+      note_text: '📷 ' + text,
+      color: 'yellow',
+      project_id: null
+    });
+    toast('📝 נשמר ביומן החכם');
+    document.getElementById('ocr-result').style.display = 'none';
+    document.getElementById('ocr-text').value = '';
+  } catch(e) {
+    toast('שגיאה: ' + e.message);
+  }
 }
 
 </script>
