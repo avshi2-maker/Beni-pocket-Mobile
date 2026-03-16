@@ -189,6 +189,65 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 
   <div id="panel-call"  class="panel active">
+
+    <!-- QUICK MISSED CALL LOG -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="quickMissedLog()" 
+        style="flex:1;padding:14px 10px;background:linear-gradient(135deg,#dc2626,#ef4444);
+               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
+               font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;
+               justify-content:center;gap:8px;">
+        📵 שיחה שלא נענתה
+      </button>
+      <button onclick="quickCallbackLog()"
+        style="flex:1;padding:14px 10px;background:linear-gradient(135deg,#1e6b30,#22c55e);
+               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
+               font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;
+               justify-content:center;gap:8px;">
+        📞 התקשרתי בחזרה
+      </button>
+    </div>
+
+    <!-- QUICK MISSED CALL MODAL (inline, slides down) -->
+    <div id="quick-log-panel" style="display:none;background:var(--surface);border:2px solid var(--border);
+         border-radius:14px;padding:16px;margin-bottom:14px;animation:fadeIn 0.2s ease;">
+      <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:12px;"
+           id="quick-log-title">📵 תעד שיחה שלא נענתה</div>
+      
+      <!-- Recent contacts quick-pick -->
+      <div id="recent-contacts-row" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:4px;scrollbar-width:none;"></div>
+      
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="ql-name" placeholder="שם המתקשר"
+          style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;
+                 font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface2);">
+        <input type="tel" id="ql-phone" placeholder="מספר" dir="ltr"
+          style="width:130px;padding:12px;border:1.5px solid var(--border);border-radius:8px;
+                 font-family:Heebo,sans-serif;font-size:14px;text-align:right;background:var(--surface2);">
+      </div>
+      <input type="text" id="ql-note" placeholder="הערה קצרה (אופציונלי)..."
+        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;
+               font-family:Heebo,sans-serif;font-size:13px;direction:rtl;background:var(--surface2);margin-bottom:10px;">
+      
+      <div style="display:flex;gap:8px;">
+        <button onclick="saveQuickLog()"
+          style="flex:2;padding:13px;background:var(--orange);color:white;border:none;
+                 border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">
+          ✅ שמור ב-יומן
+        </button>
+        <button onclick="saveQuickLogAndCall()"
+          style="flex:2;padding:13px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;
+                 border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">
+          📞 שמור + חייג
+        </button>
+        <button onclick="closeQuickLog()"
+          style="flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);
+                 border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;color:var(--text3);">
+          ✕
+        </button>
+      </div>
+    </div>
+
     <div class="sec-title">פרטי המתקשר</div>
     <div class="caller-form">
       <div class="form-row">
@@ -214,6 +273,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="sec-title">פעולות נוספות</div>
     <button class="big-btn btn-surface" onclick="openCustomReply()">✏️ תשובה מותאמת אישית</button>
     <button class="big-btn btn-surface" onclick="logCallOnly()">📝 שמור שיחה ללא שליחה</button>
+    <button class="big-btn" style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;" 
+      onclick="callBackAndLog()">📞 חייג בחזרה + תעד אוטומטית</button>
 </div>
   <div id="panel-voice" class="panel">       
     <div class="voice-center">
@@ -1653,6 +1714,190 @@ async function ocrToNote() {
   } catch(e) {
     toast('שגיאה: ' + e.message);
   }
+}
+
+
+// ══════════════════════════════════════════════════════
+// QUICK CALL LOG — 3-tap missed/callback logging
+// ══════════════════════════════════════════════════════
+
+var _quickLogMode = 'missed'; // 'missed' | 'callback'
+
+// ── Open quick log panel ────────────────────────────
+function quickMissedLog() {
+  _quickLogMode = 'missed';
+  var title = document.getElementById('quick-log-title');
+  if (title) title.textContent = '📵 תעד שיחה שלא נענתה';
+  openQuickLogPanel();
+}
+
+function quickCallbackLog() {
+  _quickLogMode = 'callback';
+  var title = document.getElementById('quick-log-title');
+  if (title) title.textContent = '📞 תעד שיחה שהתקשרת בחזרה';
+  openQuickLogPanel();
+}
+
+function openQuickLogPanel() {
+  var panel = document.getElementById('quick-log-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  // Clear previous values
+  var nameEl  = document.getElementById('ql-name');
+  var phoneEl = document.getElementById('ql-phone');
+  var noteEl  = document.getElementById('ql-note');
+  if (nameEl)  { nameEl.value  = ''; nameEl.focus(); }
+  if (phoneEl) phoneEl.value  = '';
+  if (noteEl)  noteEl.value   = '';
+  // Load recent contacts
+  loadRecentContacts();
+  // Scroll to it
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeQuickLog() {
+  var panel = document.getElementById('quick-log-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+// ── Load recent callers for quick-pick ──────────────
+async function loadRecentContacts() {
+  var row = document.getElementById('recent-contacts-row');
+  if (!row) return;
+  try {
+    var res = await fetch(
+      SB_URL + '/rest/v1/call_log?order=created_at.desc&limit=20&select=caller_name,phone',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+    );
+    var calls = await res.json();
+    // Deduplicate by phone
+    var seen  = {};
+    var unique = [];
+    (calls || []).forEach(function(c) {
+      var key = c.phone || c.caller_name;
+      if (key && !seen[key]) { seen[key] = true; unique.push(c); }
+    });
+    var recent = unique.slice(0, 8);
+    if (!recent.length) { row.style.display = 'none'; return; }
+    row.style.display = 'flex';
+    row.innerHTML = recent.map(function(c) {
+      var name  = (c.caller_name || '?').substring(0, 12);
+      var phone = c.phone || '';
+      return '<button onclick="fillQuickLog(' + JSON.stringify(c.caller_name||'') + ',' + JSON.stringify(phone) + ')"'
+        + ' style="flex-shrink:0;padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);'
+        + 'border-radius:20px;font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;'
+        + 'color:var(--text2);white-space:nowrap;">'
+        + name + '</button>';
+    }).join('');
+  } catch(e) {
+    row.style.display = 'none';
+  }
+}
+
+function fillQuickLog(name, phone) {
+  var nameEl  = document.getElementById('ql-name');
+  var phoneEl = document.getElementById('ql-phone');
+  if (nameEl)  nameEl.value  = name;
+  if (phoneEl) phoneEl.value = phone;
+  var noteEl = document.getElementById('ql-note');
+  if (noteEl) noteEl.focus();
+}
+
+// ── Save quick log to Supabase ───────────────────────
+async function saveQuickLog() {
+  var name  = (document.getElementById('ql-name')?.value  || '').trim();
+  var phone = (document.getElementById('ql-phone')?.value || '').trim();
+  var note  = (document.getElementById('ql-note')?.value  || '').trim();
+
+  if (!name && !phone) {
+    toast('נא להזין שם או מספר טלפון');
+    document.getElementById('ql-name')?.focus();
+    return;
+  }
+
+  var direction = _quickLogMode === 'missed' ? 'missed' : 'outgoing';
+
+  try {
+    await fetch(SB_URL + '/rest/v1/call_log', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        caller_name: name  || 'לא ידוע',
+        phone:       phone || null,
+        notes:       note  || null,
+        direction:   direction,
+        wa_sent:     false,
+        created_at:  new Date().toISOString()
+      })
+    });
+    closeQuickLog();
+    toast(direction === 'missed' ? '📵 שיחה שלא נענתה תועדה' : '📞 שיחה תועדה');
+    // Also pre-fill the main call form for further action
+    var nameEl  = document.getElementById('caller-name');
+    var phoneEl = document.getElementById('caller-phone');
+    if (nameEl)  nameEl.value  = name;
+    if (phoneEl) phoneEl.value = phone;
+    setDir(direction);
+  } catch(e) {
+    toast('שגיאה: ' + e.message);
+  }
+}
+
+// ── Save and immediately dial ────────────────────────
+async function saveQuickLogAndCall() {
+  var phone = (document.getElementById('ql-phone')?.value || '').trim();
+  if (!phone) { toast('נא להזין מספר טלפון לחיוג'); return; }
+  // Save as callback
+  _quickLogMode = 'callback';
+  await saveQuickLog();
+  // Dial
+  window.location.href = 'tel:' + phone;
+}
+
+// ── Callback from main form ──────────────────────────
+function callBackAndLog() {
+  var name  = (document.getElementById('caller-name')?.value  || '').trim();
+  var phone = (document.getElementById('caller-phone')?.value || '').trim();
+  if (!phone) { toast('נא להזין מספר טלפון'); return; }
+  // Log the callback
+  fetch(SB_URL + '/rest/v1/call_log', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      caller_name: name  || 'לא ידוע',
+      phone:       phone,
+      notes:       'חזרתי',
+      direction:   'outgoing',
+      wa_sent:     false,
+      created_at:  new Date().toISOString()
+    })
+  }).catch(function(e) { console.error(e); });
+  toast('📞 תועד + מחייג...');
+  setTimeout(function() { window.location.href = 'tel:' + phone; }, 400);
+}
+
+// ── WhatsApp quick reply + auto-log ─────────────────
+// Override the existing sendReply to also log the call
+var _origSendWAReply = window.sendWAReply;
+function sendWAReplyAndLog(phone, message, callerName) {
+  // Log to call_log
+  var name  = callerName || document.getElementById('caller-name')?.value || 'לא ידוע';
+  var ph    = phone || document.getElementById('caller-phone')?.value || '';
+  var note  = document.getElementById('caller-note')?.value || '';
+  fetch(SB_URL + '/rest/v1/call_log', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      caller_name: name,
+      phone:       ph,
+      notes:       note || message.substring(0, 80),
+      direction:   currentDirection || 'incoming',
+      wa_sent:     true,
+      wa_sent_at:  new Date().toISOString(),
+      quick_reply: message,
+      created_at:  new Date().toISOString()
+    })
+  }).catch(function(e) { console.error(e); });
 }
 
 </script>
