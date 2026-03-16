@@ -9,7 +9,8 @@
 <meta name="theme-color" content="#fdf6e3">
 <title>בני פוקט</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+<script src="https://accounts.google.com/gsi/client" async defer></script></script>
 <style>
 
 :root {
@@ -181,6 +182,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-tab active" onclick="switchTab('call')"  id="tab-call" ><span class="tab-icon">📞</span>שיחה</div>
     <div class="nav-tab"        onclick="switchTab('voice')" id="tab-voice"><span class="tab-icon">🎙️</span>הקלטה</div>
     <div class="nav-tab"        onclick="switchTab('todo')"  id="tab-todo" ><span class="tab-icon">✅</span>משימות<span class="nav-badge" id="todo-badge" style="display:none">0</span></div>
+    <div class="nav-tab"        onclick="switchTab('gtasks')" id="tab-gtasks"><span class="tab-icon">☑️</span>מטלות Google</div>
     <div class="nav-tab"        onclick="switchTab('log')"   id="tab-log"  ><span class="tab-icon">📋</span>יומן שיחות</div>
     <div class="nav-tab"        onclick="switchTab('gcal')"  id="tab-gcal" ><span class="tab-icon">📅</span>יומן Google</div>
     <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
@@ -255,7 +257,80 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="todo-list" id="todo-list"></div>
     <div class="empty-state" id="todo-empty" style="display:none"><div class="empty-icon">✅</div>אין משימות פעילות — כל הכבוד!</div>
 </div>
-  <div id="panel-log"   class="panel">       
+id="panel-gtasks" class="panel" style="padding:0;overflow:hidden;">
+
+    <!-- NOT CONNECTED STATE -->
+    <div id="gtasks-connect-screen" style="padding:30px 20px;text-align:center;">
+      <div style="font-size:56px;margin-bottom:16px;">☑️</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;">מטלות Google</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7;">
+        חבר את חשבון Google שלך כדי לראות, להוסיף ולסמן מטלות<br>
+        ישירות מהאתר — מסונכרן עם Google Calendar
+      </div>
+      <button onclick="gtasksSignIn()" id="btn-gtasks-signin"
+        style="background:white;border:2px solid #e5e7eb;border-radius:12px;padding:14px 24px;
+               font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+               display:flex;align-items:center;gap:12px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px;height:22px;">
+        התחבר עם Google
+      </button>
+      <div id="gtasks-signin-status" style="margin-top:14px;font-size:12px;color:var(--text3);"></div>
+    </div>
+
+    <!-- CONNECTED STATE -->
+    <div id="gtasks-main" style="display:none;height:100%;display:flex;flex-direction:column;">
+
+      <!-- Header -->
+      <div style="padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select id="gtasks-list-sel"
+            style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;
+                   font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);
+                   color:var(--text);direction:rtl;cursor:pointer;">
+            <option value="">טוען רשימות...</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="gtasksRefresh()"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+                   padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:Heebo,sans-serif;">
+            🔄
+          </button>
+          <button onclick="gtasksSignOut()"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);
+                   padding:7px 10px;border-radius:8px;font-size:11px;cursor:pointer;font-family:Heebo,sans-serif;">
+            התנתק
+          </button>
+        </div>
+      </div>
+
+      <!-- Add task bar -->
+      <div style="padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:8px;">
+        <input type="text" id="gtasks-new-title" placeholder="➕ הוסף מטלה חדשה..."
+          style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;
+                 font-family:Heebo,sans-serif;font-size:14px;background:var(--surface);
+                 color:var(--text);direction:rtl;"
+          onkeydown="if(event.key==='Enter') gtasksAddTask()">
+        <input type="date" id="gtasks-new-due"
+          style="width:130px;padding:10px 8px;border:1.5px solid var(--border);border-radius:8px;
+                 font-family:Heebo,sans-serif;font-size:12px;background:var(--surface);color:var(--text);">
+        <button onclick="gtasksAddTask()"
+          style="background:var(--orange);color:white;border:none;border-radius:8px;
+                 padding:10px 14px;font-size:16px;cursor:pointer;">
+          ➕
+        </button>
+      </div>
+
+      <!-- Tasks list -->
+      <div id="gtasks-list" style="flex:1;overflow-y:auto;padding:8px 16px 24px;">
+        <div style="text-align:center;padding:30px;color:var(--text3);">טוען מטלות...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- panel-log -->
+  <div    class="panel">       
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="sec-title" style="margin:0">יומן שיחות יומי</div>
       <button onclick="loadLog()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;">🔄 רענן</button>
@@ -378,6 +453,7 @@ function switchTab(tab) {
   if (tab === 'eod') renderEOD();
   if (tab === 'todo') renderTodos();
   if (tab === 'gcal') initGcalMobile();
+  if (tab === 'gtasks') gtasksInit();
 }
 
 // ── CLOCK ────────────────────────────────────────────────
@@ -954,6 +1030,319 @@ function switchGcalMobile(view) {
   if (iframe && iframe.dataset.src && iframe.src === 'about:blank') {
     iframe.src = iframe.dataset.src;
   }
+}
+
+
+// ══════════════════════════════════════════════════════
+// GOOGLE TASKS INTEGRATION
+// ══════════════════════════════════════════════════════
+
+// ⚠️  Replace with your real Client ID from Google Cloud Console
+const GTASKS_CLIENT_ID = '900160560035-th3ok333jm84e5clvs38k2fo3v7dbnki.apps.googleusercontent.com';
+const GTASKS_SCOPE = 'https://www.googleapis.com/auth/tasks';
+const GTASKS_API   = 'https://tasks.googleapis.com/tasks/v1';
+
+let gtasksToken      = null;   // OAuth access token
+let gtasksLists      = [];     // all task lists
+let gtasksCurrentList= null;   // selected list id
+let gtasksInited     = false;
+
+// ── Init: called when tab opens ──────────────────────────
+function gtasksInit() {
+  if (gtasksInited) return;
+  gtasksInited = true;
+  // Check for saved token in sessionStorage
+  const saved = sessionStorage.getItem('gtasks_token');
+  if (saved) {
+    gtasksToken = saved;
+    gtasksShowMain();
+    gtasksLoadLists();
+  }
+  // else: connect screen is shown by default
+}
+
+// ── Sign in with Google ──────────────────────────────────
+function gtasksSignIn() {
+  const status = document.getElementById('gtasks-signin-status');
+  if (status) status.textContent = 'מתחבר...';
+
+  if (!window.google || !window.google.accounts) {
+    if (status) status.textContent = '❌ Google SDK לא נטען. רענן ונסה שוב.';
+    return;
+  }
+
+  const client = window.google.accounts.oauth2.initTokenClient({
+    client_id: GTASKS_CLIENT_ID,
+    scope: GTASKS_SCOPE,
+    callback: function(response) {
+      if (response.error) {
+        if (status) status.textContent = '❌ ' + response.error;
+        return;
+      }
+      gtasksToken = response.access_token;
+      sessionStorage.setItem('gtasks_token', gtasksToken);
+      gtasksShowMain();
+      gtasksLoadLists();
+    }
+  });
+  client.requestAccessToken();
+}
+
+// ── Sign out ─────────────────────────────────────────────
+function gtasksSignOut() {
+  gtasksToken = null;
+  sessionStorage.removeItem('gtasks_token');
+  gtasksInited = false;
+  const main    = document.getElementById('gtasks-main');
+  const connect = document.getElementById('gtasks-connect-screen');
+  if (main)    main.style.display    = 'none';
+  if (connect) connect.style.display = 'block';
+}
+
+// ── Show main panel after login ──────────────────────────
+function gtasksShowMain() {
+  const main    = document.getElementById('gtasks-main');
+  const connect = document.getElementById('gtasks-connect-screen');
+  if (main) {
+    main.style.display    = 'flex';
+    main.style.flexDirection = 'column';
+  }
+  if (connect) connect.style.display = 'none';
+}
+
+// ── Load all task lists ──────────────────────────────────
+async function gtasksLoadLists() {
+  if (!gtasksToken) return;
+  try {
+    const res  = await fetch(GTASKS_API + '/users/@me/lists?maxResults=20', {
+      headers: { Authorization: 'Bearer ' + gtasksToken }
+    });
+    if (res.status === 401) { gtasksSignOut(); return; }
+    const data = await res.json();
+    gtasksLists = data.items || [];
+
+    const sel = document.getElementById('gtasks-list-sel');
+    if (sel) {
+      sel.innerHTML = gtasksLists.map(function(l) {
+        return '<option value="' + l.id + '">' + l.title + '</option>';
+      }).join('');
+      sel.onchange = function() {
+        gtasksCurrentList = this.value;
+        gtasksLoadTasks();
+      };
+      // Default: first list (usually "My Tasks" / "המשימות שלי")
+      if (gtasksLists.length) {
+        gtasksCurrentList = gtasksLists[0].id;
+        gtasksLoadTasks();
+      }
+    }
+  } catch(e) {
+    console.error('gtasksLoadLists:', e);
+  }
+}
+
+// ── Load tasks for selected list ─────────────────────────
+async function gtasksLoadTasks() {
+  if (!gtasksToken || !gtasksCurrentList) return;
+  const listEl = document.getElementById('gtasks-list');
+  if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">טוען...</div>';
+  try {
+    const res  = await fetch(
+      GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks?showCompleted=true&showHidden=false&maxResults=100',
+      { headers: { Authorization: 'Bearer ' + gtasksToken } }
+    );
+    if (res.status === 401) { gtasksSignOut(); return; }
+    const data = await res.json();
+    const tasks = (data.items || []).sort(function(a, b) {
+      // Incomplete first, then by due date
+      if (a.status === b.status) {
+        if (!a.due && !b.due) return 0;
+        if (!a.due) return 1;
+        if (!b.due) return -1;
+        return new Date(a.due) - new Date(b.due);
+      }
+      return a.status === 'completed' ? 1 : -1;
+    });
+    gtasksRenderTasks(tasks);
+  } catch(e) {
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);">שגיאה: ' + e.message + '</div>';
+  }
+}
+
+// ── Render tasks list ────────────────────────────────────
+function gtasksRenderTasks(tasks) {
+  const listEl = document.getElementById('gtasks-list');
+  if (!listEl) return;
+
+  if (!tasks.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);"><div style="font-size:36px;margin-bottom:10px;">✅</div><div style="font-size:14px;">אין מטלות — הוסף מטלה למעלה</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
+
+  tasks.forEach(function(task) {
+    const isDone    = task.status === 'completed';
+    const dueDate   = task.due ? task.due.split('T')[0] : null;
+    const isOverdue = dueDate && dueDate < today && !isDone;
+    const isDueToday= dueDate === today && !isDone;
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);transition:opacity 0.3s;' + (isDone ? 'opacity:0.45;' : '');
+
+    // Checkbox
+    const chk = document.createElement('div');
+    chk.style.cssText = 'width:24px;height:24px;border-radius:50%;border:2.5px solid ' + (isDone ? '#22c55e' : isOverdue ? '#ef4444' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;background:' + (isDone ? '#22c55e' : 'transparent') + ';transition:all 0.2s;';
+    chk.innerHTML = isDone ? '<span style="color:white;font-size:13px;">✓</span>' : '';
+    chk.dataset.id     = task.id;
+    chk.dataset.status = task.status;
+    chk.addEventListener('click', function() {
+      gtasksToggle(this.dataset.id, this.dataset.status);
+    });
+    row.appendChild(chk);
+
+    // Content
+    const content = document.createElement('div');
+    content.style.cssText = 'flex:1;min-width:0;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:14px;font-weight:600;color:var(--text);line-height:1.4;' + (isDone ? 'text-decoration:line-through;color:var(--text3);' : '');
+    title.textContent = task.title;
+    content.appendChild(title);
+
+    if (task.notes) {
+      const notes = document.createElement('div');
+      notes.style.cssText = 'font-size:12px;color:var(--text3);margin-top:3px;line-height:1.5;';
+      notes.textContent = task.notes;
+      content.appendChild(notes);
+    }
+
+    if (dueDate) {
+      const due = document.createElement('div');
+      due.style.cssText = 'font-size:11px;font-weight:700;margin-top:4px;color:' +
+        (isOverdue ? '#ef4444' : isDueToday ? '#f59e0b' : 'var(--text3)') + ';';
+      const dueFmt = new Date(dueDate + 'T12:00:00').toLocaleDateString('he-IL', {day:'numeric', month:'short'});
+      due.textContent = (isOverdue ? '⚠️ פג תוקף: ' : isDueToday ? '📅 היום: ' : '📅 ') + dueFmt;
+      content.appendChild(due);
+    }
+
+    row.appendChild(content);
+
+    // Delete button
+    const del = document.createElement('button');
+    del.textContent = '🗑️';
+    del.style.cssText = 'background:none;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:2px;flex-shrink:0;opacity:0.5;';
+    del.dataset.id = task.id;
+    del.addEventListener('click', function() { gtasksDelete(this.dataset.id); });
+    row.appendChild(del);
+
+    listEl.appendChild(row);
+  });
+}
+
+// ── Toggle task complete/incomplete ─────────────────────
+async function gtasksToggle(taskId, currentStatus) {
+  if (!gtasksToken || !gtasksCurrentList) return;
+  const newStatus = currentStatus === 'completed' ? 'needsAction' : 'completed';
+  try {
+    await fetch(
+      GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks/' + taskId,
+      {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + gtasksToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, completed: newStatus === 'completed' ? new Date().toISOString() : null })
+      }
+    );
+    gtasksLoadTasks();
+    // If completed — also save to Smart Notes as done item
+    if (newStatus === 'completed' && typeof sb !== 'undefined') {
+      gtasksSaveCompletedToNotes(taskId);
+    }
+  } catch(e) { console.error('gtasksToggle:', e); }
+}
+
+// ── Save completed task to יומן חכם ─────────────────────
+async function gtasksSaveCompletedToNotes(taskId) {
+  try {
+    const res  = await fetch(
+      GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks/' + taskId,
+      { headers: { Authorization: 'Bearer ' + gtasksToken } }
+    );
+    const task = await res.json();
+    const now  = new Date().toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+    await sb.from('beni_notes').insert({
+      note_text: '✅ ' + task.title + (task.notes ? '\n' + task.notes : '') + '\n\nבוצע: ' + now,
+      color: 'green',
+      project_id: null
+    });
+  } catch(e) { console.error('gtasksSaveCompletedToNotes:', e); }
+}
+
+// ── Add new task ─────────────────────────────────────────
+async function gtasksAddTask() {
+  if (!gtasksToken || !gtasksCurrentList) return;
+  const titleEl = document.getElementById('gtasks-new-title');
+  const dueEl   = document.getElementById('gtasks-new-due');
+  const title   = titleEl ? titleEl.value.trim() : '';
+  if (!title) { titleEl && titleEl.focus(); return; }
+
+  const payload = { title: title };
+  if (dueEl && dueEl.value) {
+    payload.due = dueEl.value + 'T00:00:00.000Z';
+  }
+
+  try {
+    await fetch(
+      GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks',
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + gtasksToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }
+    );
+    if (titleEl) titleEl.value = '';
+    if (dueEl)   dueEl.value   = '';
+    gtasksLoadTasks();
+    toast('✅ מטלה נוספה');
+  } catch(e) { toast('שגיאה: ' + e.message); }
+}
+
+// ── Delete task ──────────────────────────────────────────
+async function gtasksDelete(taskId) {
+  if (!gtasksToken || !gtasksCurrentList || !confirm('מחק מטלה זו?')) return;
+  try {
+    await fetch(
+      GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks/' + taskId,
+      { method: 'DELETE', headers: { Authorization: 'Bearer ' + gtasksToken } }
+    );
+    gtasksLoadTasks();
+  } catch(e) { console.error('gtasksDelete:', e); }
+}
+
+// ── Refresh ──────────────────────────────────────────────
+function gtasksRefresh() { gtasksLoadTasks(); }
+
+// ── Push task from voice memo (called by Field Intel) ────
+async function gtasksPushFromMemo(title, dueDate, notes) {
+  if (!gtasksToken || !gtasksCurrentList) {
+    // Not connected — fall back to reminders table
+    await sb.from('reminders').insert({ text: title, source: 'voice', is_done: false, created_at: new Date().toISOString() });
+    toast('📋 נשמר במשימות (Google Tasks לא מחובר)');
+    return;
+  }
+  const payload = { title: title };
+  if (dueDate) payload.due = dueDate + 'T00:00:00.000Z';
+  if (notes)   payload.notes = notes;
+  await fetch(
+    GTASKS_API + '/lists/' + gtasksCurrentList + '/tasks',
+    {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + gtasksToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }
+  );
+  toast('✅ מטלה נוספה ל-Google Tasks');
 }
 
 </script>
