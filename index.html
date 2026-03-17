@@ -2295,7 +2295,7 @@ async function inspectSaveAndSend() {
       : 'https://wa.me/?text=' + encodeURIComponent(msg);
 
     toast('✅ Saved! Opening WhatsApp...');
-    setTimeout(function() { window.open(waUrl, '_blank'); }, 500);
+    setTimeout(function() { var _wa=document.createElement('a');_wa.href=waUrl;_wa.target='_blank';_wa.rel='noopener';document.body.appendChild(_wa);_wa.click();document.body.removeChild(_wa); }, 500);
 
     // Update badge to show it was sent
     await fetch(SB_URL + '/rest/v1/site_inspections?contractor_id=eq.' + contractorId + '&wa_sent=eq.false',{
@@ -2411,8 +2411,15 @@ function spSendToContractor(contractorId, contractorName, mobile) {
   var waUrl = phone
     ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
     : 'https://wa.me/?text=' + encodeURIComponent(msg);
-  window.open(waUrl, '_blank');
-  toast('📤 Opening WhatsApp...');
+  // Use anchor click — bypasses popup blocker so text param is preserved
+  var a = document.createElement('a');
+  a.href = waUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('📤 WhatsApp נפתח עם הטופס');
 }
 
 
