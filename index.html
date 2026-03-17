@@ -185,7 +185,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-tab"        onclick="switchTab('gtasks')" id="tab-gtasks"><span class="tab-icon">☑️</span>מטלות Google</div>
     <div class="nav-tab"        onclick="switchTab('log')"   id="tab-log"  ><span class="tab-icon">📋</span>יומן שיחות</div>
     <div class="nav-tab"        onclick="switchTab('gcal')"  id="tab-gcal" ><span class="tab-icon">📅</span>יומן Google</div>
-    <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
+    <div class="nav-tab"        onclick="switchTab('inspect')" id="tab-inspect"><span class="tab-icon">🔍</span>ביקורת<span class="nav-badge" id="inspect-badge" style="display:none">!</span></div>
+        <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
   </div>
 
   <div id="panel-call"  class="panel active">
@@ -246,6 +247,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
           ✕
         </button>
       </div>
+    </div>
+
+    <!-- SCENARIO 1: Send Site Pulse request -->
+    <div style="margin-bottom:14px;">
+      <button onclick="sendSitePulseRequest()"
+        style="width:100%;padding:12px 16px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);
+               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
+               font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;
+               justify-content:center;gap:8px;">
+        📤 בקש דוח יומי מקבלן
+      </button>
     </div>
 
     <div class="sec-title">פרטי המתקשר</div>
@@ -486,8 +498,65 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
   </div>
 
-  <!-- EOD panel -->
-  <div    class="panel">       
+  <div id="panel-inspect" class="panel" style="padding:12px 14px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);">🔍 ביקורת אתר</div>
+      <div style="font-size:11px;color:var(--text3);">Site Inspection Report</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--orange);" id="inspect-datetime"></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">PROJECT &amp; CONTRACTOR</div>
+    <select id="inspect-contractor" onchange="inspectFillProjects()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;margin-bottom:8px;direction:rtl;background:var(--surface2);"><option value="">Select Contractor</option></select>
+    <select id="inspect-project" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;background:var(--surface2);"><option value="">Select Project</option></select>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;">OVERALL STATUS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="status-btn" data-status="green" onclick="setInspectStatus(this,'green')" style="padding:14px 8px;border-radius:10px;border:2.5px solid #22c55e;background:rgba(34,197,94,0.08);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:#16a34a;">&#x2705; Approved<br><span style="font-size:10px;font-weight:400;">Work OK</span></button>
+      <button class="status-btn" data-status="yellow" onclick="setInspectStatus(this,'yellow')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x26A0;&#xFE0F; Warning<br><span style="font-size:10px;font-weight:400;">Needs attention</span></button>
+      <button class="status-btn" data-status="red" onclick="setInspectStatus(this,'red')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x274C; Rejected<br><span style="font-size:10px;font-weight:400;">Fix required</span></button>
+      <button class="status-btn" data-status="safety" onclick="setInspectStatus(this,'safety')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x1F6A8; Safety<br><span style="font-size:10px;font-weight:400;">STOP WORK</span></button>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;">QUICK CHECKLIST</div>
+    <div id="inspect-checklist"></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">FINDINGS</div>
+    <textarea id="inspect-findings" rows="3" placeholder="What did you observe on site?" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:var(--surface2);color:var(--text);line-height:1.6;margin-bottom:8px;"></textarea>
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">INSTRUCTIONS TO CONTRACTOR</div>
+    <textarea id="inspect-instructions" rows="3" placeholder="What must the contractor do?" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:var(--surface2);color:var(--text);line-height:1.6;"></textarea>
+  </div>
+  <div id="inspect-safety-section" style="display:none;background:rgba(220,38,38,0.06);border:2px solid rgba(220,38,38,0.4);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:900;color:#dc2626;margin-bottom:10px;">SAFETY HAZARD REPORT</div>
+    <textarea id="inspect-safety-hazard" rows="3" placeholder="Describe the hazard. This becomes a formal legal notice." style="width:100%;padding:10px;border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:rgba(220,38,38,0.04);color:var(--text);line-height:1.6;margin-bottom:8px;"></textarea>
+    <div style="font-size:11px;font-weight:800;color:#dc2626;margin-bottom:6px;">DEADLINE</div>
+    <div style="display:flex;gap:8px;">
+      <button class="deadline-btn" data-val="immediate" onclick="setDeadline(this,'immediate')" style="flex:1;padding:9px 4px;border:2px solid rgba(220,38,38,0.4);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:rgba(220,38,38,0.08);color:#dc2626;">IMMEDIATE<br>Stop Work</button>
+      <button class="deadline-btn" data-val="today" onclick="setDeadline(this,'today')" style="flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:var(--surface2);color:var(--text2);">TODAY<br>Fix by EOD</button>
+      <button class="deadline-btn" data-val="week" onclick="setDeadline(this,'week')" style="flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:var(--surface2);color:var(--text2);">THIS WEEK</button>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">SITE PHOTOS <span id="inspect-photo-required" style="color:#dc2626;display:none;">(required for safety)</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <label for="inspect-photo-input" style="flex:1;padding:10px;background:var(--surface2);border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:var(--text2);">Gallery<input type="file" id="inspect-photo-input" accept="image/*" multiple style="display:none;" onchange="inspectHandlePhotos(this)"></label>
+      <label for="inspect-camera-input" style="flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:white;">Camera<input type="file" id="inspect-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="inspectHandlePhotos(this)"></label>
+    </div>
+    <div id="inspect-photo-preview" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    <button onclick="inspectSaveAndSend()" style="padding:14px;background:linear-gradient(135deg,#c9841a,#e8a020);color:white;border:none;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">Save + WhatsApp</button>
+    <button onclick="inspectSaveOnly()" style="padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--text2);">Save to CRM</button>
+  </div>
+  <button onclick="inspectReset()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;color:var(--text3);margin-bottom:20px;">Reset</button>
+</div>
+
+<!-- EOD panel -->
+  <div id="panel-eod"   class="panel">       
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div class="sec-title" style="margin:0">🧠 סיכום יום — מוח AI</div>
       <button onclick="clearEOD()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;">נקה הכל</button>
@@ -550,6 +619,7 @@ function switchTab(tab) {
   if (tab === 'eod') renderEOD();
   if (tab === 'todo') renderTodos();
   if (tab === 'gcal') initGcalMobile();
+  if (tab === 'inspect') inspectInit();
   if (tab === 'gtasks') gtasksInit();
 }
 
@@ -1899,6 +1969,452 @@ function sendWAReplyAndLog(phone, message, callerName) {
     })
   }).catch(function(e) { console.error(e); });
 }
+
+
+// ══════════════════════════════════════════════════════
+// SITE INSPECTION MODULE
+// ══════════════════════════════════════════════════════
+
+var _inspectStatus   = 'green';
+var _inspectDeadline = 'today';
+var _inspectPhotos   = [];
+var _inspectInited   = false;
+
+var INSPECT_CHECKLIST = [
+  { key:'safety_equip',   label:'Safety equipment present (helmets, vests, boots)' },
+  { key:'plan_match',     label:'Work matches approved plan/drawings' },
+  { key:'materials_ok',   label:'Materials quality acceptable' },
+  { key:'progress_ok',    label:'Progress on schedule' },
+  { key:'site_clean',     label:'Site cleanliness & housekeeping' },
+  { key:'scaffolding',    label:'Scaffolding / formwork properly secured' },
+  { key:'permits',        label:'Required permits on site' },
+];
+
+// ── Init inspection tab ──────────────────────────────
+function inspectInit() {
+  if (_inspectInited) return;
+  _inspectInited = true;
+
+  // Set current time
+  var now = new Date();
+  var timeStr = now.toLocaleString('he-IL', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  var el = document.getElementById('inspect-datetime');
+  if (el) el.textContent = timeStr;
+
+  // Build checklist
+  var cl = document.getElementById('inspect-checklist');
+  if (cl) {
+    cl.innerHTML = INSPECT_CHECKLIST.map(function(item) {
+      return [
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;',
+          'border-bottom:1px solid var(--border);">',
+          '<span style="font-size:13px;color:var(--text2);flex:1;">' + item.label + '</span>',
+          '<div style="display:flex;gap:6px;flex-shrink:0;">',
+            '<button class="cl-btn" data-key="' + item.key + '" data-val="ok"',
+              ' onclick="setCheckItem(this)"',
+              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #22c55e;',
+              'background:transparent;cursor:pointer;font-size:15px;">✅</button>',
+            '<button class="cl-btn" data-key="' + item.key + '" data-val="warn"',
+              ' onclick="setCheckItem(this)"',
+              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #f59e0b;',
+              'background:transparent;cursor:pointer;font-size:15px;">⚠️</button>',
+            '<button class="cl-btn" data-key="' + item.key + '" data-val="fail"',
+              ' onclick="setCheckItem(this)"',
+              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #ef4444;',
+              'background:transparent;cursor:pointer;font-size:15px;">❌</button>',
+            '<button class="cl-btn" data-key="' + item.key + '" data-val="na"',
+              ' onclick="setCheckItem(this)"',
+              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);',
+              'background:transparent;cursor:pointer;font-size:11px;color:var(--text3);">N/A</button>',
+          '</div>',
+        '</div>'
+      ].join('');
+    }).join('');
+  }
+
+  // Fill contractor dropdown from Supabase
+  inspectLoadContractors();
+}
+
+async function inspectLoadContractors() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/contractors_master?is_active=eq.true&select=id,company_name&order=company_name',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    var contractors = await res.json();
+    var sel = document.getElementById('inspect-contractor');
+    if (sel && contractors.length) {
+      sel.innerHTML = '<option value="">Select Contractor</option>' +
+        contractors.map(function(c) {
+          return '<option value="' + c.id + '">' + c.company_name + '</option>';
+        }).join('');
+    }
+  } catch(e) { console.error('inspectLoadContractors:', e); }
+}
+
+function inspectFillProjects() {
+  var contractorId = document.getElementById('inspect-contractor')?.value;
+  var projSel = document.getElementById('inspect-project');
+  if (!projSel) return;
+  // For now show all active projects — could filter by contractor if linked
+  fetch(SB_URL + '/rest/v1/projects?status=eq.active&select=id,project_name&order=project_name',
+    { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } })
+    .then(function(r){ return r.json(); })
+    .then(function(projects) {
+      projSel.innerHTML = '<option value="">Select Project</option>' +
+        (projects||[]).map(function(p) {
+          return '<option value="' + p.id + '">' + p.project_name + '</option>';
+        }).join('');
+    }).catch(function(e){ console.error(e); });
+}
+
+// ── Checklist item ────────────────────────────────────
+function setCheckItem(btn) {
+  var key = btn.dataset.key;
+  var val = btn.dataset.val;
+  // Highlight selected
+  document.querySelectorAll('.cl-btn[data-key="' + key + '"]').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? (
+      val === 'ok' ? 'rgba(34,197,94,0.2)' :
+      val === 'warn' ? 'rgba(245,158,11,0.2)' :
+      val === 'fail' ? 'rgba(239,68,68,0.2)' : 'rgba(156,163,175,0.2)'
+    ) : 'transparent';
+  });
+}
+
+function collectChecklist() {
+  var result = {};
+  INSPECT_CHECKLIST.forEach(function(item) {
+    var active = document.querySelector('.cl-btn[data-key="' + item.key + '"][style*="rgba"]');
+    result[item.key] = active ? active.dataset.val : null;
+  });
+  return result;
+}
+
+// ── Overall status ────────────────────────────────────
+function setInspectStatus(btn, status) {
+  _inspectStatus = status;
+  var colors = { green:'#22c55e', yellow:'#f59e0b', red:'#ef4444', safety:'#dc2626' };
+  document.querySelectorAll('.status-btn').forEach(function(b) {
+    var isThis = b === btn;
+    var c = colors[b.dataset.status] || 'var(--border)';
+    b.style.borderColor = isThis ? c : 'var(--border)';
+    b.style.background  = isThis ? c.replace(')', ',0.12)').replace('rgb', 'rgba').replace('#', 'rgba(').replace('rgba(', 'rgba(') + (c.startsWith('#') ? '1a' : '') : 'var(--surface2)';
+  });
+  // Show/hide safety section
+  var safetySection = document.getElementById('inspect-safety-section');
+  var photoRequired = document.getElementById('inspect-photo-required');
+  var badge         = document.getElementById('inspect-badge');
+  if (safetySection) safetySection.style.display = status === 'safety' ? 'block' : 'none';
+  if (photoRequired) photoRequired.style.display = status === 'safety' ? 'inline' : 'none';
+  if (badge) { badge.textContent = status === 'safety' ? '🚨' : '!'; badge.style.display = 'inline'; }
+}
+
+// ── Deadline ──────────────────────────────────────────
+function setDeadline(btn, val) {
+  _inspectDeadline = val;
+  document.querySelectorAll('.deadline-btn').forEach(function(b) {
+    b.style.fontWeight = b === btn ? '900' : '700';
+    b.style.background = b === btn ? 'rgba(220,38,38,0.2)' : 'var(--surface2)';
+  });
+}
+
+// ── Photos ────────────────────────────────────────────
+function inspectHandlePhotos(input) {
+  Array.from(input.files || []).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      _inspectPhotos.push({ file: file, dataUrl: e.target.result });
+      renderInspectPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderInspectPhotos() {
+  var preview = document.getElementById('inspect-photo-preview');
+  if (!preview) return;
+  preview.innerHTML = '';
+  _inspectPhotos.forEach(function(ph, i) {
+    var div = document.createElement('div');
+    div.style.cssText = 'position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--border);';
+    var img = document.createElement('img');
+    img.src = ph.dataUrl;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    var del = document.createElement('button');
+    del.innerHTML = '×';
+    del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(220,38,38,0.85);color:white;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:1;';
+    del.addEventListener('click', function() { _inspectPhotos.splice(i, 1); renderInspectPhotos(); });
+    div.appendChild(img);
+    div.appendChild(del);
+    preview.appendChild(div);
+  });
+}
+
+// ── Build WhatsApp message ────────────────────────────
+function buildInspectWAMessage(data) {
+  var STATUS_LABELS = { green:'✅ APPROVED', yellow:'⚠️ WARNING', red:'❌ REJECTED', safety:'🚨 SAFETY STOP' };
+  var contractorName = document.getElementById('inspect-contractor')?.selectedOptions[0]?.text || '';
+  var projectName    = document.getElementById('inspect-project')?.selectedOptions[0]?.text   || '';
+  var now = new Date().toLocaleString('he-IL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  var msg = [
+    '🔍 *SITE INSPECTION REPORT*',
+    STATUS_LABELS[_inspectStatus] || _inspectStatus.toUpperCase(),
+    '',
+    '📅 ' + now,
+    '👷 Contractor: ' + contractorName,
+    '🏗️ Project: ' + (projectName || '—'),
+    '👤 Inspector: Beni Persky',
+    '',
+  ];
+
+  if (data.findings) {
+    msg.push('📝 *FINDINGS:*');
+    msg.push(data.findings);
+    msg.push('');
+  }
+
+  if (data.instructions) {
+    msg.push('📋 *INSTRUCTIONS:*');
+    msg.push(data.instructions);
+    msg.push('');
+  }
+
+  if (_inspectStatus === 'safety' && data.safety_hazard) {
+    msg.push('🚨 *SAFETY HAZARD:*');
+    msg.push(data.safety_hazard);
+    msg.push('⏰ Deadline: ' + (_inspectDeadline === 'immediate' ? 'IMMEDIATE — STOP WORK NOW' : _inspectDeadline === 'today' ? 'Fix by end of today' : 'Fix this week'));
+    msg.push('');
+    msg.push('⚠️ This is a formal safety notice. Please confirm receipt.');
+    msg.push('');
+  }
+
+  // Checklist summary
+  var cl = data.checklist;
+  var failed = Object.entries(cl).filter(function(e){ return e[1] === 'fail'; });
+  var warned = Object.entries(cl).filter(function(e){ return e[1] === 'warn'; });
+  if (failed.length || warned.length) {
+    msg.push('☑️ *CHECKLIST ISSUES:*');
+    failed.forEach(function(e) {
+      var item = INSPECT_CHECKLIST.find(function(c){ return c.key === e[0]; });
+      if (item) msg.push('❌ ' + item.label);
+    });
+    warned.forEach(function(e) {
+      var item = INSPECT_CHECKLIST.find(function(c){ return c.key === e[0]; });
+      if (item) msg.push('⚠️ ' + item.label);
+    });
+    msg.push('');
+  }
+
+  msg.push('_Sent via Beni Persky Site Inspection System_');
+  return msg.join('\n');
+}
+
+// ── Save to Supabase ──────────────────────────────────
+async function inspectSave() {
+  var contractorSel = document.getElementById('inspect-contractor');
+  var projectSel    = document.getElementById('inspect-project');
+  var contractorId   = contractorSel?.value   || null;
+  var contractorName = contractorSel?.selectedOptions[0]?.text || '';
+  var projectId      = projectSel?.value      || null;
+  var projectName    = projectSel?.selectedOptions[0]?.text   || '';
+
+  var findings     = document.getElementById('inspect-findings')?.value?.trim()     || '';
+  var instructions = document.getElementById('inspect-instructions')?.value?.trim() || '';
+  var safetyHazard = document.getElementById('inspect-safety-hazard')?.value?.trim() || '';
+
+  if (!findings && !instructions) {
+    toast('Please add findings or instructions');
+    return null;
+  }
+
+  // Upload photos
+  var photoPaths = [];
+  for (var i = 0; i < _inspectPhotos.length; i++) {
+    try {
+      var ph   = _inspectPhotos[i];
+      var ext  = ph.file.name.split('.').pop() || 'jpg';
+      var path = 'inspections/' + Date.now() + '_' + i + '.' + ext;
+      var { error } = await sb.storage.from('photos').upload(path, ph.file, { upsert: true });
+      if (!error) photoPaths.push(path);
+    } catch(e) { console.error(e); }
+  }
+
+  var now = new Date();
+  var payload = {
+    contractor_id:   contractorId,
+    project_id:      projectId,
+    contractor_name: contractorName,
+    project_name:    projectName,
+    inspection_date: now.toISOString().split('T')[0],
+    inspection_time: now.toTimeString().slice(0,5),
+    inspector:       'Beni Persky',
+    overall_status:  _inspectStatus,
+    checklist:       JSON.stringify(collectChecklist()),
+    findings:        findings  || null,
+    instructions:    instructions || null,
+    safety_hazard:   safetyHazard || null,
+    safety_deadline: _inspectStatus === 'safety' ? _inspectDeadline : null,
+    photos:          JSON.stringify(photoPaths),
+    created_at:      now.toISOString()
+  };
+
+  var res = await fetch(SB_URL + '/rest/v1/site_inspections', {
+    method:  'POST',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+               'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) throw new Error('Save failed: HTTP ' + res.status);
+  return { payload, contractorName, projectName, findings, instructions, safetyHazard };
+}
+
+// ── Save + WhatsApp ───────────────────────────────────
+async function inspectSaveAndSend() {
+  try {
+    var data = await inspectSave();
+    if (!data) return;
+
+    var msg   = buildInspectWAMessage(data.payload);
+    var phone = '';
+    // Try to get contractor phone
+    var contractorId = document.getElementById('inspect-contractor')?.value;
+    if (contractorId) {
+      try {
+        var r = await fetch(SB_URL + '/rest/v1/contractors_master?id=eq.' + contractorId + '&select=mobile',
+          { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+        var cd = await r.json();
+        if (cd && cd[0] && cd[0].mobile) phone = cd[0].mobile.replace(/\D/g,'');
+      } catch(e){}
+    }
+    var waUrl = phone
+      ? 'https://wa.me/972' + phone.replace(/^0/,'') + '?text=' + encodeURIComponent(msg)
+      : 'https://wa.me/?text=' + encodeURIComponent(msg);
+
+    toast('✅ Saved! Opening WhatsApp...');
+    setTimeout(function() { window.open(waUrl, '_blank'); }, 500);
+
+    // Update badge to show it was sent
+    await fetch(SB_URL + '/rest/v1/site_inspections?contractor_id=eq.' + contractorId + '&wa_sent=eq.false',{
+      method: 'PATCH',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wa_sent: true, wa_sent_at: new Date().toISOString() })
+    });
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+async function inspectSaveOnly() {
+  try {
+    var data = await inspectSave();
+    if (!data) return;
+    toast('✅ Saved to CRM — contractor & project log updated');
+    inspectReset();
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+function inspectReset() {
+  _inspectStatus   = 'green';
+  _inspectDeadline = 'today';
+  _inspectPhotos   = [];
+  _inspectInited   = false;
+
+  var fields = ['inspect-findings','inspect-instructions','inspect-safety-hazard'];
+  fields.forEach(function(id) { var el = document.getElementById(id); if(el) el.value=''; });
+
+  var contractor = document.getElementById('inspect-contractor');
+  var project    = document.getElementById('inspect-project');
+  if (contractor) contractor.value = '';
+  if (project)    project.value    = '';
+
+  document.getElementById('inspect-photo-preview').innerHTML = '';
+  document.getElementById('inspect-safety-section').style.display = 'none';
+  document.getElementById('inspect-badge').style.display = 'none';
+
+  document.querySelectorAll('.status-btn').forEach(function(b) {
+    b.style.borderColor = 'var(--border)';
+    b.style.background  = 'var(--surface2)';
+  });
+  document.querySelectorAll('.cl-btn').forEach(function(b) { b.style.background = 'transparent'; });
+
+  inspectInit();
+  toast('Form reset');
+}
+
+// ── Scenario 1: Send Site Pulse request from mobile ──
+async function sendSitePulseRequest() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/contractors_master?is_active=eq.true&select=id,company_name,mobile&order=company_name',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    var contractors = await res.json();
+    if (!contractors.length) { toast('No contractors found'); return; }
+
+    // Build modal using DOM
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
+
+    var sheet = document.createElement('div');
+    sheet.style.cssText = 'background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;direction:rtl;max-height:70vh;overflow-y:auto;';
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:15px;font-weight:900;color:var(--text);margin-bottom:14px;';
+    title.textContent = 'בחר קבלן לשליחת טופס';
+    sheet.appendChild(title);
+
+    contractors.forEach(function(c) {
+      var btn = document.createElement('button');
+      btn.style.cssText = 'width:100%;padding:13px;margin-bottom:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:right;color:var(--text);';
+      btn.textContent = c.company_name;
+      btn.dataset.id     = c.id;
+      btn.dataset.name   = c.company_name;
+      btn.dataset.mobile = c.mobile || '';
+      btn.addEventListener('click', function() {
+        modal.remove();
+        spSendToContractor(this.dataset.id, this.dataset.name, this.dataset.mobile);
+      });
+      sheet.appendChild(btn);
+    });
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.style.cssText = 'width:100%;padding:11px;background:none;border:1px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;color:var(--text3);';
+    cancelBtn.textContent = 'ביטול';
+    cancelBtn.addEventListener('click', function() { modal.remove(); });
+    sheet.appendChild(cancelBtn);
+
+    modal.appendChild(sheet);
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+
+function spSendToContractor(contractorId, contractorName, mobile) {
+  var url  = 'https://avshi2-maker.github.io/site-pulse/?c=' + contractorId + '&cn=' + encodeURIComponent(contractorName);
+  var lines = [
+    'שלום ' + contractorName + ',',
+    '',
+    'בני פרסקי שולח לך בקשה למלא דוח עבודה יומי.',
+    'נא למלא את הטופס:',
+    '',
+    url,
+    '',
+    'תודה!'
+  ];
+  var msg   = lines.join('\n');
+  var phone = mobile ? '972' + mobile.replace(/[^0-9]/g,'').replace(/^0/,'') : '';
+  var waUrl = phone
+    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
+    : 'https://wa.me/?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+  toast('📤 Opening WhatsApp...');
+}
+
 
 </script>
 </body>
