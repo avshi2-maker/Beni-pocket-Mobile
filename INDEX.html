@@ -37,11 +37,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .topbar-name{font-size:18px;font-weight:900;color:var(--text);}
 .topbar-sub{font-size:10px;color:var(--text2);line-height:1;}
 .topbar-time{font-size:13px;font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums;}
-.nav-tabs{display:flex;background:#f5e9c4;border-bottom:2px solid #c9a84c;overflow-x:auto;scrollbar-width:none;}
-.nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:1;min-width:0;padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;}
-.nav-tab .tab-icon{font-size:20px;}
-.nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:#f5e9c4;border-bottom:2px solid #c9a84c;}
+.nav-tab{padding:9px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;border-top:1px solid #e8d9a0;}
+.nav-tab:nth-child(-n+4){border-top:none;}
+.nav-tab .tab-icon{font-size:18px;}
+.nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);background:rgba(201,132,26,0.08);}
 .nav-badge{background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;position:absolute;margin-top:-28px;margin-right:-20px;}
 .panel{display:none;flex:1;padding:16px;padding-bottom:24px;animation:fadeIn 0.2s ease;}
 .panel.active{display:block;}
@@ -152,6 +152,87 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;border:1px solid var(--border);z-index:9000;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;max-width:90vw;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
 #toast.on{opacity:1;}
 
+/* ── Utility classes (replaces inline styles) ─────────────────── */
+.card-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;}
+.card-label{font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;}
+.sp-inp{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Heebo',sans-serif;font-size:13px;direction:rtl;background:var(--surface2);color:var(--text);-webkit-appearance:none;}
+.sp-inp:focus{outline:none;border-color:var(--orange);}
+.sp-textarea{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Heebo',sans-serif;font-size:13px;direction:rtl;resize:none;background:var(--surface2);color:var(--text);line-height:1.6;}
+.sp-sheet-inner{background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;direction:rtl;}
+.sp-sheet-scroll{background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;direction:rtl;max-height:75vh;overflow-y:auto;}
+.sp-sheet-title{font-size:15px;font-weight:900;color:var(--text);margin-bottom:14px;}
+.sp-list-btn{width:100%;padding:13px;margin-bottom:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:right;color:var(--text);}
+.sp-cancel-btn{width:100%;padding:11px;background:none;border:1px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer;color:var(--text3);margin-top:4px;}
+.cl-btn{width:32px;height:32px;border-radius:6px;background:transparent;cursor:pointer;font-size:15px;}
+.cl-btn-ok{border:1.5px solid #22c55e;}
+.cl-btn-warn{border:1.5px solid #f59e0b;}
+.cl-btn-fail{border:1.5px solid #ef4444;}
+.cl-btn-na{border:1.5px solid var(--border);font-size:11px;color:var(--text3);}
+.cl-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.cl-row-label{font-size:13px;color:var(--text2);flex:1;}
+.cl-btns{display:flex;gap:6px;flex-shrink:0;}
+.inspect-status-btn{padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:'Heebo',sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);}
+.inspect-status-btn.status-active-green{border-color:#22c55e;background:rgba(34,197,94,0.08);color:#16a34a;}
+.inspect-status-btn.status-active-yellow{border-color:#f59e0b;background:rgba(245,158,11,0.08);color:#d97706;}
+.inspect-status-btn.status-active-red{border-color:#ef4444;background:rgba(239,68,68,0.08);color:#dc2626;}
+.inspect-status-btn.status-active-safety{border-color:#dc2626;background:rgba(220,38,38,0.08);color:#dc2626;}
+.wa-preview-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--text2);direction:rtl;line-height:1.7;margin-bottom:14px;white-space:pre-wrap;word-break:break-word;}
+.wa-send-btn{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#25d366,#128c7e);color:white;text-align:center;border-radius:12px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:900;text-decoration:none;margin-bottom:10px;box-sizing:border-box;}
+.wa-copy-btn{width:100%;padding:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--text2);margin-bottom:8px;}
+.btn-blue-dark{width:100%;padding:12px 16px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:12px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-amber{padding:14px;background:linear-gradient(135deg,#c9841a,#e8a020);color:white;border:none;border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;}
+.btn-save-only{padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--text2);}
+.btn-reset{width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;font-family:'Heebo',sans-serif;font-size:12px;cursor:pointer;color:var(--text3);margin-bottom:20px;}
+.photo-label{flex:1;padding:10px;background:var(--surface2);border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:var(--text2);}
+.photo-label-cam{flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:white;}
+.photo-thumb{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);}
+.safety-section{display:none;background:rgba(220,38,38,0.06);border:2px solid rgba(220,38,38,0.4);border-radius:12px;padding:12px;margin-bottom:12px;}
+.safety-title{font-size:13px;font-weight:900;color:#dc2626;margin-bottom:10px;}
+.safety-inp{width:100%;padding:10px;border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;font-family:'Heebo',sans-serif;font-size:13px;direction:rtl;resize:none;background:rgba(220,38,38,0.04);color:var(--text);line-height:1.6;margin-bottom:8px;}
+.deadline-btn{flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:8px;font-family:'Heebo',sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:var(--surface2);color:var(--text2);}
+.deadline-btn.active{border-color:#dc2626;background:rgba(220,38,38,0.08);color:#dc2626;}
+
+/* ── Quick log panel ───────────────────────────────────────────── */
+.btn-ql-red{flex:1;padding:14px 10px;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;border:none;border-radius:12px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-ql-green{flex:1;padding:14px 10px;background:linear-gradient(135deg,#1e6b30,#22c55e);color:white;border:none;border-radius:12px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-ql-orange{flex:2;padding:13px;background:var(--orange);color:white;border:none;border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;}
+.btn-ql-blue{flex:2;padding:13px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;}
+.btn-ql-cancel{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer;color:var(--text2);}
+.ql-panel{display:none;background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;animation:fadeIn 0.2s ease;}
+/* ── Voice tab ─────────────────────────────────────────────────── */
+.voice-action-card{background:rgba(139,92,246,0.08);border:1.5px solid rgba(139,92,246,0.25);border-radius:12px;padding:12px;margin-top:10px;}
+.btn-voice-photo{flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:var(--text2);}
+.btn-voice-cam{flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:white;}
+.ocr-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+/* ── Calendar confirm modal ─────────────────────────────────────── */
+.cal-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;direction:rtl;max-height:80vh;overflow-y:auto;}
+.cal-sheet-title{font-size:16px;font-weight:900;color:var(--text);margin-bottom:16px;direction:rtl;}
+/* ── EOD tab ───────────────────────────────────────────────────── */
+.btn-eod-action{flex:1;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--text2);text-align:center;}
+.btn-eod-google{flex:2;padding:14px;background:linear-gradient(135deg,#1a73e8,#0d47a1);border:none;border-radius:10px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;color:white;}
+/* ── Call tab status tabs ──────────────────────────────────────── */
+.call-view-btn-active{flex:1;padding:8px 4px;border:1.5px solid var(--orange);background:var(--orange);color:white;border-radius:8px;font-family:'Heebo',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.call-view-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);border-radius:8px;font-family:'Heebo',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+/* ── Recent contacts chip ──────────────────────────────────────── */
+.contact-chip{flex-shrink:0;padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;white-space:nowrap;}
+
+/* ── Final batch ────────────────────────────────────────────────── */
+.gcal-view-btn-active{padding:7px 14px;border-radius:20px;border:1.5px solid var(--orange);background:var(--orange);color:white;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.gcal-view-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.gtask-confirm-card{background:white;border:2px solid #e5e7eb;border-radius:12px;padding:14px 24px;font-family:'Heebo',sans-serif;direction:rtl;width:100%;}
+.sp-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Heebo',sans-serif;font-size:13px;background:var(--surface2);color:var(--text);direction:rtl;}
+.sp-btn-surface2{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:9px 14px;border-radius:8px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.sp-btn-text3{background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:9px 14px;border-radius:8px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.status-stat-green{flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px;text-align:center;}
+.status-stat-blue{flex:1;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px;text-align:center;}
+.status-stat-red{flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;text-align:center;}
+.status-stat-wa{flex:1;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:8px;padding:10px;text-align:center;}
+.log-section-title{font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;}
+.btn-orange-sm{background:var(--orange);color:white;border:none;border-radius:8px;padding:10px 14px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+.ocr-label-row{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.label-camera-gold{flex:1;padding:10px;background:linear-gradient(135deg,#9a6f00,#c9a84c);color:#1a1a2e;border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;}
+.label-photo-orange{flex:1;padding:10px;background:var(--orange);color:white;border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;}
+
 </style>
 </head>
 <body>
@@ -182,9 +263,9 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-tab active" onclick="switchTab('call')"  id="tab-call" ><span class="tab-icon">📞</span>שיחה</div>
     <div class="nav-tab"        onclick="switchTab('voice')" id="tab-voice"><span class="tab-icon">🎙️</span>הקלטה</div>
     <div class="nav-tab"        onclick="switchTab('todo')"  id="tab-todo" ><span class="tab-icon">✅</span>משימות<span class="nav-badge" id="todo-badge" style="display:none">0</span></div>
-    <div class="nav-tab"        onclick="switchTab('gtasks')" id="tab-gtasks"><span class="tab-icon">☑️</span>מטלות Google</div>
+    <div class="nav-tab"        onclick="switchTab('gtasks')" id="tab-gtasks"><span class="tab-icon">☑️</span>G-Tasks</div>
     <div class="nav-tab"        onclick="switchTab('log')"   id="tab-log"  ><span class="tab-icon">📋</span>יומן שיחות</div>
-    <div class="nav-tab"        onclick="switchTab('gcal')"  id="tab-gcal" ><span class="tab-icon">📅</span>יומן Google</div>
+    <div class="nav-tab"        onclick="switchTab('gcal')"  id="tab-gcal" ><span class="tab-icon">📅</span>G-יומן</div>
     <div class="nav-tab"        onclick="switchTab('inspect')" id="tab-inspect"><span class="tab-icon">🔍</span>ביקורת<span class="nav-badge" id="inspect-badge" style="display:none">!</span></div>
         <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
   </div>
@@ -194,24 +275,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- QUICK MISSED CALL LOG -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button onclick="quickMissedLog()" 
-        style="flex:1;padding:14px 10px;background:linear-gradient(135deg,#dc2626,#ef4444);
-               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
-               font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;
-               justify-content:center;gap:8px;">
+        class="btn-ql-red">
         📵 שיחה שלא נענתה
       </button>
       <button onclick="quickCallbackLog()"
-        style="flex:1;padding:14px 10px;background:linear-gradient(135deg,#1e6b30,#22c55e);
-               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
-               font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;
-               justify-content:center;gap:8px;">
+        class="btn-ql-green">
         📞 התקשרתי בחזרה
       </button>
     </div>
 
     <!-- QUICK MISSED CALL MODAL (inline, slides down) -->
-    <div id="quick-log-panel" style="display:none;background:var(--surface);border:2px solid var(--border);
-         border-radius:14px;padding:16px;margin-bottom:14px;animation:fadeIn 0.2s ease;">
+    <div id="quick-log-panel" class="ql-panel">
       <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:12px;"
            id="quick-log-title">📵 תעד שיחה שלא נענתה</div>
       
@@ -220,30 +294,24 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input type="text" id="ql-name" placeholder="שם המתקשר"
-          style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;
-                 font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface2);">
+          class="sp-inp">
         <input type="tel" id="ql-phone" placeholder="מספר" dir="ltr"
-          style="width:130px;padding:12px;border:1.5px solid var(--border);border-radius:8px;
-                 font-family:Heebo,sans-serif;font-size:14px;text-align:right;background:var(--surface2);">
+          class="sp-inp">
       </div>
       <input type="text" id="ql-note" placeholder="הערה קצרה (אופציונלי)..."
-        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;
-               font-family:Heebo,sans-serif;font-size:13px;direction:rtl;background:var(--surface2);margin-bottom:10px;">
+        class="sp-inp">
       
       <div style="display:flex;gap:8px;">
         <button onclick="saveQuickLog()"
-          style="flex:2;padding:13px;background:var(--orange);color:white;border:none;
-                 border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">
+          class="btn-ql-orange">
           ✅ שמור ב-יומן
         </button>
         <button onclick="saveQuickLogAndCall()"
-          style="flex:2;padding:13px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;
-                 border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">
+          class="btn-ql-blue">
           📞 שמור + חייג
         </button>
         <button onclick="closeQuickLog()"
-          style="flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);
-                 border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;color:var(--text3);">
+          class="btn-ql-cancel">
           ✕
         </button>
       </div>
@@ -252,10 +320,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- SCENARIO 1: Send Site Pulse request -->
     <div style="margin-bottom:14px;">
       <button onclick="sendSitePulseRequest()"
-        style="width:100%;padding:12px 16px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);
-               color:white;border:none;border-radius:12px;font-family:Heebo,sans-serif;
-               font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;
-               justify-content:center;gap:8px;">
+        class="btn-blue-dark">
         📤 בקש דוח יומי מקבלן
       </button>
     </div>
@@ -304,16 +369,16 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <span id="transcript-text"></span>
     </div>
     <!-- OCR: Photo → Hebrew text -->
-    <div style="background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+    <div class="btn-voice-photo">
+      <div class="ocr-label-row">
         <span style="font-size:18px;">📷</span> קרא טקסט מתמונה (OCR עברית)
       </div>
       <div style="display:flex;gap:8px;">
-        <label for="ocr-file-input" style="flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;color:var(--text2);">
+        <label for="ocr-file-input" class="btn-voice-photo">
           📁 בחר תמונה
           <input type="file" id="ocr-file-input" accept="image/*" capture="environment" style="display:none;" onchange="ocrProcessImage(this)">
         </label>
-        <label for="ocr-camera-input" style="flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;color:white;">
+        <label for="ocr-camera-input" class="btn-voice-cam">
           📸 צלם עכשיו
           <input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="ocrProcessImage(this)">
         </label>
@@ -321,14 +386,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div id="ocr-result" style="display:none;margin-top:10px;">
         <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;">טקסט שזוהה:</div>
         <textarea id="ocr-text" rows="4"
-          style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;
-                 font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface);
-                 color:var(--text);resize:vertical;line-height:1.6;"></textarea>
+          class="sp-textarea"></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;">
-          <button onclick="ocrToTranscript()" style="flex:1;padding:10px;background:var(--orange);color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          <button onclick="ocrToTranscript()" class="label-photo-orange">
             🎙️ שלח לניתוח AI
           </button>
-          <button onclick="ocrToNote()" style="flex:1;padding:10px;background:linear-gradient(135deg,#9a6f00,#c9a84c);color:#1a1a2e;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          <button onclick="ocrToNote()" class="label-camera-gold">
             📝 שמור ביומן חכם
           </button>
         </div>
@@ -359,9 +422,9 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="add-btn" onclick="addTodo()">+</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <button onclick="filterTodos('all')"    id="f-all"    style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--orange);background:var(--orange);color:white;font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">הכל</button>
-      <button onclick="filterTodos('active')" id="f-active" style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">פעילות</button>
-      <button onclick="filterTodos('done')"   id="f-done"   style="padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">הושלמו</button>
+      <button onclick="filterTodos('all')"    id="f-all"    class="gcal-view-btn-active">הכל</button>
+      <button onclick="filterTodos('active')" id="f-active" class="gcal-view-btn">פעילות</button>
+      <button onclick="filterTodos('done')"   id="f-done"   class="gcal-view-btn">הושלמו</button>
     </div>
     <div class="todo-list" id="todo-list"></div>
     <div class="empty-state" id="todo-empty" style="display:none"><div class="empty-icon">✅</div>אין משימות פעילות — כל הכבוד!</div>
@@ -377,9 +440,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
         ישירות מהאתר — מסונכרן עם Google Calendar
       </div>
       <button onclick="gtasksSignIn()" id="btn-gtasks-signin"
-        style="background:white;border:2px solid #e5e7eb;border-radius:12px;padding:14px 24px;
-               font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;
-               display:flex;align-items:center;gap:12px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        class="gtask-confirm-card">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px;height:22px;">
         התחבר עם Google
       </button>
@@ -393,21 +454,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div style="padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);">
         <div style="display:flex;align-items:center;gap:8px;">
           <select id="gtasks-list-sel"
-            style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;
-                   font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);
-                   color:var(--text);direction:rtl;cursor:pointer;">
+            class="sp-select">
             <option value="">טוען רשימות...</option>
           </select>
         </div>
         <div style="display:flex;gap:6px;">
           <button onclick="gtasksRefresh()"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);
-                   padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:Heebo,sans-serif;">
+            class="sp-btn-surface2">
             🔄
           </button>
           <button onclick="gtasksSignOut()"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);
-                   padding:7px 10px;border-radius:8px;font-size:11px;cursor:pointer;font-family:Heebo,sans-serif;">
+            class="sp-btn-text3">
             התנתק
           </button>
         </div>
@@ -416,16 +473,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <!-- Add task bar -->
       <div style="padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:8px;">
         <input type="text" id="gtasks-new-title" placeholder="➕ הוסף מטלה חדשה..."
-          style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;
-                 font-family:Heebo,sans-serif;font-size:14px;background:var(--surface);
-                 color:var(--text);direction:rtl;"
+          class="sp-inp"
           onkeydown="if(event.key==='Enter') gtasksAddTask()">
         <input type="date" id="gtasks-new-due"
-          style="width:130px;padding:10px 8px;border:1.5px solid var(--border);border-radius:8px;
-                 font-family:Heebo,sans-serif;font-size:12px;background:var(--surface);color:var(--text);">
+          class="sp-inp">
         <button onclick="gtasksAddTask()"
-          style="background:var(--orange);color:white;border:none;border-radius:8px;
-                 padding:10px 14px;font-size:16px;cursor:pointer;">
+          class="btn-orange-sm">
           ➕
         </button>
       </div>
@@ -442,13 +495,13 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div    class="panel">       
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="sec-title" style="margin:0">יומן שיחות יומי</div>
-      <button onclick="loadLog()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;">🔄 רענן</button>
+      <button onclick="loadLog()" class="sp-btn-surface2">🔄 רענן</button>
     </div>
     <div id="log-stats" style="display:flex;gap:8px;margin-bottom:12px;">
-      <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#15803d;" id="stat-in">0</div><div style="font-size:10px;color:#15803d;font-weight:700;">נכנסות</div></div>
-      <div style="flex:1;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#1d4ed8;" id="stat-out">0</div><div style="font-size:10px;color:#1d4ed8;font-weight:700;">יוצאות</div></div>
-      <div style="flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#dc2626;" id="stat-miss">0</div><div style="font-size:10px;color:#dc2626;font-weight:700;">לא נענו</div></div>
-      <div style="flex:1;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#128c7e;" id="stat-wa">0</div><div style="font-size:10px;color:#128c7e;font-weight:700;">וואטסאפ</div></div>
+      <div class="status-stat-green"><div style="font-size:20px;font-weight:900;color:#15803d;" id="stat-in">0</div><div style="font-size:10px;color:#15803d;font-weight:700;">נכנסות</div></div>
+      <div class="status-stat-blue"><div style="font-size:20px;font-weight:900;color:#1d4ed8;" id="stat-out">0</div><div style="font-size:10px;color:#1d4ed8;font-weight:700;">יוצאות</div></div>
+      <div class="status-stat-red"><div style="font-size:20px;font-weight:900;color:#dc2626;" id="stat-miss">0</div><div style="font-size:10px;color:#dc2626;font-weight:700;">לא נענו</div></div>
+      <div class="status-stat-wa"><div style="font-size:20px;font-weight:900;color:#128c7e;" id="stat-wa">0</div><div style="font-size:10px;color:#128c7e;font-weight:700;">וואטסאפ</div></div>
     </div>
     <div class="log-filter">
       <button class="log-ftab active" id="lf-all"  onclick="filterLog('all')">הכל</button>
@@ -462,15 +515,15 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 <div id="panel-gcal"  class="panel" style="padding:0;display:flex;flex-direction:column;">
     <div style="display:flex;gap:6px;padding:12px 14px 8px;background:var(--bg);">
       <button class="gcal-view-btn active-gcal-btn" data-view="agenda" onclick="switchGcalMobile('agenda')"
-        style="flex:1;padding:8px 4px;border:1.5px solid var(--orange);background:var(--orange);color:white;border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
+        class="log-ftab active">
         📋 אג׳נדה
       </button>
       <button class="gcal-view-btn" data-view="week" onclick="switchGcalMobile('week')"
-        style="flex:1;padding:8px 4px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
+        class="log-ftab">
         📆 שבוע
       </button>
       <button class="gcal-view-btn" data-view="month" onclick="switchGcalMobile('month')"
-        style="flex:1;padding:8px 4px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
+        class="log-ftab">
         🗓️ חודש
       </button>
     </div>
@@ -506,53 +559,53 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--orange);" id="inspect-datetime"></div>
   </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">PROJECT &amp; CONTRACTOR</div>
-    <select id="inspect-contractor" onchange="inspectFillProjects()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;margin-bottom:8px;direction:rtl;background:var(--surface2);"><option value="">Select Contractor</option></select>
-    <select id="inspect-project" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;background:var(--surface2);"><option value="">Select Project</option></select>
+  <div class="card-section">
+    <div class="card-label">PROJECT &amp; CONTRACTOR</div>
+    <select id="inspect-contractor" onchange="inspectFillProjects()" class="sp-inp"><option value="">Select Contractor</option></select>
+    <select id="inspect-project" class="sp-inp"><option value="">Select Project</option></select>
   </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;">OVERALL STATUS</div>
+  <div class="card-section">
+    <div class="card-label">OVERALL STATUS</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button class="status-btn" data-status="green" onclick="setInspectStatus(this,'green')" style="padding:14px 8px;border-radius:10px;border:2.5px solid #22c55e;background:rgba(34,197,94,0.08);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:#16a34a;">&#x2705; Approved<br><span style="font-size:10px;font-weight:400;">Work OK</span></button>
-      <button class="status-btn" data-status="yellow" onclick="setInspectStatus(this,'yellow')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x26A0;&#xFE0F; Warning<br><span style="font-size:10px;font-weight:400;">Needs attention</span></button>
-      <button class="status-btn" data-status="red" onclick="setInspectStatus(this,'red')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x274C; Rejected<br><span style="font-size:10px;font-weight:400;">Fix required</span></button>
-      <button class="status-btn" data-status="safety" onclick="setInspectStatus(this,'safety')" style="padding:14px 8px;border-radius:10px;border:2.5px solid var(--border);background:var(--surface2);font-family:Heebo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--text2);">&#x1F6A8; Safety<br><span style="font-size:10px;font-weight:400;">STOP WORK</span></button>
+      <button class="status-btn" data-status="green" onclick="setInspectStatus(this,'green')" class="inspect-status-btn status-active-green">&#x2705; Approved<br><span style="font-size:10px;font-weight:400;">Work OK</span></button>
+      <button class="status-btn" data-status="yellow" onclick="setInspectStatus(this,'yellow')" class="inspect-status-btn">&#x26A0;&#xFE0F; Warning<br><span style="font-size:10px;font-weight:400;">Needs attention</span></button>
+      <button class="status-btn" data-status="red" onclick="setInspectStatus(this,'red')" class="inspect-status-btn">&#x274C; Rejected<br><span style="font-size:10px;font-weight:400;">Fix required</span></button>
+      <button class="status-btn" data-status="safety" onclick="setInspectStatus(this,'safety')" class="inspect-status-btn">&#x1F6A8; Safety<br><span style="font-size:10px;font-weight:400;">STOP WORK</span></button>
     </div>
   </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;">QUICK CHECKLIST</div>
+  <div class="card-section">
+    <div class="card-label">QUICK CHECKLIST</div>
     <div id="inspect-checklist"></div>
   </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">FINDINGS</div>
-    <textarea id="inspect-findings" rows="3" placeholder="What did you observe on site?" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:var(--surface2);color:var(--text);line-height:1.6;margin-bottom:8px;"></textarea>
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">INSTRUCTIONS TO CONTRACTOR</div>
-    <textarea id="inspect-instructions" rows="3" placeholder="What must the contractor do?" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:var(--surface2);color:var(--text);line-height:1.6;"></textarea>
+  <div class="card-section">
+    <div class="card-label">FINDINGS</div>
+    <textarea id="inspect-findings" rows="3" placeholder="What did you observe on site?" class="sp-textarea"></textarea>
+    <div class="card-label">INSTRUCTIONS TO CONTRACTOR</div>
+    <textarea id="inspect-instructions" rows="3" placeholder="What must the contractor do?" class="sp-textarea"></textarea>
   </div>
-  <div id="inspect-safety-section" style="display:none;background:rgba(220,38,38,0.06);border:2px solid rgba(220,38,38,0.4);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:13px;font-weight:900;color:#dc2626;margin-bottom:10px;">SAFETY HAZARD REPORT</div>
-    <textarea id="inspect-safety-hazard" rows="3" placeholder="Describe the hazard. This becomes a formal legal notice." style="width:100%;padding:10px;border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;resize:none;background:rgba(220,38,38,0.04);color:var(--text);line-height:1.6;margin-bottom:8px;"></textarea>
+  <div id="inspect-safety-section" class="safety-section">
+    <div class="safety-title">SAFETY HAZARD REPORT</div>
+    <textarea id="inspect-safety-hazard" rows="3" placeholder="Describe the hazard. This becomes a formal legal notice." class="safety-inp"></textarea>
     <div style="font-size:11px;font-weight:800;color:#dc2626;margin-bottom:6px;">DEADLINE</div>
     <div style="display:flex;gap:8px;">
-      <button class="deadline-btn" data-val="immediate" onclick="setDeadline(this,'immediate')" style="flex:1;padding:9px 4px;border:2px solid rgba(220,38,38,0.4);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:rgba(220,38,38,0.08);color:#dc2626;">IMMEDIATE<br>Stop Work</button>
-      <button class="deadline-btn" data-val="today" onclick="setDeadline(this,'today')" style="flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:var(--surface2);color:var(--text2);">TODAY<br>Fix by EOD</button>
-      <button class="deadline-btn" data-val="week" onclick="setDeadline(this,'week')" style="flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;background:var(--surface2);color:var(--text2);">THIS WEEK</button>
+      <button class="deadline-btn" data-val="immediate" onclick="setDeadline(this,'immediate')" class="deadline-btn active">IMMEDIATE<br>Stop Work</button>
+      <button class="deadline-btn" data-val="today" onclick="setDeadline(this,'today')" class="deadline-btn">TODAY<br>Fix by EOD</button>
+      <button class="deadline-btn" data-val="week" onclick="setDeadline(this,'week')" class="deadline-btn">THIS WEEK</button>
     </div>
   </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;">SITE PHOTOS <span id="inspect-photo-required" style="color:#dc2626;display:none;">(required for safety)</span></div>
+  <div class="card-section">
+    <div class="card-label">SITE PHOTOS <span id="inspect-photo-required" style="color:#dc2626;display:none;">(required for safety)</span></div>
     <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <label for="inspect-photo-input" style="flex:1;padding:10px;background:var(--surface2);border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:var(--text2);">Gallery<input type="file" id="inspect-photo-input" accept="image/*" multiple style="display:none;" onchange="inspectHandlePhotos(this)"></label>
-      <label for="inspect-camera-input" style="flex:1;padding:10px;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border:none;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;color:white;">Camera<input type="file" id="inspect-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="inspectHandlePhotos(this)"></label>
+      <label for="inspect-photo-input" class="photo-label">Gallery<input type="file" id="inspect-photo-input" accept="image/*" multiple style="display:none;" onchange="inspectHandlePhotos(this)"></label>
+      <label for="inspect-camera-input" class="photo-label-cam">Camera<input type="file" id="inspect-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="inspectHandlePhotos(this)"></label>
     </div>
     <div id="inspect-photo-preview" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-    <button onclick="inspectSaveAndSend()" style="padding:14px;background:linear-gradient(135deg,#c9841a,#e8a020);color:white;border:none;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">Save + WhatsApp</button>
-    <button onclick="inspectSaveOnly()" style="padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--text2);">Save to CRM</button>
+    <button onclick="inspectSaveAndSend()" class="btn-amber">Save + WhatsApp</button>
+    <button onclick="inspectSaveOnly()" class="btn-save-only">Save to CRM</button>
   </div>
-  <button onclick="inspectReset()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;cursor:pointer;color:var(--text3);margin-bottom:20px;">Reset</button>
+  <button onclick="inspectReset()" class="btn-reset">Reset</button>
 </div>
 
 <!-- EOD panel -->
@@ -569,7 +622,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div id="eod-list"></div>
     <div class="empty-state" id="eod-empty"><div class="empty-icon">🧠</div>הקלט משהו ולחץ "שמור לסוף יום"<br>הכל יופיע כאן מסודר ומנותח</div>
     <div id="eod-send-section" style="display:none;margin-top:16px;">
-      <div style="background:rgba(139,92,246,0.08);border:1.5px solid rgba(139,92,246,0.25);border-radius:12px;padding:14px;margin-bottom:12px;">
+      <div class="voice-action-card">
         <div style="font-size:12px;font-weight:800;color:var(--purple);margin-bottom:6px;">📤 שלח ל-Stonhard CRM</div>
         <div style="font-size:12px;color:var(--text2);">כל ההקלטות יישלחו כ-Smart Note לסופאבייס של ה-CRM</div>
       </div>
@@ -655,7 +708,7 @@ async function bootstrap() {
   document.getElementById('splash').style.display='none';
   document.getElementById('app').classList.add('ready');
   // Init all data
-  await Promise.all([loadQuickReplies(), loadTodos(), loadLog(), loadEODFromSupabase()]);
+  await Promise.all([loadQuickReplies(), loadTodos(), loadLog(), loadEODFromSupabase(), loadInspectChecklist()]);
   initSpeechRecognition();
   document.querySelectorAll('.modal-overlay').forEach(el =>
     el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); })
@@ -987,24 +1040,18 @@ function shareEODSummary() {
 }
 
 // ── QUICK REPLIES ───────────────────────────────────────
+// ── QUICK REPLIES — 100% Supabase driven ─────────────────────────
+// Edit replies in Supabase → quick_replies table
+// Fields: id, label, emoji, message, is_active, sort_order
 async function loadQuickReplies() {
   try {
     const res = await fetch(SB_URL+'/rest/v1/quick_replies?is_active=eq.true&order=sort_order',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     const data = await res.json();
-    quickReplies = Array.isArray(data) && data.length ? data : getDefaultQuickReplies();
-  } catch(e) { quickReplies = getDefaultQuickReplies(); }
+    quickReplies = Array.isArray(data) && data.length ? data : [];
+    if (!quickReplies.length) console.warn('quick_replies table empty — add rows in Supabase');
+  } catch(e) { console.error('loadQuickReplies:', e); quickReplies = []; }
   renderQuickGrid();
-}
-function getDefaultQuickReplies() {
-  return [
-    {id:1,label:'אחזור אליך',emoji:'📞',message:'שלום, קיבלתי את שיחתך. אחזור אליך בהקדם. תודה — בני'},
-    {id:2,label:'שלח פרטים',emoji:'📋',message:'שלום, אנא שלח לי את הפרטים בוואטסאפ. תודה — בני'},
-    {id:3,label:'בישיבה',    emoji:'🤝',message:'שלום, אני כרגע בישיבה. אחזור אליך בסיומה. תודה — בני'},
-    {id:4,label:'שלח תמונה',emoji:'📸',message:'שלום, אנא שלח לי תמונה בוואטסאפ. תודה — בני'},
-    {id:5,label:'מחר בבוקר',emoji:'🌅',message:'שלום, אטפל בנושא מחר בבוקר. תודה — בני'},
-    {id:6,label:'לא זמין',   emoji:'🔕',message:'שלום, אינני זמין היום. ניצור קשר מחר. תודה — בני'},
-  ];
 }
 function renderQuickGrid() {
   const grid = document.getElementById('quick-grid'); if(!grid)return;
@@ -1116,7 +1163,7 @@ function renderLog(logs){
   window._callData={};
   let html='';
   Object.entries(groups).forEach(([date,items])=>{
-    html+='<div style="font-size:11px;font-weight:800;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">'+date+'</div>';
+    html+='<div class="log-section-title">'+date+'</div>';
     items.forEach(r=>{
       const id=r.id||Math.random().toString(36).slice(2);
       window._callData[id]={name:r.caller_name||'לא ידוע',phone:r.phone||''};
@@ -1582,27 +1629,27 @@ function calShowConfirm(event) {
   modal.id = 'cal-confirm-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
   modal.innerHTML = [
-    '<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;direction:rtl;max-height:85vh;overflow-y:auto;">',
-      '<div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;">',
+    '<div class="cal-sheet">',
+      '<div class="cal-sheet-title">',
         '<span style="font-size:22px;">📅</span> אשר יצירת פגישה',
       '</div>',
       '<div style="display:grid;gap:10px;margin-bottom:20px;">',
         '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">כותרת</label>',
-        '<input id="cal-title" value="' + event.title + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;"></div>',
+        '<input id="cal-title" value="' + event.title + '" class="sp-inp"></div>',
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">',
           '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">תאריך</label>',
-          '<input id="cal-date" type="date" value="' + (event.date||new Date().toISOString().split('T')[0]) + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+          '<input id="cal-date" type="date" value="' + (event.date||new Date().toISOString().split('T')[0]) + '" class="sp-textarea"></div>',
           '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">שעה</label>',
-          '<input id="cal-time" type="time" value="' + (event.time||'10:00') + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+          '<input id="cal-time" type="time" value="' + (event.time||'10:00') + '" class="sp-textarea"></div>',
         '</div>',
         '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">משך (דקות)</label>',
-        '<input id="cal-duration" type="number" value="' + (event.duration_minutes||60) + '" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;"></div>',
+        '<input id="cal-duration" type="number" value="' + (event.duration_minutes||60) + '" class="sp-textarea"></div>',
         '<div><label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">מיקום (אופציונלי)</label>',
-        '<input id="cal-location" value="' + (event.location||'') + '" placeholder="כתובת / קישור" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;"></div>',
+        '<input id="cal-location" value="' + (event.location||'') + '" placeholder="כתובת / קישור" class="sp-textarea"></div>',
       '</div>',
       '<div style="display:flex;gap:10px;">',
-        '<button class="cal-cancel-btn" style="flex:1;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;color:var(--text2);">ביטול</button>',
-        '<button onclick="calCreateEvent()" style="flex:2;padding:14px;background:linear-gradient(135deg,#1a73e8,#0d47a1);border:none;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;color:white;">📅 צור פגישה</button>',
+        '<button class="cal-cancel-btn" class="btn-eod-action">ביטול</button>',
+        '<button onclick="calCreateEvent()" class="btn-eod-google">📅 צור פגישה</button>',
       '</div>',
     '</div>'
   ].join('');
@@ -1854,9 +1901,7 @@ async function loadRecentContacts() {
       var name  = (c.caller_name || '?').substring(0, 12);
       var phone = c.phone || '';
       return '<button onclick="fillQuickLog(' + JSON.stringify(c.caller_name||'') + ',' + JSON.stringify(phone) + ')"'
-        + ' style="flex-shrink:0;padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);'
-        + 'border-radius:20px;font-family:Heebo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;'
-        + 'color:var(--text2);white-space:nowrap;">'
+        + ' class="contact-chip">'
         + name + '</button>';
     }).join('');
   } catch(e) {
@@ -1980,15 +2025,35 @@ var _inspectDeadline = 'today';
 var _inspectPhotos   = [];
 var _inspectInited   = false;
 
-var INSPECT_CHECKLIST = [
-  { key:'safety_equip',   label:'Safety equipment present (helmets, vests, boots)' },
-  { key:'plan_match',     label:'Work matches approved plan/drawings' },
-  { key:'materials_ok',   label:'Materials quality acceptable' },
-  { key:'progress_ok',    label:'Progress on schedule' },
-  { key:'site_clean',     label:'Site cleanliness & housekeeping' },
-  { key:'scaffolding',    label:'Scaffolding / formwork properly secured' },
-  { key:'permits',        label:'Required permits on site' },
-];
+// ── INSPECT CHECKLIST — loaded from Supabase ─────────────────────
+// Edit items in Supabase → inspection_checklist table
+// Fields: key, label, sort_order, is_active
+// To add a new checklist item: INSERT a row. No code change.
+var INSPECT_CHECKLIST = [];  // filled by loadInspectChecklist()
+
+async function loadInspectChecklist() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/inspection_checklist?is_active=eq.true&order=sort_order',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    var data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      INSPECT_CHECKLIST = data;
+    } else {
+      // Fallback only if table missing — seed SQL is in SQL_SitePulse file
+      INSPECT_CHECKLIST = [
+        { key:'safety_equip', label:'ציוד בטיחות (קסדות, אפודים, נעליים)' },
+        { key:'plan_match',   label:'עבודה תואמת תכנית מאושרת' },
+        { key:'materials_ok', label:'איכות חומרים תקינה' },
+        { key:'progress_ok',  label:'התקדמות לפי לוח זמנים' },
+        { key:'site_clean',   label:'ניקיון וסדר באתר' },
+        { key:'scaffolding',  label:'פיגום / תבניות מאובטחים' },
+        { key:'permits',      label:'היתרים נדרשים באתר' },
+      ];
+    }
+  } catch(e) {
+    console.error('loadInspectChecklist:', e);
+  }
+}
 
 // ── Init inspection tab ──────────────────────────────
 function inspectInit() {
@@ -2001,30 +2066,29 @@ function inspectInit() {
   var el = document.getElementById('inspect-datetime');
   if (el) el.textContent = timeStr;
 
-  // Build checklist
+  // Build checklist (INSPECT_CHECKLIST loaded from Supabase)
   var cl = document.getElementById('inspect-checklist');
   if (cl) {
     cl.innerHTML = INSPECT_CHECKLIST.map(function(item) {
       return [
-        '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;',
-          'border-bottom:1px solid var(--border);">',
+        '<div class="cl-row">',
           '<span style="font-size:13px;color:var(--text2);flex:1;">' + item.label + '</span>',
           '<div style="display:flex;gap:6px;flex-shrink:0;">',
             '<button class="cl-btn" data-key="' + item.key + '" data-val="ok"',
               ' onclick="setCheckItem(this)"',
-              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #22c55e;',
+              ' class="cl-btn cl-btn-ok"',
               'background:transparent;cursor:pointer;font-size:15px;">✅</button>',
             '<button class="cl-btn" data-key="' + item.key + '" data-val="warn"',
               ' onclick="setCheckItem(this)"',
-              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #f59e0b;',
+              ' class="cl-btn cl-btn-warn"',
               'background:transparent;cursor:pointer;font-size:15px;">⚠️</button>',
             '<button class="cl-btn" data-key="' + item.key + '" data-val="fail"',
               ' onclick="setCheckItem(this)"',
-              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid #ef4444;',
+              ' class="cl-btn cl-btn-fail"',
               'background:transparent;cursor:pointer;font-size:15px;">❌</button>',
             '<button class="cl-btn" data-key="' + item.key + '" data-val="na"',
               ' onclick="setCheckItem(this)"',
-              ' style="width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);',
+              ' class="cl-btn cl-btn-na"',
               'background:transparent;cursor:pointer;font-size:11px;color:var(--text3);">N/A</button>',
           '</div>',
         '</div>'
@@ -2348,116 +2412,151 @@ function inspectReset() {
 }
 
 // ── Scenario 1: Send Site Pulse request from mobile ──
+// ── SITE PULSE — SUPABASE-FIRST ARCHITECTURE ─────────────────────
+// Flow: pick contractor → pick project → INSERT site_pulse_requests
+//       → get UUID → send ?req={UUID} in WhatsApp
+// Contractor opens link → site-pulse.html fetches everything from Supabase
+// NO Hebrew in URL. NO encoding. NO bugs.
+
 async function sendSitePulseRequest() {
   try {
     var res = await fetch(SB_URL + '/rest/v1/contractors_master?is_active=eq.true&select=id,company_name,mobile&order=company_name',
       { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     var contractors = await res.json();
-    if (!contractors.length) { toast('No contractors found'); return; }
-
-    // Build modal using DOM
-    var modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
-
-    var sheet = document.createElement('div');
-    sheet.style.cssText = 'background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;direction:rtl;max-height:70vh;overflow-y:auto;';
-
-    var title = document.createElement('div');
-    title.style.cssText = 'font-size:15px;font-weight:900;color:var(--text);margin-bottom:14px;';
-    title.textContent = 'בחר קבלן לשליחת טופס';
-    sheet.appendChild(title);
-
-    contractors.forEach(function(c) {
-      var btn = document.createElement('button');
-      btn.style.cssText = 'width:100%;padding:13px;margin-bottom:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:right;color:var(--text);';
-      btn.textContent = c.company_name;
-      btn.dataset.id     = c.id;
-      btn.dataset.name   = c.company_name;
-      btn.dataset.mobile = c.mobile || '';
-      btn.addEventListener('click', function() {
-        modal.remove();
-        spSendToContractor(this.dataset.id, this.dataset.name, this.dataset.mobile);
-      });
-      sheet.appendChild(btn);
-    });
-
-    var cancelBtn = document.createElement('button');
-    cancelBtn.style.cssText = 'width:100%;padding:11px;background:none;border:1px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;color:var(--text3);';
-    cancelBtn.textContent = 'ביטול';
-    cancelBtn.addEventListener('click', function() { modal.remove(); });
-    sheet.appendChild(cancelBtn);
-
-    modal.appendChild(sheet);
-    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    document.body.appendChild(modal);
-  } catch(e) { toast('Error: ' + e.message); }
+    if (!contractors.length) { toast('לא נמצאו קבלנים פעילים'); return; }
+    spStep1_PickContractor(contractors);
+  } catch(e) { toast('שגיאה: ' + e.message); }
 }
 
+function spStep1_PickContractor(contractors) {
+  var modal = spModal();
+  var sheet = modal.sheet;
 
-function spSendToContractor(contractorId, contractorName, mobile) {
-  var url  = 'https://avshi2-maker.github.io/site-pulse/?c=' + contractorId + '&cn=' + encodeURIComponent(contractorName);
-  var lines = [
-    'שלום ' + contractorName + ',',
-    '',
-    'בני פרסקי שולח לך בקשה למלא דוח עבודה יומי.',
-    'נא למלא את הטופס:',
-    '',
-    url,
-    '',
-    'תודה!'
-  ];
-  var msg   = lines.join('\n');
-  var phone = mobile ? '972' + mobile.replace(/[^0-9]/g,'').replace(/^0/,'') : '';
-  var waUrl = phone
-    ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
-    : 'https://wa.me/?text=' + encodeURIComponent(msg);
+  spModalTitle(sheet, '📋 שלב 1 מתוך 2 — בחר קבלן');
 
-  // Show tap-to-send sheet — most reliable on mobile
-  // User taps the green button themselves = 100% reliable WA open with text
+  contractors.forEach(function(c) {
+    var btn = spListBtn(c.company_name, function() {
+      modal.el.remove();
+      spStep2_PickProject(c);
+    });
+    sheet.appendChild(btn);
+  });
+  spCancelBtn(sheet, function() { modal.el.remove(); });
+  document.body.appendChild(modal.el);
+}
+
+async function spStep2_PickProject(contractor) {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/projects?status=eq.active&select=id,project_name&order=project_name',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    var projects = await res.json();
+
+    var modal = spModal();
+    var sheet = modal.sheet;
+    spModalTitle(sheet, '📋 שלב 2 מתוך 2 — בחר פרויקט עבור ' + contractor.company_name);
+
+    if (!projects.length) {
+      var note = document.createElement('div');
+      note.style.cssText = 'padding:12px;color:var(--text3);font-size:13px;text-align:center;';
+      note.textContent = 'לא נמצאו פרויקטים פעילים';
+      sheet.appendChild(note);
+    } else {
+      projects.forEach(function(p) {
+        var btn = spListBtn(p.project_name, function() {
+          modal.el.remove();
+          spCreateRequestAndSend(contractor, p);
+        });
+        sheet.appendChild(btn);
+      });
+    }
+    spCancelBtn(sheet, function() { modal.el.remove(); });
+    document.body.appendChild(modal.el);
+  } catch(e) { toast('שגיאה בטעינת פרויקטים: ' + e.message); }
+}
+
+async function spCreateRequestAndSend(contractor, project) {
+  try {
+    toast('⏳ יוצר בקשה...');
+    // INSERT into site_pulse_requests → Supabase returns the new UUID
+    var res = await fetch(SB_URL + '/rest/v1/site_pulse_requests',
+      { method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+                   'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({
+          contractor_id:     contractor.id,
+          project_id:        project.id,
+          contractor_name:   contractor.company_name,
+          project_name:      project.project_name,
+          contractor_mobile: contractor.mobile || null,
+          requested_by:      'Beni Persky',
+          report_date:       new Date().toISOString().slice(0,10),
+          status:            'pending'
+        })
+      });
+    var rows = await res.json();
+    if (!rows || !rows[0] || !rows[0].id) throw new Error('לא הוחזר ID מ-Supabase');
+    var requestId = rows[0].id;
+    // Clean URL — just a UUID, zero encoding issues
+    var formUrl = 'https://avshi2-maker.github.io/site-pulse/?req=' + requestId;
+    spShowWASheet(contractor, project, formUrl);
+  } catch(e) { toast('שגיאה ביצירת בקשה: ' + e.message); }
+}
+
+function spShowWASheet(contractor, project, formUrl) {
   var existing = document.getElementById('wa-send-sheet');
   if (existing) existing.remove();
 
+  var textBefore = 'שלום ' + contractor.company_name + ',\n\nבני פרסקי שולח לך בקשה למלא דוח עבודה יומי.\nפרויקט: ' + project.project_name + '\nנא למלא את הטופס:\n\n';
+  var textAfter  = '\n\nתודה!';
+  var msgForCopy = textBefore + formUrl + textAfter;
+
+  var phone  = contractor.mobile ? '972' + contractor.mobile.replace(/[^0-9]/g,'').replace(/^0/,'') : '';
+  var waText = encodeURIComponent(textBefore) + formUrl + encodeURIComponent(textAfter);
+  var waUrl  = phone
+    ? 'https://wa.me/' + phone + '?text=' + waText
+    : 'https://wa.me/?text=' + waText;
+
   var sheet = document.createElement('div');
   sheet.id = 'wa-send-sheet';
-  sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:flex-end;';
+  sheet.className = 'modal-overlay'; this_el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:flex-end;';
 
   var inner = document.createElement('div');
-  inner.style.cssText = 'background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;direction:rtl;';
+  inner.className = 'sp-sheet-inner';
 
-  // Title
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:15px;font-weight:900;color:var(--text);margin-bottom:12px;';
-  title.textContent = 'שלח טופס ל' + contractorName;
+  title.className = 'sp-sheet-title'; title.style.marginBottom='4px';
+  title.textContent = '📲 שלח טופס ל' + contractor.company_name;
   inner.appendChild(title);
 
-  // Message preview box
+  var sub = document.createElement('div');
+  sub.className = 'sp-sheet-title'; sub.style.cssText='font-size:11px;font-weight:400;color:var(--text3);margin-bottom:12px;';
+  sub.textContent = 'פרויקט: ' + project.project_name;
+  inner.appendChild(sub);
+
   var preview = document.createElement('div');
-  preview.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--text2);direction:rtl;line-height:1.7;margin-bottom:14px;white-space:pre-wrap;word-break:break-all;';
-  preview.textContent = msg;
+  preview.className = 'wa-preview-box';
+  preview.textContent = msgForCopy;
   inner.appendChild(preview);
 
-  // OPEN WHATSAPP button — user taps this directly = guaranteed to work
   var waBtn = document.createElement('a');
   waBtn.href = waUrl;
   waBtn.target = '_blank';
   waBtn.rel = 'noopener noreferrer';
-  waBtn.style.cssText = 'display:block;width:100%;padding:16px;background:linear-gradient(135deg,#25d366,#128c7e);color:white;text-align:center;border-radius:12px;font-family:Heebo,sans-serif;font-size:16px;font-weight:900;text-decoration:none;margin-bottom:10px;box-sizing:border-box;';
+  waBtn.className = 'wa-send-btn';
   waBtn.textContent = '📲 פתח WhatsApp ושלח';
   waBtn.addEventListener('click', function() { setTimeout(function(){ sheet.remove(); }, 500); });
   inner.appendChild(waBtn);
 
-  // Copy message button (fallback)
   var copyBtn = document.createElement('button');
-  copyBtn.style.cssText = 'width:100%;padding:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--text2);margin-bottom:8px;';
+  copyBtn.className = 'wa-copy-btn';
   copyBtn.textContent = '📋 העתק הודעה';
   copyBtn.addEventListener('click', function() {
-    navigator.clipboard.writeText(msg).then(function(){ toast('✅ הודעה הועתקה'); }).catch(function(){ toast('העתק ידנית מהתיבה למעלה'); });
+    navigator.clipboard.writeText(msgForCopy).then(function(){ toast('✅ הודעה הועתקה'); }).catch(function(){ toast('העתק ידנית מהתיבה'); });
   });
   inner.appendChild(copyBtn);
 
-  // Cancel
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;padding:11px;background:none;border:1px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;color:var(--text3);';
+  cancelBtn.className = 'sp-cancel-btn';
   cancelBtn.textContent = 'ביטול';
   cancelBtn.addEventListener('click', function() { sheet.remove(); });
   inner.appendChild(cancelBtn);
@@ -2465,6 +2564,37 @@ function spSendToContractor(contractorId, contractorName, mobile) {
   sheet.appendChild(inner);
   sheet.addEventListener('click', function(e) { if (e.target === sheet) sheet.remove(); });
   document.body.appendChild(sheet);
+}
+
+// ── UI Helper Functions ───────────────────────────────────────────
+function spModal() {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
+  var sheet = document.createElement('div');
+  sheet.className = 'sp-sheet-scroll';
+  el.appendChild(sheet);
+  el.addEventListener('click', function(e) { if (e.target === el) el.remove(); });
+  return { el: el, sheet: sheet };
+}
+function spModalTitle(sheet, text) {
+  var t = document.createElement('div');
+  t.className = 'sp-sheet-title';
+  t.textContent = text;
+  sheet.appendChild(t);
+}
+function spListBtn(label, onClick) {
+  var btn = document.createElement('button');
+  btn.className = 'sp-list-btn';
+  btn.textContent = label;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+function spCancelBtn(sheet, onClick) {
+  var btn = document.createElement('button');
+  btn.className = 'sp-cancel-btn';
+  btn.textContent = 'ביטול';
+  btn.addEventListener('click', onClick);
+  sheet.appendChild(btn);
 }
 
 
