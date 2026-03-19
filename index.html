@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#fdf6e3">
 <title>בני פוקט</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
 <link rel="stylesheet" id="bp-css" href=""><!-- loaded from Supabase Storage -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -599,20 +600,6 @@ async function loadScript(name) {
   document.head.appendChild(script);
   window['_loaded_'+name] = true;
   console.log(`✅ Loaded module: ${name}.js`);
-}
-  if (APP.loaded['js_' + name]) return;
-  try {
-    const res = await fetch(`${STORAGE}/${name}.js`);
-    if (!res.ok) { console.error(`Module ${name}.js failed: HTTP ${res.status}`); return; }
-    const code = await res.text();
-    const s = document.createElement('script');
-    s.textContent = code;
-    document.head.appendChild(s);
-    APP.loaded['js_' + name] = true;
-    console.log(`✅ Loaded: ${name}.js`);
-  } catch(e) {
-    console.error(`Module ${name}.js error:`, e.message);
-  }
 }
 
 // ── BOOTSTRAP ─────────────────────────────────────────────
