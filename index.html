@@ -913,12 +913,43 @@ async function toPhotoSave(){
 
 async function toPhotoOCR(){
   if(!_toPhotoBase64){showToast('אין תמונה');return;}
-  // Claude API has CORS restrictions from browser
-  // Show the photo and let user manually type the measurements they see
-  document.getElementById('to-photo-ocr-text').value = '';
-  document.getElementById('to-photo-ocr-text').placeholder = 'כתוב מדידות. לדוגמא: סלון 6.5 4.2';
-  document.getElementById('to-photo-ocr-result').style.display='block';
-  document.getElementById('to-photo-status').textContent='העתק את המדידות מהתמונה לתיבת הטקסט ולחץ הוסף';
+  document.getElementById('to-photo-status').textContent='⏳ AI מזהה טקסט...';
+  document.getElementById('to-photo-ocr-result').style.display='none';
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {type:'image', source:{type:'base64', media_type:_toPhotoType, data:_toPhotoBase64}},
+            {type:'text', text:'זוהי תמונה של רשימת מדידות בכתב יד של מודד. חלץ את כל המדידות בדיוק. כתוב שורה אחת לכל מדידה בפורמט: שם_חדר אורך רוחב. לדוגמה: סלון 6.5 4.2'}
+          ]
+        }]
+      })
+    });
+    var data = await resp.json();
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    if (text) {
+      document.getElementById('to-photo-ocr-text').value = text;
+      document.getElementById('to-photo-ocr-result').style.display = 'block';
+      document.getElementById('to-photo-status').textContent = '✅ טקסט זוהה — בדוק ולחץ הוסף';
+    } else {
+      throw new Error('No text returned');
+    }
+  } catch(e) {
+    // API failed — show manual input
+    document.getElementById('to-photo-ocr-text').value = '';
+    document.getElementById('to-photo-ocr-text').placeholder = 'כתוב את המדידות שאתה רואה בתמונה\nלדוגמה: סלון 6.5 4.2';
+    document.getElementById('to-photo-ocr-result').style.display = 'block';
+    document.getElementById('to-photo-status').textContent = 'הכנס מדידות ידנית';
+  }
 }
 
 async function toParseVoice(){await toAIParse(document.getElementById('to-voice-text').value.trim());}
