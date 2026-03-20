@@ -973,9 +973,10 @@ async function toAIParse(rawText){
   processed = stripUnits(processed);
 
   var lines = processed.split(/[\n,;.]+/);
+  var rawLines = rawText.split(/[\n,;.]+/);
   var added = 0;
 
-  lines.forEach(function(line) {
+  lines.forEach(function(line, lineIdx) {
     line = line.trim();
     if (!line) return;
 
@@ -983,15 +984,29 @@ async function toAIParse(rawText){
     var nums = line.match(/\d+(?:\.\d+)?/g);
     if (!nums || nums.length === 0) return;
 
-    // Try to find room name from original line
-    var origLine = rawText.split(/[\n,;.]+/)[lines.indexOf(line)] || line;
+    // Get room name from ORIGINAL raw line (before number conversion)
+    var rawLine = (rawLines[lineIdx] || rawText).trim();
     var roomName = '';
+
+    // Check for known room keywords in original line
     roomKeywords.forEach(function(kw){
-      if (rawText.indexOf(kw) >= 0 && !roomName) roomName = kw;
+      if (rawLine.indexOf(kw) >= 0 && !roomName) roomName = kw;
     });
-    // Also extract Hebrew words from line as room name
-    var hebrewWords = line.replace(/\d+(?:\.\d+)?/g,'').replace(/\s+/g,' ').trim();
-    if (!roomName && hebrewWords.length > 1) roomName = hebrewWords;
+
+    // If no keyword found, use first Hebrew word(s) before any number/measurement word
+    if (!roomName) {
+      var measureWords = ['אורך','רוחב','גובה','מטר','וחצי','ורבע','על','כפול','פי'];
+      var words = rawLine.split(/\s+/);
+      var nameWords = [];
+      for (var w = 0; w < words.length; w++) {
+        var word = words[w];
+        if (/\d/.test(word)) break;
+        if (measureWords.indexOf(word) >= 0) break;
+        nameWords.push(word);
+      }
+      roomName = nameWords.join(' ').trim();
+    }
+
     if (!roomName) roomName = 'מדידה ' + (_toRows.length + added + 1);
 
     var d1 = parseFloat(nums[0]) || 0;
@@ -1008,7 +1023,21 @@ async function toAIParse(rawText){
   });
 
   toRenderRows();
-  if (added > 0) showToast('✅ הוספו ' + added + ' שורות');
+  if (added > 0) {
+    showToast('✅ הוספו ' + added + ' שורות');
+    // Clear voice box and reset for next room
+    var voiceEl = document.getElementById('to-voice-text');
+    if (voiceEl) voiceEl.value = '';
+    // Stop recording if still active
+    if (_toVoiceActive && _toVoiceRecog) {
+      _toVoiceRecog.stop();
+      _toVoiceActive = false;
+      var btn = document.getElementById('to-voice-btn');
+      var status = document.getElementById('to-voice-status');
+      if (btn) btn.textContent = '🎤';
+      if (status) status.textContent = 'מוכן לחדר הבא — לחץ להקלטה';
+    }
+  }
   else {
     showToast('לא זוהו מדידות');
     // Show help message in voice text area
