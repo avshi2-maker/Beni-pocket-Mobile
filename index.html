@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#fdf6e3">
 <title>בני פוקט</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <link rel="stylesheet" id="bp-css" href=""><!-- loaded from Supabase Storage -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -48,7 +48,7 @@
     <div class="nav-tab"        onclick="switchTab('gcal')"  id="tab-gcal" ><span class="tab-icon">📅</span>G-יומן</div>
     <div class="nav-tab"        onclick="switchTab('inspect')" id="tab-inspect"><span class="tab-icon">🔍</span>ביקורת<span class="nav-badge" id="inspect-badge" style="display:none">!</span></div>
         <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
-    <div class="nav-tab"        onclick="switchTab('takeoff')" id="tab-takeoff"><span class="tab-icon">📐</span>טייקאוף</div>
+    <div class="nav-tab" onclick="switchTab('takeoff')" id="tab-takeoff"><span class="tab-icon">📐</span>טייקאוף</div>
   </div>
 
   <div id="panel-call"  class="panel active">
@@ -273,7 +273,7 @@
   </div>
 
   <!-- panel-log -->
-  <div    class="panel">       
+  <div id="panel-log" class="panel">       
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="sec-title" style="margin:0">יומן שיחות יומי</div>
       <button onclick="loadLog()" class="sp-btn-surface2">🔄 רענן</button>
@@ -412,6 +412,151 @@
       <button class="big-btn btn-surface" onclick="shareEODSummary()">📤 שתף סיכום יום</button>
     </div>
 </div>
+
+  <!-- TAKEOFF PANEL -->
+  <div id="panel-takeoff" class="panel" style="padding:12px 14px;padding-bottom:80px;">
+
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <input type="text" id="to-project-name" placeholder="שם פרויקט / אתר" oninput="document.getElementById('to-project-label').textContent=this.value||'אין פרויקט פעיל'"
+        style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
+      <input type="date" id="to-date" style="width:128px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
+      <button onclick="toNewSession()" style="background:var(--orange);color:white;border:none;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">+ חדש</button>
+    </div>
+    <div id="to-project-label" style="font-size:11px;color:var(--text2);margin-bottom:10px;">אין פרויקט פעיל</div>
+
+    <!-- 5 MODE BUTTONS -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px;">
+      <button onclick="toMode('type')"  id="to-mode-type"  style="background:var(--orange);color:white;border:none;border-radius:10px;padding:9px 3px;font-size:13px;line-height:1.3;cursor:pointer;font-family:Heebo,sans-serif;font-weight:800;">&#9000;<br><span style="font-size:10px;">הקלדה</span></button>
+      <button onclick="toMode('voice')" id="to-mode-voice" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:9px 3px;font-size:13px;line-height:1.3;cursor:pointer;font-family:Heebo,sans-serif;font-weight:800;">🎤<br><span style="font-size:10px;">קול</span></button>
+      <button onclick="toMode('photo')" id="to-mode-photo" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:9px 3px;font-size:13px;line-height:1.3;cursor:pointer;font-family:Heebo,sans-serif;font-weight:800;">📷<br><span style="font-size:10px;">תמונה</span></button>
+      <button onclick="toMode('calc')"  id="to-mode-calc"  style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:9px 3px;font-size:13px;line-height:1.3;cursor:pointer;font-family:Heebo,sans-serif;font-weight:800;">🧮<br><span style="font-size:10px;">מחשבון</span></button>
+      <button onclick="toMode('table')" id="to-mode-table" style="background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:9px 3px;font-size:13px;line-height:1.3;cursor:pointer;font-family:Heebo,sans-serif;font-weight:800;">📊<br><span style="font-size:10px;">טבלה</span></button>
+    </div>
+
+    <!-- TYPE MODE -->
+    <div id="to-input-type" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:6px;">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;">
+        <input type="text" id="to-room" placeholder="שם חדר / אזור" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);">
+        <select id="to-shape" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);">
+          <option value="rect">מלבן</option><option value="circle">עיגול</option><option value="triangle">משולש</option><option value="manual">ידני</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="number" id="to-dim1" placeholder="אורך (מ')" step="0.01" oninput="toPreviewCalc()" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:15px;background:var(--surface);color:var(--text);">
+        <input type="number" id="to-dim2" placeholder="רוחב (מ')" step="0.01" oninput="toPreviewCalc()" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:15px;background:var(--surface);color:var(--text);">
+        <div id="to-preview" style="background:var(--orange);color:white;border-radius:10px;padding:9px 8px;font-size:12px;font-weight:900;min-width:62px;text-align:center;">—</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="to-note" placeholder="הערה" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);">
+        <button onclick="toAddRow()" style="background:var(--green);color:white;border:none;border-radius:10px;padding:9px 18px;font-size:15px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">+ הוסף</button>
+      </div>
+    </div>
+
+    <!-- VOICE MODE -->
+    <div id="to-input-voice" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:6px;text-align:center;">
+      <button id="to-voice-btn" onclick="toVoiceToggle()" style="background:var(--orange);color:white;border:none;border-radius:50%;width:64px;height:64px;font-size:24px;cursor:pointer;display:block;margin:0 auto 8px;">🎤</button>
+      <div id="to-voice-status" style="font-size:12px;color:var(--text2);margin-bottom:8px;">לחץ להקלטה</div>
+      <textarea id="to-voice-text" placeholder="הטקסט המוקלט יופיע כאן" rows="3" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);resize:none;margin-bottom:8px;text-align:right;"></textarea>
+      <button onclick="toParseVoice()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">AI — פרש והוסף שורות</button>
+    </div>
+
+    <!-- PHOTO MODE -->
+    <div id="to-input-photo" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:6px;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;">📷 צלם רשימת מדידות בכתב יד</div>
+      <label for="to-photo-img" style="display:block;background:var(--surface);border:2px dashed var(--border);border-radius:10px;padding:18px;cursor:pointer;font-size:13px;color:var(--text2);text-align:center;margin-bottom:8px;">
+        📸 לחץ לצילום / העלאה
+        <input type="file" id="to-photo-img" accept="image/*" capture="environment" style="display:none;" onchange="toPhotoCapture(this)">
+      </label>
+      <div id="to-photo-preview" style="text-align:center;margin-bottom:8px;"></div>
+      <div id="to-photo-status" style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:8px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="toPhotoSave()" id="to-photo-save-btn" style="display:none;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💾 שמור לפרויקט</button>
+        <button onclick="toPhotoOCR()" id="to-photo-ocr-btn" style="display:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">AI OCR → שורות</button>
+      </div>
+      <div id="to-photo-ocr-result" style="display:none;margin-top:10px;">
+        <textarea id="to-photo-ocr-text" rows="3" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);resize:none;margin-bottom:8px;text-align:right;"></textarea>
+        <button onclick="toAIParse(document.getElementById('to-photo-ocr-text').value)" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">הוסף לטייקאוף</button>
+      </div>
+    </div>
+
+    <!-- CALC MODE -->
+    <div id="to-input-calc" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:6px;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;">🧮 מחשבון שטחים מהיר</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+        <button onclick="toCalcShape('rect')"   id="tc-rect"   style="background:var(--orange);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">▭ מלבן</button>
+        <button onclick="toCalcShape('circle')" id="tc-circle" style="background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">⬤ עיגול</button>
+        <button onclick="toCalcShape('tri')"    id="tc-tri"    style="background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">△ משולש</button>
+        <button onclick="toCalcShape('trap')"   id="tc-trap"   style="background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">⬡ טרפז</button>
+      </div>
+      <div id="tc-panel-rect">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">אורך (מ')</div><input type="number" id="tc-r-l" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">רוחב (מ')</div><input type="number" id="tc-r-w" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+        </div>
+      </div>
+      <div id="tc-panel-circle" style="display:none;margin-bottom:8px;"><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">רדיוס (מ')</div><input type="number" id="tc-c-r" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+      <div id="tc-panel-tri" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">בסיס (מ')</div><input type="number" id="tc-t-b" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">גובה (מ')</div><input type="number" id="tc-t-h" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+        </div>
+      </div>
+      <div id="tc-panel-trap" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">בסיס א</div><input type="number" id="tc-p-a" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">בסיס ב</div><input type="number" id="tc-p-b" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+          <div><div style="font-size:10px;color:var(--text2);margin-bottom:3px;">גובה</div><input type="number" id="tc-p-h" step="0.01" oninput="tcCalc()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:Heebo,sans-serif;background:var(--surface);color:var(--text);"></div>
+        </div>
+      </div>
+      <div id="tc-result" data-val="0" style="background:var(--orange);color:white;border-radius:10px;padding:16px;text-align:center;font-size:22px;font-weight:900;margin-bottom:10px;">— מ"ר</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="tc-room-label" placeholder="שם לפריט (סלון / מטבח...)" style="flex:1;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);">
+        <button onclick="tcAddToList()" style="background:var(--green);color:white;border:none;border-radius:10px;padding:9px 16px;font-size:15px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">+ הוסף</button>
+      </div>
+    </div>
+
+    <!-- TABLE MODE -->
+    <div id="to-input-table" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:6px;">
+      <div style="display:flex;overflow-x:auto;border-bottom:2px solid var(--border);background:var(--surface);">
+        <button onclick="toTableTab('floors')"   id="tt-tab-floors"   style="background:none;border:none;border-bottom:2px solid var(--orange);padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--orange);white-space:nowrap;margin-bottom:-2px;">רצפות</button>
+        <button onclick="toTableTab('walls')"    id="tt-tab-walls"    style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);white-space:nowrap;margin-bottom:-2px;">קירות</button>
+        <button onclick="toTableTab('ceilings')" id="tt-tab-ceilings" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);white-space:nowrap;margin-bottom:-2px;">תקרות</button>
+        <button onclick="toTableTab('columns')"  id="tt-tab-columns"  style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);white-space:nowrap;margin-bottom:-2px;">עמודים</button>
+        <button onclick="toTableTab('openings')" id="tt-tab-openings" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);white-space:nowrap;margin-bottom:-2px;">פתחים</button>
+        <button onclick="toTableTab('rooms')"    id="tt-tab-rooms"    style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);white-space:nowrap;margin-bottom:-2px;">סיכום</button>
+      </div>
+      <div id="tt-panel-floors"   style="padding:10px;"><div style="font-size:10px;color:var(--text2);margin-bottom:6px;">שטח = אורך x רוחב</div><div id="tt-floors-rows"></div><button onclick="ttAddRow('floors')" style="width:100%;background:none;border:2px dashed var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--text3);font-family:Heebo,sans-serif;font-size:13px;margin-top:4px;">+ הוסף שורה</button><div id="tt-floors-total" style="font-size:14px;font-weight:900;color:var(--orange);text-align:left;padding-top:8px;">סה"כ: 0.00 מ"ר</div></div>
+      <div id="tt-panel-walls"    style="display:none;padding:10px;"><div style="font-size:10px;color:var(--text2);margin-bottom:6px;">שטח קיר = אורך x גובה</div><div id="tt-walls-rows"></div><button onclick="ttAddRow('walls')" style="width:100%;background:none;border:2px dashed var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--text3);font-family:Heebo,sans-serif;font-size:13px;margin-top:4px;">+ הוסף שורה</button><div id="tt-walls-total" style="font-size:14px;font-weight:900;color:var(--orange);text-align:left;padding-top:8px;">סה"כ: 0.00 מ"ר</div></div>
+      <div id="tt-panel-ceilings" style="display:none;padding:10px;"><div style="font-size:10px;color:var(--text2);margin-bottom:6px;">שטח = אורך x רוחב</div><div id="tt-ceilings-rows"></div><button onclick="ttAddRow('ceilings')" style="width:100%;background:none;border:2px dashed var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--text3);font-family:Heebo,sans-serif;font-size:13px;margin-top:4px;">+ הוסף שורה</button><div id="tt-ceilings-total" style="font-size:14px;font-weight:900;color:var(--orange);text-align:left;padding-top:8px;">סה"כ: 0.00 מ"ר</div></div>
+      <div id="tt-panel-columns"  style="display:none;padding:10px;"><div style="font-size:10px;color:var(--text2);margin-bottom:6px;">היקף x גובה</div><div id="tt-columns-rows"></div><button onclick="ttAddRow('columns')" style="width:100%;background:none;border:2px dashed var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--text3);font-family:Heebo,sans-serif;font-size:13px;margin-top:4px;">+ הוסף עמוד</button><div id="tt-columns-total" style="font-size:14px;font-weight:900;color:var(--orange);text-align:left;padding-top:8px;">סה"כ: 0.00 מ"ר</div></div>
+      <div id="tt-panel-openings" style="display:none;padding:10px;"><div style="font-size:10px;color:var(--text2);margin-bottom:6px;">רוחב x גובה (לניכוי)</div><div id="tt-openings-rows"></div><button onclick="ttAddRow('openings')" style="width:100%;background:none;border:2px dashed var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--text3);font-family:Heebo,sans-serif;font-size:13px;margin-top:4px;">+ הוסף פתח</button><div id="tt-openings-total" style="font-size:14px;font-weight:900;color:#e53e3e;text-align:left;padding-top:8px;">סה"כ לניכוי: 0.00 מ"ר</div></div>
+      <div id="tt-panel-rooms" style="display:none;padding:10px;">
+        <div id="tt-rooms-summary"></div>
+        <button onclick="ttSaveAll()" style="width:100%;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;margin-top:10px;">שמור ל-Supabase</button>
+        <button onclick="ttExportWA()" style="width:100%;background:#25D366;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;margin-top:8px;">שלח WhatsApp</button>
+      </div>
+    </div>
+
+    <!-- Shared rows list -->
+    <div style="margin-top:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;color:var(--text);">פירוט מדידות</div>
+        <div id="to-total-badge" style="display:none;background:var(--orange);color:white;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800;"></div>
+      </div>
+      <div id="to-rows-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">עדיין אין מדידות</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="toGenerateReport()" style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">דוח PDF</button>
+        <button onclick="toSendWA()" style="background:#25D366;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">WhatsApp</button>
+        <button onclick="toSaveSupabase()" style="background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">שמור</button>
+        <button onclick="toClearAll()" style="background:var(--surface2);color:#e53e3e;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">נקה הכל</button>
+      </div>
+    </div>
+
+  </div>
+  <!-- end panel-takeoff -->
+
 </div>
 
 <!-- Modals -->
@@ -436,110 +581,6 @@
 
 <div id="toast"></div>
 
-<!-- ══════════════════════════════════════════════════
-     TAKEOFF PANEL — טייקאוף חכם
-══════════════════════════════════════════════════ -->
-<div id="panel-takeoff" class="panel" style="padding:12px 14px;padding-bottom:80px;">
-
-  <!-- Header row -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-    <div>
-      <div style="font-size:17px;font-weight:900;color:var(--text);">📐 טייקאוף חכם</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:2px;" id="to-project-label">אין פרויקט פעיל</div>
-    </div>
-    <button onclick="toNewSession()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">+ סשן חדש</button>
-  </div>
-
-  <!-- Project + session strip -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-    <input type="text" id="to-project-name" placeholder="שם פרויקט / אתר" oninput="document.getElementById('to-project-label').textContent=this.value||'אין פרויקט פעיל'"
-      style="flex:1;min-width:140px;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
-    <input type="date" id="to-date"
-      style="width:140px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
-  </div>
-
-  <!-- 3 input modes -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-    <button onclick="toMode('type')" id="to-mode-type" class="to-mode-btn to-mode-active">⌨️ הקלדה</button>
-    <button onclick="toMode('voice')" id="to-mode-voice" class="to-mode-btn">🎤 קול</button>
-    <button onclick="toMode('ocr')" id="to-mode-ocr" class="to-mode-btn">📷 OCR</button>
-  </div>
-
-  <!-- TYPE mode input -->
-  <div id="to-input-type" class="to-input-panel">
-    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;">
-      <input type="text" id="to-room" placeholder="שם חדר / אזור (לדוגמה: סלון)" 
-        style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
-      <select id="to-shape" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
-        <option value="rect">מלבן</option>
-        <option value="circle">עיגול</option>
-        <option value="triangle">משולש</option>
-        <option value="manual">ידני</option>
-      </select>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;">
-      <input type="number" id="to-dim1" placeholder="אורך / רדיוס (מ׳)" step="0.01"
-        style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;background:var(--surface2);color:var(--text);"
-        oninput="toPreviewCalc()">
-      <input type="number" id="to-dim2" placeholder="רוחב (מ׳)" step="0.01"
-        style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;background:var(--surface2);color:var(--text);"
-        oninput="toPreviewCalc()">
-      <div id="to-preview" style="background:var(--accent);color:white;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:900;min-width:72px;text-align:center;">—</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <input type="text" id="to-note" placeholder="הערה (אופציונלי)"
-        style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);">
-      <button onclick="toAddRow()" style="background:var(--green);color:white;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">+ הוסף</button>
-    </div>
-  </div>
-
-  <!-- VOICE mode input -->
-  <div id="to-input-voice" class="to-input-panel" style="display:none;">
-    <div style="text-align:center;padding:16px 0 10px;">
-      <button id="to-voice-btn" onclick="toVoiceToggle()"
-        style="background:var(--accent);color:white;border:none;border-radius:50%;width:72px;height:72px;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2);">🎤</button>
-      <div id="to-voice-status" style="font-size:12px;color:var(--text2);margin-top:8px;">לחץ להקלטה</div>
-    </div>
-    <textarea id="to-voice-text" placeholder="הטקסט המוקלט יופיע כאן — AI יפרש אותו לשורות טייקאוף" rows="4"
-      style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);resize:none;margin-bottom:8px;"></textarea>
-    <button onclick="toParseVoice()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">🤖 AI — פרש והוסף שורות</button>
-  </div>
-
-  <!-- OCR mode input -->
-  <div id="to-input-ocr" class="to-input-panel" style="display:none;">
-    <div style="text-align:center;padding:10px 0;">
-      <label for="to-ocr-img" style="display:inline-block;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;padding:20px 30px;cursor:pointer;font-size:13px;color:var(--text2);">
-        📷 צלם / העלה תמונה של הרשימה הכתובה
-        <input type="file" id="to-ocr-img" accept="image/*" capture="environment" style="display:none;" onchange="toOCRProcess(this)">
-      </label>
-      <div id="to-ocr-preview" style="margin-top:10px;"></div>
-    </div>
-    <textarea id="to-ocr-text" placeholder="הטקסט שזוהה מהתמונה יופיע כאן" rows="4"
-      style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface2);color:var(--text);resize:none;margin-bottom:8px;"></textarea>
-    <button onclick="toParseOCR()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:900;cursor:pointer;font-family:Heebo,sans-serif;">🤖 AI — פרש לשורות טייקאוף</button>
-  </div>
-
-  <!-- Rows table -->
-  <div style="margin-top:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:800;color:var(--text);">פירוט מדידות</div>
-      <div id="to-total-badge" style="background:var(--accent);color:white;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800;display:none;"></div>
-    </div>
-    <div id="to-rows-list" style="display:flex;flex-direction:column;gap:6px;">
-      <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">עדיין אין מדידות — הוסף למעלה</div>
-    </div>
-  </div>
-
-  <!-- Actions -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
-    <button onclick="toGenerateReport()" style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">📄 דוח PDF</button>
-    <button onclick="toSendWA()" style="background:#25D366;color:white;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💬 שלח WhatsApp</button>
-    <button onclick="toSaveSupabase()" style="background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💾 שמור Supabase</button>
-    <button onclick="toClearAll()" style="background:var(--surface2);color:var(--red,#e53e3e);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">🗑️ נקה הכל</button>
-  </div>
-
-</div>
-<!-- end panel-takeoff -->
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────
@@ -584,33 +625,18 @@ function toast(msg, dur=2500){
 async function loadScript(name) {
   if (window['_loaded_'+name]) return;
   let code = null;
-  try {
-    const res = await fetch(`${STORAGE}/${name}.js`);
-    if (res.ok) code = await res.text();
-  } catch(e) {}
-  if (!code) {
-    try {
-      const res2 = await fetch(`${STORAGE_FALLBACK}/${name}.js`);
-      if (res2.ok) { code = await res2.text(); console.log(`${name}.js loaded from Supabase fallback`); }
-    } catch(e) {}
-  }
-  if (!code) { console.error(`Module ${name}.js error: Failed to fetch`); return; }
-  const script = document.createElement('script');
-  script.textContent = code;
-  document.head.appendChild(script);
-  window['_loaded_'+name] = true;
-  console.log(`✅ Loaded module: ${name}.js`);
+  try { const r1=await fetch(`${STORAGE}/${name}.js`); if(r1.ok) code=await r1.text(); } catch(e){}
+  if (!code) { try { const r2=await fetch(`${STORAGE_FALLBACK}/${name}.js`); if(r2.ok){code=await r2.text();} } catch(e){} }
+  if (!code) { console.error('Module '+name+'.js error: Failed to fetch'); return; }
+  const s=document.createElement('script'); s.textContent=code; document.head.appendChild(s);
+  window['_loaded_'+name]=true; console.log('Loaded: '+name+'.js');
 }
+
 
 // ── BOOTSTRAP ─────────────────────────────────────────────
 async function bootstrap() {
   // 1. Load CSS from Storage
-  // Load CSS — try GitHub first, fall back to Supabase
-  const cssLink = document.getElementById('bp-css');
-  try {
-    const cssRes = await fetch(`${STORAGE}/bp_style.css`);
-    cssLink.href = cssRes.ok ? `${STORAGE}/bp_style.css` : `${STORAGE_FALLBACK}/bp_style.css`;
-  } catch(e) { cssLink.href = `${STORAGE_FALLBACK}/bp_style.css`; }
+  try{const cr=await fetch(`${STORAGE}/bp_style.css`);document.getElementById('bp-css').href=cr.ok?`${STORAGE}/bp_style.css`:`${STORAGE_FALLBACK}/bp_style.css`;}catch(e){document.getElementById('bp-css').href=`${STORAGE_FALLBACK}/bp_style.css`;}
 
   // 2. Load main JS module from Storage
   await loadScript('beni-pocket');
@@ -644,320 +670,292 @@ async function bootstrap() {
 }
 
 bootstrap();
-// ══════════════════════════════════════════════════════
-// TAKEOFF MODULE — טייקאוף חכם
-// ══════════════════════════════════════════════════════
-(function(){
-  var s = document.createElement('style');
-  s.textContent = `
-    .to-mode-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:9px 6px;font-size:12px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;color:var(--text2);transition:all 0.15s;}
-    .to-mode-active{background:var(--accent)!important;color:white!important;border-color:var(--accent)!important;}
-    .to-input-panel{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;}
-    .to-row-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-    .to-row-name{font-size:13px;font-weight:800;color:var(--text);flex:1;}
-    .to-row-dims{font-size:12px;color:var(--text2);}
-    .to-row-area{font-size:15px;font-weight:900;color:var(--accent);min-width:64px;text-align:left;}
-    .to-row-del{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;}
-  `;
-  document.head.appendChild(s);
-})();
+// ===== TAKEOFF MODULE =====
+var _toRows=[], _toVoiceRecog=null, _toVoiceActive=false;
+var _tcShape='rect';
+var _ttData={floors:[],walls:[],ceilings:[],columns:[],openings:[]};
+var _ttCfg={
+  floors:  {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05e8\u05d5\u05d7\u05d1'],f:function(v){return v[1]*v[2];}},
+  walls:   {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}},
+  ceilings:{cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05e8\u05d5\u05d7\u05d1'],f:function(v){return v[1]*v[2];}},
+  columns: {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d4\u05d9\u05e7\u05e3','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}},
+  openings:{cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05e8\u05d5\u05d7\u05d1','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}}
+};
+var _toPhotoBase64=null,_toPhotoType=null;
 
-var _toRows = [];
-var _toVoiceRecog = null;
-var _toVoiceActive = false;
-var ANTHROPIC_KEY = null; // will use fetch proxy via Beni Pocket pattern
-
-function toInit() {
-  if (!document.getElementById('to-date').value) {
-    document.getElementById('to-date').value = new Date().toISOString().split('T')[0];
-  }
-  toRenderRows();
+function toInit(){
+  if(!document.getElementById('to-date').value)
+    document.getElementById('to-date').value=new Date().toISOString().split('T')[0];
+  toRenderRows();toTableInit();
 }
 
-function toMode(m) {
-  ['type','voice','ocr'].forEach(function(x) {
-    document.getElementById('to-input-'+x).style.display = x===m ? 'block' : 'none';
-    document.getElementById('to-mode-'+x).classList.toggle('to-mode-active', x===m);
+function toMode(m){
+  ['type','voice','photo','calc','table'].forEach(function(x){
+    var el=document.getElementById('to-input-'+x);
+    var btn=document.getElementById('to-mode-'+x);
+    if(el)el.style.display=x===m?'block':'none';
+    if(btn){btn.style.background=x===m?'var(--orange)':'var(--surface2)';btn.style.color=x===m?'white':'var(--text2)';btn.style.border=x===m?'none':'1.5px solid var(--border)';}
   });
 }
 
-function toPreviewCalc() {
-  var d1 = parseFloat(document.getElementById('to-dim1').value) || 0;
-  var d2 = parseFloat(document.getElementById('to-dim2').value) || 0;
-  var shape = document.getElementById('to-shape').value;
-  var area = 0;
-  if (shape === 'rect')     area = d1 * d2;
-  if (shape === 'circle')   area = Math.PI * d1 * d1;
-  if (shape === 'triangle') area = d1 * d2 / 2;
-  if (shape === 'manual')   area = d1;
-  var el = document.getElementById('to-preview');
-  el.textContent = area > 0 ? (Math.round(area*100)/100) + ' מ״ר' : '—';
+function toPreviewCalc(){
+  var d1=parseFloat(document.getElementById('to-dim1').value)||0;
+  var d2=parseFloat(document.getElementById('to-dim2').value)||0;
+  var shape=document.getElementById('to-shape').value;
+  var a=0;
+  if(shape==='rect')a=d1*d2;
+  else if(shape==='circle')a=Math.PI*d1*d1;
+  else if(shape==='triangle')a=d1*d2/2;
+  else a=d1;
+  document.getElementById('to-preview').textContent=a>0?(Math.round(a*100)/100)+' \u05de\u05f4\u05e8':'—';
 }
 
-function toAddRow() {
-  var room  = document.getElementById('to-room').value.trim();
-  var d1    = parseFloat(document.getElementById('to-dim1').value) || 0;
-  var d2    = parseFloat(document.getElementById('to-dim2').value) || 0;
-  var shape = document.getElementById('to-shape').value;
-  var note  = document.getElementById('to-note').value.trim();
-  if (!room || !d1) { showToast('נא למלא שם חדר ומידה'); return; }
-  var area = 0, dimLabel = '';
-  if (shape === 'rect')     { area = d1*d2; dimLabel = d1+'×'+d2; }
-  if (shape === 'circle')   { area = Math.PI*d1*d1; dimLabel = 'r='+d1; }
-  if (shape === 'triangle') { area = d1*d2/2; dimLabel = d1+'×'+d2+'/2'; }
-  if (shape === 'manual')   { area = d1; dimLabel = d1+' מ״ר'; }
-  _toRows.push({ id: Date.now(), room: room, shape: shape, d1: d1, d2: d2, area: Math.round(area*100)/100, dimLabel: dimLabel, note: note });
-  // clear inputs
-  document.getElementById('to-room').value = '';
-  document.getElementById('to-dim1').value = '';
-  document.getElementById('to-dim2').value = '';
-  document.getElementById('to-note').value = '';
-  document.getElementById('to-preview').textContent = '—';
-  toRenderRows();
-  showToast('✅ נוסף: '+room+' — '+(Math.round(area*100)/100)+' מ״ר');
+function toAddRow(){
+  var room=document.getElementById('to-room').value.trim();
+  var d1=parseFloat(document.getElementById('to-dim1').value)||0;
+  var d2=parseFloat(document.getElementById('to-dim2').value)||0;
+  var shape=document.getElementById('to-shape').value;
+  var note=document.getElementById('to-note').value.trim();
+  if(!room||!d1){showToast('\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05e9\u05dd \u05d5\u05de\u05d9\u05d3\u05d4');return;}
+  var a=0,dl='';
+  if(shape==='rect'){a=d1*d2;dl=d1+'\xd7'+d2;}
+  else if(shape==='circle'){a=Math.PI*d1*d1;dl='r='+d1;}
+  else if(shape==='triangle'){a=d1*d2/2;dl=d1+'\xd7'+d2+'/2';}
+  else{a=d1;dl=d1+' \u05de\u05f4\u05e8';}
+  _toRows.push({id:Date.now()+Math.random(),room:room,shape:shape,d1:d1,d2:d2,area:Math.round(a*100)/100,dimLabel:dl,note:note});
+  document.getElementById('to-room').value='';document.getElementById('to-dim1').value='';document.getElementById('to-dim2').value='';document.getElementById('to-note').value='';document.getElementById('to-preview').textContent='—';
+  toRenderRows();showToast('\u2705 '+room+' — '+(Math.round(a*100)/100)+' \u05de\u05f4\u05e8');
 }
 
-function toDeleteRow(id) {
-  _toRows = _toRows.filter(function(r){ return r.id !== id; });
-  toRenderRows();
-}
+function toDeleteRow(id){_toRows=_toRows.filter(function(r){return r.id!==id;});toRenderRows();}
 
-function toRenderRows() {
-  var list = document.getElementById('to-rows-list');
-  if (!_toRows.length) {
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">עדיין אין מדידות — הוסף למעלה</div>';
-    document.getElementById('to-total-badge').style.display = 'none';
-    return;
-  }
-  var total = _toRows.reduce(function(s,r){ return s+r.area; }, 0);
-  total = Math.round(total*100)/100;
-  document.getElementById('to-total-badge').textContent = 'סה״כ: '+total+' מ״ר';
-  document.getElementById('to-total-badge').style.display = 'inline';
-  list.innerHTML = _toRows.map(function(r) {
-    return '<div class="to-row-card">'
-      +'<div style="flex:1;">'
-        +'<div class="to-row-name">'+r.room+'</div>'
-        +'<div class="to-row-dims">'+r.dimLabel+(r.note?' · '+r.note:'')+'</div>'
-      +'</div>'
-      +'<div class="to-row-area">'+r.area+' מ״ר</div>'
-      +'<button class="to-row-del" onclick="toDeleteRow('+r.id+')">✕</button>'
-    +'</div>';
+function toRenderRows(){
+  var list=document.getElementById('to-rows-list');if(!list)return;
+  if(!_toRows.length){list.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">\u05e2\u05d3\u05d9\u05d9\u05df \u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea</div>';document.getElementById('to-total-badge').style.display='none';return;}
+  var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
+  document.getElementById('to-total-badge').textContent='\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8';document.getElementById('to-total-badge').style.display='inline';
+  list.innerHTML=_toRows.map(function(r){
+    return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text);">'+r.room+'</div><div style="font-size:12px;color:var(--text2);">'+r.dimLabel+(r.note?' \xb7 '+r.note:'')+'</div></div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--orange);min-width:58px;text-align:left;">'+r.area+' \u05de\u05f4\u05e8</div>'
+      +'<button onclick="toDeleteRow('+r.id+')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;">\u2715</button>'
+      +'</div>';
   }).join('');
 }
 
-function toNewSession() {
-  if (_toRows.length && !confirm('לפתוח סשן חדש? המדידות הנוכחיות יימחקו (שמור קודם אם צריך)')) return;
-  _toRows = [];
-  document.getElementById('to-project-name').value = '';
-  document.getElementById('to-project-label').textContent = 'אין פרויקט פעיל';
-  document.getElementById('to-date').value = new Date().toISOString().split('T')[0];
-  toRenderRows();
-  showToast('🔄 סשן חדש נפתח');
+function toNewSession(){
+  if(_toRows.length&&!confirm('\u05dc\u05e4\u05ea\u05d5\u05d7 \u05e1\u05e9\u05df \u05d7\u05d3\u05e9?'))return;
+  _toRows=[];document.getElementById('to-project-name').value='';document.getElementById('to-project-label').textContent='\u05d0\u05d9\u05df \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8 \u05e4\u05e2\u05d9\u05dc';
+  document.getElementById('to-date').value=new Date().toISOString().split('T')[0];toRenderRows();showToast('\u05e1\u05e9\u05df \u05d7\u05d3\u05e9');
 }
 
-// ── VOICE INPUT ──────────────────────────────────────
-function toVoiceToggle() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    showToast('הדפדפן לא תומך בזיהוי קול'); return;
-  }
-  if (_toVoiceActive) {
-    if (_toVoiceRecog) _toVoiceRecog.stop();
-    _toVoiceActive = false;
-    document.getElementById('to-voice-btn').textContent = '🎤';
-    document.getElementById('to-voice-status').textContent = 'לחץ להקלטה';
-    return;
-  }
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  _toVoiceRecog = new SR();
-  _toVoiceRecog.lang = 'he-IL';
-  _toVoiceRecog.continuous = true;
-  _toVoiceRecog.interimResults = false;
-  _toVoiceRecog.onresult = function(e) {
-    var t = Array.from(e.results).map(function(r){ return r[0].transcript; }).join(' ');
-    var el = document.getElementById('to-voice-text');
-    el.value = (el.value ? el.value+' ' : '') + t;
-  };
-  _toVoiceRecog.onerror = function() {
-    _toVoiceActive = false;
-    document.getElementById('to-voice-btn').textContent = '🎤';
-    document.getElementById('to-voice-status').textContent = 'שגיאה — נסה שוב';
-  };
-  _toVoiceRecog.start();
-  _toVoiceActive = true;
-  document.getElementById('to-voice-btn').textContent = '⏹';
-  document.getElementById('to-voice-status').textContent = '🔴 מקליט... דבר עכשיו';
+function toVoiceToggle(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('\u05d4\u05d3\u05e4\u05d3\u05e4\u05df \u05dc\u05d0 \u05ea\u05d5\u05de\u05da');return;}
+  if(_toVoiceActive){if(_toVoiceRecog)_toVoiceRecog.stop();_toVoiceActive=false;document.getElementById('to-voice-btn').textContent='\ud83c\udfa4';document.getElementById('to-voice-status').textContent='\u05dc\u05d7\u05e5 \u05dc\u05d4\u05e7\u05dc\u05d8\u05d4';return;}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;_toVoiceRecog=new SR();_toVoiceRecog.lang='he-IL';_toVoiceRecog.continuous=true;_toVoiceRecog.interimResults=false;
+  _toVoiceRecog.onresult=function(e){var t=Array.from(e.results).map(function(r){return r[0].transcript;}).join(' ');var el=document.getElementById('to-voice-text');el.value=(el.value?el.value+' ':'')+t;};
+  _toVoiceRecog.onerror=function(){_toVoiceActive=false;document.getElementById('to-voice-btn').textContent='\ud83c\udfa4';};
+  _toVoiceRecog.start();_toVoiceActive=true;document.getElementById('to-voice-btn').textContent='\u23f9';document.getElementById('to-voice-status').textContent='\ud83d\udd34 \u05de\u05e7\u05dc\u05d9\u05d8...';
 }
 
-// ── OCR via Claude API ───────────────────────────────
-async function toOCRProcess(input) {
-  var file = input.files[0];
-  if (!file) return;
-  var preview = document.getElementById('to-ocr-preview');
-  var img = document.createElement('img');
-  img.style.cssText = 'max-width:100%;border-radius:8px;margin-bottom:8px;';
-  var reader = new FileReader();
-  reader.onload = async function(e) {
-    img.src = e.target.result;
-    preview.innerHTML = '';
-    preview.appendChild(img);
-    var base64 = e.target.result.split(',')[1];
-    var mediaType = file.type || 'image/jpeg';
-    document.getElementById('to-ocr-text').value = '⏳ מזהה טקסט מהתמונה...';
-    try {
-      var resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'זוהי תמונה של רשימת מדידות בכתב יד של מודד/קבלן. אנא חלץ את כל המדידות מהתמונה בצורה מדויקת כפי שהן כתובות. כתוב שורה אחת לכל מדידה. שמור על המספרים המקוריים.' }
-          ]}]
-        })
-      });
-      var data = await resp.json();
-      var text = (data.content && data.content[0] && data.content[0].text) || 'לא זוהה טקסט';
-      document.getElementById('to-ocr-text').value = text;
-    } catch(e) {
-      document.getElementById('to-ocr-text').value = 'שגיאה בזיהוי: ' + e.message;
-    }
-  };
-  reader.readAsDataURL(file);
+function toPhotoCapture(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    _toPhotoBase64=e.target.result.split(',')[1];_toPhotoType=file.type||'image/jpeg';
+    var img=document.createElement('img');img.src=e.target.result;img.style.cssText='max-width:100%;max-height:180px;border-radius:8px;';
+    var prev=document.getElementById('to-photo-preview');prev.innerHTML='';prev.appendChild(img);
+    document.getElementById('to-photo-status').textContent='\u2705 \u05ea\u05de\u05d5\u05e0\u05d4 \u05de\u05d5\u05db\u05e0\u05ea';
+    document.getElementById('to-photo-save-btn').style.display='block';document.getElementById('to-photo-ocr-btn').style.display='block';
+  };reader.readAsDataURL(file);
 }
 
-// ── AI PARSE (voice or OCR text → structured rows) ──
-async function toParseVoice() {
-  var text = document.getElementById('to-voice-text').value.trim();
-  if (!text) { showToast('אין טקסט לפרש'); return; }
-  await toAIParse(text);
+async function toPhotoSave(){
+  if(!_toPhotoBase64){showToast('\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4');return;}
+  var project=(document.getElementById('to-project-name').value.trim()||'general').replace(/\s+/g,'_');
+  try{
+    var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
+    for(var i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+    var res=await sb.storage.from('photos').upload('takeoffs/'+project+'_'+Date.now()+'.jpg',new Blob([ab],{type:_toPhotoType}),{upsert:false});
+    if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');
+  }catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
 
-async function toParseOCR() {
-  var text = document.getElementById('to-ocr-text').value.trim();
-  if (!text) { showToast('אין טקסט לפרש'); return; }
-  await toAIParse(text);
+async function toPhotoOCR(){
+  if(!_toPhotoBase64){showToast('\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4');return;}
+  document.getElementById('to-photo-status').textContent='AI \u05de\u05d6\u05d4\u05d4...';
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:_toPhotoType,data:_toPhotoBase64}},{type:'text',text:'\u05d6\u05d5\u05d4\u05d9 \u05ea\u05de\u05d5\u05e0\u05d4 \u05e9\u05dc \u05e8\u05e9\u05d9\u05de\u05ea \u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d1\u05db\u05ea\u05d1 \u05d9\u05d3. \u05d7\u05dc\u05e5 \u05d0\u05ea \u05db\u05dc \u05d4\u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d1\u05d3\u05d9\u05d5\u05e7, \u05e9\u05d5\u05e8\u05d4 \u05dc\u05db\u05dc \u05de\u05d3\u05d9\u05d3\u05d4.'}]}]})});
+    var data=await resp.json();
+    var text=(data.content&&data.content[0]&&data.content[0].text)||'\u05dc\u05d0 \u05d6\u05d5\u05d4\u05d4';
+    document.getElementById('to-photo-ocr-text').value=text;document.getElementById('to-photo-ocr-result').style.display='block';
+    document.getElementById('to-photo-status').textContent='\u2705 \u05d6\u05d5\u05d4\u05d4';
+  }catch(e){document.getElementById('to-photo-status').textContent='\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message;}
 }
 
-async function toAIParse(rawText) {
-  showToast('⏳ AI מפרש מדידות...');
-  try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content:
-          'הטקסט הבא מכיל מדידות של חדרים/אזורים שנלקחו באתר בנייה. '
-          +'פרש אותו לרשימת JSON בלבד — אין טקסט נוסף, אין ```json, רק מערך JSON. '
-          +'כל אובייקט: {"room":"שם","d1":מספר,"d2":מספר_או_0,"shape":"rect/circle/triangle/manual","note":""}. '
-          +'אם יש רק מידה אחת לחדר — d2=0 ו-shape=manual ו-d1=השטח. '
-          +'אם שני מידות — shape=rect. '
-          +'הטקסט: ' + rawText
-        }]
-      })
+async function toParseVoice(){await toAIParse(document.getElementById('to-voice-text').value.trim());}
+
+async function toAIParse(rawText){
+  if(!rawText){showToast('\u05d0\u05d9\u05df \u05d8\u05e7\u05e1\u05d8');return;}showToast('AI \u05de\u05e4\u05e8\u05e9...');
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:'\u05e4\u05e8\u05e9 \u05d0\u05ea \u05d4\u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d4\u05d1\u05d0\u05d5\u05ea \u05dc\u05de\u05e2\u05e8\u05da JSON \u05d1\u05dc\u05d1\u05d3. \u05db\u05dc \u05d0\u05d5\u05d1\u05d9\u05d9\u05e7\u05d8: {"room":"\u05e9\u05dd","d1":\u05de\u05e1\u05e4\u05e8,"d2":\u05de\u05e1\u05e4\u05e8_\u05d0\u05d5_0,"shape":"rect/circle/triangle/manual","note":""}. \u05d8\u05e7\u05e1\u05d8: '+rawText}]})});
+    var data=await resp.json();var raw=(data.content&&data.content[0]&&data.content[0].text)||'[]';
+    raw=raw.replace(/```json|```/g,'').trim();var parsed=JSON.parse(raw);var added=0;
+    parsed.forEach(function(r){
+      if(!r.room||!r.d1)return;var a=0,dl='';
+      if(r.shape==='rect'){a=r.d1*(r.d2||0);dl=r.d1+'\xd7'+(r.d2||0);}
+      else if(r.shape==='circle'){a=Math.PI*r.d1*r.d1;dl='r='+r.d1;}
+      else if(r.shape==='triangle'){a=r.d1*(r.d2||0)/2;dl=r.d1+'\xd7'+(r.d2||0)+'/2';}
+      else{a=r.d1;dl=r.d1+' \u05de\u05f4\u05e8';}
+      _toRows.push({id:Date.now()+Math.random(),room:r.room,shape:r.shape||'rect',d1:r.d1,d2:r.d2||0,area:Math.round(a*100)/100,dimLabel:dl,note:r.note||''});added++;
     });
-    var data = await resp.json();
-    var raw = (data.content && data.content[0] && data.content[0].text) || '[]';
-    raw = raw.replace(/```json|```/g,'').trim();
-    var parsed = JSON.parse(raw);
-    var added = 0;
-    parsed.forEach(function(r) {
-      if (!r.room || !r.d1) return;
-      var area = 0, dimLabel = '';
-      if (r.shape==='rect')     { area=r.d1*(r.d2||0); dimLabel=r.d1+'×'+(r.d2||0); }
-      if (r.shape==='circle')   { area=Math.PI*r.d1*r.d1; dimLabel='r='+r.d1; }
-      if (r.shape==='triangle') { area=r.d1*(r.d2||0)/2; dimLabel=r.d1+'×'+(r.d2||0)+'/2'; }
-      if (r.shape==='manual')   { area=r.d1; dimLabel=r.d1+' מ״ר'; }
-      _toRows.push({ id: Date.now()+Math.random(), room: r.room, shape: r.shape||'rect', d1: r.d1, d2: r.d2||0, area: Math.round(area*100)/100, dimLabel: dimLabel, note: r.note||'' });
-      added++;
-    });
-    toRenderRows();
-    showToast('✅ AI הוסיף '+added+' שורות');
-  } catch(e) {
-    showToast('שגיאה: ' + e.message);
-  }
+    toRenderRows();showToast('\u2705 AI \u05d4\u05d5\u05e1\u05d9\u05e3 '+added+' \u05e9\u05d5\u05e8\u05d5\u05ea');
+  }catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
 
-// ── SAVE TO SUPABASE ─────────────────────────────────
-async function toSaveSupabase() {
-  if (!_toRows.length) { showToast('אין מדידות לשמור'); return; }
-  var project = document.getElementById('to-project-name').value.trim() || 'ללא שם';
-  var date    = document.getElementById('to-date').value || new Date().toISOString().split('T')[0];
-  var total   = _toRows.reduce(function(s,r){ return s+r.area; }, 0);
-  try {
-    var res = await sb.from('site_takeoffs').insert({
-      project_name: project,
-      takeoff_date: date,
-      rows: JSON.stringify(_toRows),
-      total_area: Math.round(total*100)/100,
-      created_at: new Date().toISOString()
-    });
-    if (res.error) throw res.error;
-    showToast('✅ נשמר ב-Supabase');
-  } catch(e) {
-    showToast('שגיאה: ' + e.message);
-  }
+function toCalcShape(s){
+  _tcShape=s;
+  ['rect','circle','tri','trap'].forEach(function(x){
+    var p=document.getElementById('tc-panel-'+x),b=document.getElementById('tc-'+x);
+    if(p)p.style.display=x===s?'block':'none';
+    if(b){b.style.background=x===s?'var(--orange)':'var(--surface)';b.style.color=x===s?'white':'var(--text2)';b.style.border=x===s?'none':'1.5px solid var(--border)';}
+  });tcCalc();
 }
 
-// ── GENERATE REPORT (print window) ──────────────────
-function toGenerateReport() {
-  if (!_toRows.length) { showToast('אין מדידות לדוח'); return; }
-  var project = document.getElementById('to-project-name').value.trim() || 'ללא שם';
-  var date    = document.getElementById('to-date').value || new Date().toISOString().split('T')[0];
-  var total   = Math.round(_toRows.reduce(function(s,r){ return s+r.area; },0)*100)/100;
-  var rows = _toRows.map(function(r,i) {
-    return '<tr><td>'+(i+1)+'</td><td>'+r.room+'</td><td>'+r.dimLabel+'</td><td style="font-weight:700;color:#1a3d5c;">'+r.area+' מ״ר</td><td>'+r.note+'</td></tr>';
-  }).join('');
-  var win = window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>טייקאוף — '+project+'</title>'
-    +'<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">'
-    +'<style>body{font-family:Heebo,sans-serif;padding:30px;color:#111;direction:rtl}'
-    +'h1{font-size:22px;font-weight:900;color:#1a3d5c;margin-bottom:4px}'
-    +'.meta{font-size:13px;color:#666;margin-bottom:20px}'
-    +'table{width:100%;border-collapse:collapse;font-size:13px}'
-    +'th{background:#1a3d5c;color:#c9a84c;padding:9px 10px;text-align:right}'
-    +'td{padding:8px 10px;border-bottom:1px solid #eee}'
-    +'.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:14px}'
-    +'@media print{button{display:none}}</style></head><body>'
-    +'<button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:20px;font-family:Heebo,sans-serif;">🖨️ הדפס / שמור PDF</button>'
-    +'<h1>📐 דוח טייקאוף — '+project+'</h1>'
-    +'<div class="meta">תאריך: '+date+' | הופק ע״י: בני פרסקי ניהול פרויקטים</div>'
-    +'<table><thead><tr><th>#</th><th>חדר / אזור</th><th>מידות</th><th>שטח</th><th>הערות</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<div class="total">סה״כ שטח: '+total+' מ״ר</div>'
-    +'<div style="font-size:11px;color:#aaa;margin-top:30px;border-top:1px solid #eee;padding-top:10px;">מסמך זה הופק ממערכת בני פוקט | '+new Date().toLocaleDateString('he-IL')+'</div>'
-    +'</body></html>');
+function tcCalc(){
+  var a=0;
+  if(_tcShape==='rect'){var l=parseFloat(document.getElementById('tc-r-l').value)||0,w=parseFloat(document.getElementById('tc-r-w').value)||0;a=l*w;}
+  else if(_tcShape==='circle'){var r=parseFloat(document.getElementById('tc-c-r').value)||0;a=Math.PI*r*r;}
+  else if(_tcShape==='tri'){var b=parseFloat(document.getElementById('tc-t-b').value)||0,h=parseFloat(document.getElementById('tc-t-h').value)||0;a=b*h/2;}
+  else if(_tcShape==='trap'){var a1=parseFloat(document.getElementById('tc-p-a').value)||0,b2=parseFloat(document.getElementById('tc-p-b').value)||0,h2=parseFloat(document.getElementById('tc-p-h').value)||0;a=(a1+b2)/2*h2;}
+  var el=document.getElementById('tc-result');el.textContent=a>0?(Math.round(a*100)/100)+' \u05de\u05f4\u05e8':'— \u05de\u05f4\u05e8';el.dataset.val=a;
+}
+
+function tcAddToList(){
+  var a=parseFloat(document.getElementById('tc-result').dataset.val)||0;
+  var label=document.getElementById('tc-room-label').value.trim();
+  if(!a||!label){showToast('\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05e9\u05dd \u05d5\u05dc\u05d7\u05e9\u05d1');return;}
+  var dims='';
+  if(_tcShape==='rect')dims=(document.getElementById('tc-r-l').value||'0')+'\xd7'+(document.getElementById('tc-r-w').value||'0');
+  else if(_tcShape==='circle')dims='r='+(document.getElementById('tc-c-r').value||'0');
+  else if(_tcShape==='tri')dims=(document.getElementById('tc-t-b').value||'0')+'\xd7'+(document.getElementById('tc-t-h').value||'0')+'/2';
+  else if(_tcShape==='trap')dims='('+document.getElementById('tc-p-a').value+'+'+document.getElementById('tc-p-b').value+')\xd7'+document.getElementById('tc-p-h').value+'/2';
+  _toRows.push({id:Date.now()+Math.random(),room:label,shape:_tcShape,d1:0,d2:0,area:Math.round(a*100)/100,dimLabel:dims,note:''});
+  document.getElementById('tc-room-label').value='';toRenderRows();showToast('\u2705 '+label);
+}
+
+function toTableTab(tab){
+  var tabs=['floors','walls','ceilings','columns','openings','rooms'];
+  tabs.forEach(function(t){
+    var p=document.getElementById('tt-panel-'+t),b=document.getElementById('tt-tab-'+t);
+    if(p)p.style.display=t===tab?'block':'none';
+    if(b){b.style.color=t===tab?'var(--orange)':'var(--text2)';b.style.borderBottom=t===tab?'2px solid var(--orange)':'2px solid transparent';}
+  });
+  if(tab==='rooms')ttRenderSummary();
+}
+
+function ttAddRow(tab){_ttData[tab].push({id:Date.now()+Math.random(),vals:['',0,0]});ttRenderTab(tab);}
+
+function ttRenderTab(tab){
+  var cfg=_ttCfg[tab],rows=_ttData[tab],container=document.getElementById('tt-'+tab+'-rows');if(!container)return;
+  container.innerHTML='';
+  rows.forEach(function(row){
+    var div=document.createElement('div');div.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:4px;align-items:center;margin-bottom:4px;';
+    var a=cfg.f(row.vals),rid=row.id;
+    div.innerHTML='<input style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);width:100%;" type="text" value="'+row.vals[0]+'" placeholder="'+cfg.cols[0]+'" oninput="ttUpdate(\''+tab+'\','+rid+',0,this.value)">'
+      +'<input style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:15px;background:var(--surface);color:var(--text);width:100%;text-align:center;" type="number" step="0.01" value="'+(row.vals[1]||'')+'" placeholder="'+cfg.cols[1]+'" oninput="ttUpdate(\''+tab+'\','+rid+',1,this.value)">'
+      +'<input style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:Heebo,sans-serif;font-size:15px;background:var(--surface);color:var(--text);width:100%;text-align:center;" type="number" step="0.01" value="'+(row.vals[2]||'')+'" placeholder="'+cfg.cols[2]+'" oninput="ttUpdate(\''+tab+'\','+rid+',2,this.value)">'
+      +'<div id="ttr-'+rid+'" style="background:var(--orange);color:white;border-radius:8px;padding:8px 5px;font-size:13px;font-weight:900;text-align:center;min-width:48px;">'+(a>0?Math.round(a*100)/100:'—')+'</div>'
+      +'<button onclick="ttDelRow(\''+tab+'\','+rid+')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;">\u2715</button>';
+    container.appendChild(div);
+  });ttUpdateTotal(tab);
+}
+
+function ttUpdate(tab,id,idx,val){
+  var row=_ttData[tab].find(function(r){return r.id===id;});if(!row)return;
+  row.vals[idx]=idx===0?val:(parseFloat(val)||0);
+  var a=_ttCfg[tab].f(row.vals),el=document.getElementById('ttr-'+id);if(el)el.textContent=a>0?Math.round(a*100)/100:'—';
+  ttUpdateTotal(tab);
+}
+
+function ttDelRow(tab,id){_ttData[tab]=_ttData[tab].filter(function(r){return r.id!==id;});ttRenderTab(tab);}
+
+function ttUpdateTotal(tab){
+  var total=_ttData[tab].reduce(function(s,r){return s+_ttCfg[tab].f(r.vals);},0);
+  var el=document.getElementById('tt-'+tab+'-total');
+  if(el)el.textContent=(tab==='openings'?'\u05e1\u05d4\u05f4\u05db \u05dc\u05e0\u05d9\u05db\u05d5\u05d9: ':'\u05e1\u05d4\u05f4\u05db: ')+Math.round(total*100)/100+' \u05de\u05f4\u05e8';
+}
+
+function ttRenderSummary(){
+  var tabs=['floors','walls','ceilings','columns','openings'];
+  var names={floors:'\u05e8\u05e6\u05e4\u05d5\u05ea',walls:'\u05e7\u05d9\u05e8\u05d5\u05ea',ceilings:'\u05ea\u05e7\u05e8\u05d5\u05ea',columns:'\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',openings:'\u05e4\u05ea\u05d7\u05d9\u05dd (\u05e0\u05d9\u05db\u05d5\u05d9)'};
+  var grand=0,html='';
+  tabs.forEach(function(tab){
+    var total=Math.round(_ttData[tab].reduce(function(s,r){return s+_ttCfg[tab].f(r.vals);},0)*100)/100;
+    if(tab!=='openings')grand+=total;
+    html+='<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text);">'+names[tab]+'</span>'
+      +'<span style="font-size:15px;font-weight:900;color:'+(tab==='openings'?'#e53e3e':'var(--orange)')+';">'+total+' \u05de\u05f4\u05e8</span></div>';
+  });
+  html+='<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:900;color:var(--text);"><span>\u05e1\u05d4\u05f4\u05db \u05e0\u05d8\u05d5</span><span style="color:var(--orange);">'+Math.round(grand*100)/100+' \u05de\u05f4\u05e8</span></div>';
+  var el=document.getElementById('tt-rooms-summary');if(el)el.innerHTML=html;
+}
+
+async function ttSaveAll(){
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
+  var date=document.getElementById('to-date').value||new Date().toISOString().split('T')[0];
+  var totals={};['floors','walls','ceilings','columns','openings'].forEach(function(t){totals[t]=Math.round(_ttData[t].reduce(function(s,r){return s+_ttCfg[t].f(r.vals);},0)*100)/100;});
+  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_ttData),total_area:totals.floors,created_at:new Date().toISOString(),takeoff_type:'table',totals:JSON.stringify(totals)});if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');}catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
+}
+
+function ttExportWA(){
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
+  var date=document.getElementById('to-date').value||'';
+  var names={floors:'\u05e8\u05e6\u05e4\u05d5\u05ea',walls:'\u05e7\u05d9\u05e8\u05d5\u05ea',ceilings:'\u05ea\u05e7\u05e8\u05d5\u05ea',columns:'\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',openings:'\u05e4\u05ea\u05d7\u05d9\u05dd'};
+  var msg='\ud83d\udcd0 *\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'*\n\u05ea\u05d0\u05e8\u05d9\u05da: '+date+'\n\n';
+  ['floors','walls','ceilings','columns','openings'].forEach(function(t){var tot=Math.round(_ttData[t].reduce(function(s,r){return s+_ttCfg[t].f(r.vals);},0)*100)/100;if(tot>0)msg+=names[t]+': '+tot+' \u05de\u05f4\u05e8\n';});
+  msg+='\n\u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd';
+  var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function toTableInit(){
+  var tabs=['floors','walls','ceilings','columns','openings'];
+  tabs.forEach(function(tab){
+    if(_ttData[tab].length===0){_ttData[tab].push({id:Date.now()+Math.random(),vals:['',0,0]});_ttData[tab].push({id:Date.now()+Math.random()+1,vals:['',0,0]});}
+    ttRenderTab(tab);
+  });
+}
+
+async function toSaveSupabase(){
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
+  var date=document.getElementById('to-date').value||new Date().toISOString().split('T')[0];
+  var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
+  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_toRows),total_area:total,created_at:new Date().toISOString()});if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');}catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
+}
+
+function toGenerateReport(){
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
+  var date=document.getElementById('to-date').value||'';
+  var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
+  var rows=_toRows.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.room+'</td><td>'+r.dimLabel+'</td><td style="font-weight:700;color:#1a3d5c;">'+r.area+' \u05de\u05f4\u05e8</td><td>'+r.note+'</td></tr>';}).join('');
+  var win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>\u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Heebo,sans-serif;padding:28px;direction:rtl}h1{font-size:20px;font-weight:900;color:#1a3d5c;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#1a3d5c;color:#c9a84c;padding:8px}td{padding:7px 8px;border-bottom:1px solid #eee}.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:12px}@media print{button{display:none}}</style></head><body><button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:18px;font-family:Heebo,sans-serif;">\u05d4\u05d3\u05e4\u05e1 / PDF</button><h1>\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'</h1><div class="meta">\u05ea\u05d0\u05e8\u05d9\u05da: '+date+' | \u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd</div><table><thead><tr><th>#</th><th>\u05d7\u05d3\u05e8 / \u05d0\u05d6\u05d5\u05e8</th><th>\u05de\u05d9\u05d3\u05d5\u05ea</th><th>\u05e9\u05d8\u05d7</th><th>\u05d4\u05e2\u05e8\u05d5\u05ea</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8</div></body></html>');
   win.document.close();
 }
 
-// ── WHATSAPP REPORT ──────────────────────────────────
-function toSendWA() {
-  if (!_toRows.length) { showToast('אין מדידות לשליחה'); return; }
-  var project = document.getElementById('to-project-name').value.trim() || 'ללא שם';
-  var date    = document.getElementById('to-date').value || '';
-  var total   = Math.round(_toRows.reduce(function(s,r){ return s+r.area; },0)*100)/100;
-  var lines   = _toRows.map(function(r,i){ return (i+1)+'. '+r.room+' — '+r.area+' מ״ר ('+r.dimLabel+')'; }).join('\n');
-  var msg = '📐 *דוח טייקאוף*\n'
-    +'פרויקט: '+project+'\n'
-    +'תאריך: '+date+'\n\n'
-    + lines +'\n\n'
-    +'*סה״כ: '+total+' מ״ר*\n\n'
-    +'בני פרסקי ניהול פרויקטים 🏗️';
-  var a = document.createElement('a');
-  a.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
-  a.target = '_blank'; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+function toSendWA(){
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
+  var date=document.getElementById('to-date').value||'';
+  var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
+  var lines=_toRows.map(function(r,i){return (i+1)+'. '+r.room+' \u2014 '+r.area+' \u05de\u05f4\u05e8 ('+r.dimLabel+')';}).join('\n');
+  var msg='\ud83d\udcd0 *\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3*\n\u05e4\u05e8\u05d5\u05d9\u05e7\u05d8: '+project+'\n\u05ea\u05d0\u05e8\u05d9\u05da: '+date+'\n\n'+lines+'\n\n*\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8*\n\n\u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd';
+  var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
-// ── CLEAR ────────────────────────────────────────────
-function toClearAll() {
-  if (!confirm('למחוק את כל המדידות?')) return;
-  _toRows = [];
-  toRenderRows();
-  showToast('🗑️ נוקה');
-}
+function toClearAll(){if(!confirm('\u05dc\u05de\u05d7\u05d5\u05e7 \u05d4\u05db\u05dc?'))return;_toRows=[];toRenderRows();}
 
 </script>
 </body>
