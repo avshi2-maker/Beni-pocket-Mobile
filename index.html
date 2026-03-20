@@ -656,10 +656,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
         <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">עדיין אין מדידות</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="toGenerateReport()" style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">דוח PDF</button>
-        <button onclick="toSendWA()" style="background:#25D366;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">WhatsApp</button>
-        <button onclick="toSaveSupabase()" style="background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">שמור</button>
-        <button onclick="toClearAll()" style="background:var(--surface2);color:#e53e3e;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">נקה הכל</button>
+        <button onclick="toGenerateReport()" style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">📄 דוח PDF</button>
+        <button onclick="toSendWA()" style="background:#25D366;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💬 WhatsApp</button>
+        <button onclick="toSaveSupabase()" style="background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💾 שמור</button>
+        <button onclick="toExportXLS()" style="background:#1e6b30;color:white;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">📊 ייצוא XLS</button>
+        <button onclick="toClearAll()" style="background:var(--surface2);color:#e53e3e;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;grid-column:1/-1;">🗑️ נקה הכל</button>
       </div>
     </div>
 
@@ -692,7 +693,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
+// -- CONFIG ----------------------------------------------
 const SB_URL = 'https://vmcipofovheztbjmhwsl.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2lwb2ZvdmhlenRiam1od3NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjE2MTcsImV4cCI6MjA4NzAzNzYxN30.LPq5N2Xo8iEqjgz2UhmdzUdh5tpGT3EYzSxJcYBEJ1w';
 const STORAGE = 'https://avshi2-maker.github.io/Beni-pocket-Mobile';
@@ -700,10 +701,10 @@ const STORAGE_FALLBACK = `${SB_URL}/storage/v1/object/public/app-assets`;
 window.sb = window.supabase.createClient(SB_URL, SB_KEY);
 window.APP = { config: {}, loaded: {} };
 
-// ── TAB SWITCHER ────────────────────────────────────────
+// -- TAB SWITCHER ----------------------------------------
 function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  // Hide all panels using inline style — guaranteed regardless of CSS loading
+  // Hide all panels using inline style - guaranteed regardless of CSS loading
   document.querySelectorAll('.panel').forEach(function(p) {
     p.style.display = 'none';
     p.classList.remove('active');
@@ -723,14 +724,14 @@ function switchTab(tab) {
   if (tab === 'takeoff') toInit();
 }
 
-// ── CLOCK ────────────────────────────────────────────────
+// -- CLOCK ------------------------------------------------
 (function clock(){
   const el = document.getElementById('clock');
   if(el){ const n=new Date(); el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
   setTimeout(clock,1000);
 })();
 
-// ── TOAST ─────────────────────────────────────────────────
+// -- TOAST -------------------------------------------------
 function toast(msg, dur=2500){
   let t=document.getElementById('toast');
   if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-family:Heebo,sans-serif;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;';document.body.appendChild(t);}
@@ -738,7 +739,7 @@ function toast(msg, dur=2500){
   clearTimeout(t._t); t._t=setTimeout(()=>{t.style.opacity='0';},dur);
 }
 
-// ── JS MODULE LOADER ─────────────────────────────────────
+// -- JS MODULE LOADER -------------------------------------
 async function loadScript(name) {
   if (window['_loaded_'+name]) return;
   let code = null;
@@ -750,13 +751,13 @@ async function loadScript(name) {
 }
 
 
-// ── BOOTSTRAP ─────────────────────────────────────────────
+// -- BOOTSTRAP ---------------------------------------------
 async function bootstrap() {
   // 1. Load CSS from Storage
-  // CSS is inlined — no fetch needed
+  // CSS is inlined - no fetch needed
 
-  // 2. beni-pocket.js is now inlined — no fetch needed
-  // await loadScript('beni-pocket'); // DISABLED — inlined below
+  // 2. beni-pocket.js is now inlined - no fetch needed
+  // await loadScript('beni-pocket'); // DISABLED - inlined below
 
   // 3. Load app config from Supabase
   try {
@@ -787,7 +788,7 @@ async function bootstrap() {
 }
 
 bootstrap();
-// showToast fallback — defined here so takeoff module can use it
+// showToast fallback - defined here so takeoff module can use it
 // (beni-pocket.js defines the full version later; this is overridden)
 if (typeof showToast === 'undefined') {
   function showToast(msg) {
@@ -911,35 +912,47 @@ async function toPhotoSave(){
 }
 
 async function toPhotoOCR(){
-  if(!_toPhotoBase64){showToast('\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4');return;}
-  document.getElementById('to-photo-status').textContent='AI \u05de\u05d6\u05d4\u05d4...';
-  try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:_toPhotoType,data:_toPhotoBase64}},{type:'text',text:'\u05d6\u05d5\u05d4\u05d9 \u05ea\u05de\u05d5\u05e0\u05d4 \u05e9\u05dc \u05e8\u05e9\u05d9\u05de\u05ea \u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d1\u05db\u05ea\u05d1 \u05d9\u05d3. \u05d7\u05dc\u05e5 \u05d0\u05ea \u05db\u05dc \u05d4\u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d1\u05d3\u05d9\u05d5\u05e7, \u05e9\u05d5\u05e8\u05d4 \u05dc\u05db\u05dc \u05de\u05d3\u05d9\u05d3\u05d4.'}]}]})});
-    var data=await resp.json();
-    var text=(data.content&&data.content[0]&&data.content[0].text)||'\u05dc\u05d0 \u05d6\u05d5\u05d4\u05d4';
-    document.getElementById('to-photo-ocr-text').value=text;document.getElementById('to-photo-ocr-result').style.display='block';
-    document.getElementById('to-photo-status').textContent='\u2705 \u05d6\u05d5\u05d4\u05d4';
-  }catch(e){document.getElementById('to-photo-status').textContent='\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message;}
+  if(!_toPhotoBase64){showToast('אין תמונה');return;}
+  // Claude API has CORS restrictions from browser
+  // Show the photo and let user manually type the measurements they see
+  document.getElementById('to-photo-ocr-text').value = '';
+  document.getElementById('to-photo-ocr-text').placeholder = 'כתוב מדידות. לדוגמא: סלון 6.5 4.2';
+  document.getElementById('to-photo-ocr-result').style.display='block';
+  document.getElementById('to-photo-status').textContent='העתק את המדידות מהתמונה לתיבת הטקסט ולחץ הוסף';
 }
 
 async function toParseVoice(){await toAIParse(document.getElementById('to-voice-text').value.trim());}
 
 async function toAIParse(rawText){
-  if(!rawText){showToast('\u05d0\u05d9\u05df \u05d8\u05e7\u05e1\u05d8');return;}showToast('AI \u05de\u05e4\u05e8\u05e9...');
-  try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:'\u05e4\u05e8\u05e9 \u05d0\u05ea \u05d4\u05de\u05d3\u05d9\u05d3\u05d5\u05ea \u05d4\u05d1\u05d0\u05d5\u05ea \u05dc\u05de\u05e2\u05e8\u05da JSON \u05d1\u05dc\u05d1\u05d3. \u05db\u05dc \u05d0\u05d5\u05d1\u05d9\u05d9\u05e7\u05d8: {"room":"\u05e9\u05dd","d1":\u05de\u05e1\u05e4\u05e8,"d2":\u05de\u05e1\u05e4\u05e8_\u05d0\u05d5_0,"shape":"rect/circle/triangle/manual","note":""}. \u05d8\u05e7\u05e1\u05d8: '+rawText}]})});
-    var data=await resp.json();var raw=(data.content&&data.content[0]&&data.content[0].text)||'[]';
-    raw=raw.replace(/```json|```/g,'').trim();var parsed=JSON.parse(raw);var added=0;
-    parsed.forEach(function(r){
-      if(!r.room||!r.d1)return;var a=0,dl='';
-      if(r.shape==='rect'){a=r.d1*(r.d2||0);dl=r.d1+'\xd7'+(r.d2||0);}
-      else if(r.shape==='circle'){a=Math.PI*r.d1*r.d1;dl='r='+r.d1;}
-      else if(r.shape==='triangle'){a=r.d1*(r.d2||0)/2;dl=r.d1+'\xd7'+(r.d2||0)+'/2';}
-      else{a=r.d1;dl=r.d1+' \u05de\u05f4\u05e8';}
-      _toRows.push({id:Date.now()+Math.random(),room:r.room,shape:r.shape||'rect',d1:r.d1,d2:r.d2||0,area:Math.round(a*100)/100,dimLabel:dl,note:r.note||''});added++;
-    });
-    toRenderRows();showToast('\u2705 AI \u05d4\u05d5\u05e1\u05d9\u05e3 '+added+' \u05e9\u05d5\u05e8\u05d5\u05ea');
-  }catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
+  if(!rawText){showToast('אין טקסט');return;}
+  showToast('מפרש מדידות...');
+  // Local parser - works offline, no CORS issues
+  // Parses lines like: "salon 6.5 4.2", "mirdaf 30", "kir 10 2.8"
+  var lines = rawText.split(/[\n,;]+/);
+  var added = 0;
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (!line) return;
+    // Extract numbers from line
+    var nums = line.match(/[\d.]+/g);
+    if (!nums || nums.length === 0) return;
+    // Extract room name (non-numeric words)
+    var roomWords = line.replace(/[\d.x×\/\(\)]+/g, ' ').trim();
+    roomWords = roomWords.replace(/\s+/g, ' ').trim();
+    var room = roomWords || 'חדר ' + (_toRows.length + added + 1);
+    var d1 = parseFloat(nums[0]) || 0;
+    var d2 = parseFloat(nums[1]) || 0;
+    if (!d1) return;
+    var shape = d2 > 0 ? 'rect' : 'manual';
+    var area = d2 > 0 ? d1 * d2 : d1;
+    var dimLabel = d2 > 0 ? d1 + '×' + d2 : d1 + ' מ״ר';
+    _toRows.push({id:Date.now()+Math.random(), room:room, shape:shape, d1:d1, d2:d2,
+      area:Math.round(area*100)/100, dimLabel:dimLabel, note:''});
+    added++;
+  });
+  toRenderRows();
+  if (added > 0) showToast('✅ הוספו ' + added + ' שורות');
+  else showToast('לא זוהו מדידות — נסה לכתוב מספרים בלבד');
 }
 
 function toCalcShape(s){
@@ -1070,7 +1083,7 @@ function toGenerateReport(){
   var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
   var rows=_toRows.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.room+'</td><td>'+r.dimLabel+'</td><td style="font-weight:700;color:#1a3d5c;">'+r.area+' \u05de\u05f4\u05e8</td><td>'+r.note+'</td></tr>';}).join('');
   var win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>\u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Heebo,sans-serif;padding:28px;direction:rtl}h1{font-size:20px;font-weight:900;color:#1a3d5c;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#1a3d5c;color:#c9a84c;padding:8px}td{padding:7px 8px;border-bottom:1px solid #eee}.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:12px}@media print{button{display:none}}</style></head><body><button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:18px;font-family:Heebo,sans-serif;">\u05d4\u05d3\u05e4\u05e1 / PDF</button><h1>\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'</h1><div class="meta">\u05ea\u05d0\u05e8\u05d9\u05da: '+date+' | \u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd</div><table><thead><tr><th>#</th><th>\u05d7\u05d3\u05e8 / \u05d0\u05d6\u05d5\u05e8</th><th>\u05de\u05d9\u05d3\u05d5\u05ea</th><th>\u05e9\u05d8\u05d7</th><th>\u05d4\u05e2\u05e8\u05d5\u05ea</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8</div></body></html>');
+  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>\u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Heebo,sans-serif;padding:28px;direction:rtl}h1{font-size:20px;font-weight:900;color:#1a3d5c;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#1a3d5c;color:#c9a84c;padding:8px}td{padding:7px 8px;border-bottom:1px solid #eee}.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:12px}.btn-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}@media print{.btn-row{display:none}}</style></head><body><div class="btn-row"><button onclick="window.close()" style="background:#f0f0f0;color:#333;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">&#8592; \u05d7\u05d6\u05d5\u05e8 \u05dc\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4</button><button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">\u05d4\u05d3\u05e4\u05e1 / PDF</button><button onclick="toExportXLS()" style="background:#1e6b30;color:white;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">\u05d9\u05d9\u05e6\u05d5\u05d0 XLS</button></div><h1>\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'</h1><div class="meta">\u05ea\u05d0\u05e8\u05d9\u05da: '+date+' | \u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd</div><table><thead><tr><th>#</th><th>\u05d7\u05d3\u05e8 / \u05d0\u05d6\u05d5\u05e8</th><th>\u05de\u05d9\u05d3\u05d5\u05ea</th><th>\u05e9\u05d8\u05d7</th><th>\u05d4\u05e2\u05e8\u05d5\u05ea</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8</div></body></html>');
   win.document.close();
 }
 
@@ -1084,16 +1097,56 @@ function toSendWA(){
   var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
+
+function toExportXLS() {
+  if (!_toRows.length) { showToast('אין מדידות'); return; }
+  var project = document.getElementById('to-project-name').value.trim() || 'ללא שם';
+  var date = document.getElementById('to-date').value || new Date().toISOString().split('T')[0];
+  var total = Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
+
+  // Build CSV content (Excel opens CSV files)
+  var BOM = '﻿'; // UTF-8 BOM for Hebrew in Excel
+  var lines = [
+    ['טייקאוף — ' + project + ' — ' + date],
+    [],
+    ['#', 'חדר / אזור', 'מידות', 'שטח (מ״ר)', 'הערות']
+  ];
+  _toRows.forEach(function(r, i) {
+    lines.push([i+1, r.room, r.dimLabel, r.area, r.note]);
+  });
+  lines.push([]);
+  lines.push(['סה״כ', '', '', total, '']);
+
+  var csv = BOM + lines.map(function(row) {
+    return row.map(function(cell) {
+      var s = String(cell === null || cell === undefined ? '' : cell);
+      if (s.includes(',') || s.includes('"') || s.indexOf('\n') >= 0) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(',');
+  }).join('\n');
+
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'טייקאוף_' + project.replace(/\s/g,'_') + '_' + date + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ קובץ XLS הורד');
+}
+
 function toClearAll(){if(!confirm('\u05dc\u05de\u05d7\u05d5\u05e7 \u05d4\u05db\u05dc?'))return;_toRows=[];toRenderRows();}
 
-// ═══ INLINED: beni-pocket.js ═══════════════════════════
-// ════════════════════════════════════════════════════════
-// BENI POCKET — main logic
+// === INLINED: beni-pocket.js ===========================
+// ========================================================
+// BENI POCKET - main logic
 // Loaded from Supabase Storage at runtime
 // Version: 15-03-2026
-// ════════════════════════════════════════════════════════
+// ========================================================
 
-// ── STATE ──────────────────────────────────────────────
+// -- STATE ----------------------------------------------
 let quickReplies      = [];
 let todos             = [];
 let todoFilter        = 'all';
@@ -1111,7 +1164,7 @@ let currentAIResult   = null;
 
 // SB_URL and SB_KEY already declared above
 
-// ── INIT ───────────────────────────────────────────────
+// -- INIT -----------------------------------------------
 // initApp() merged into bootstrap() above
 
 // Panel init hooks (called after each panel HTML is injected)
@@ -1125,7 +1178,7 @@ function initPanel_voice() { initSpeechRecognition(); }
 function onTab_log()   { loadLog(); }
 function onTab_eod()   { renderEOD(); }
 
-// ── CLAUDE AI ──────────────────────────────────────────
+// -- CLAUDE AI ------------------------------------------
 async function analyzeWithClaude(transcript) {
   const ANTHROPIC_KEY = window.APP?.config?.anthropic_key;
   if (!ANTHROPIC_KEY) { console.warn('No Anthropic key in app_config'); return null; }
@@ -1182,7 +1235,7 @@ function renderAICard(result) {
   const card = document.getElementById('ai-card'); if(card) card.classList.add('visible');
 }
 
-// ── VOICE ──────────────────────────────────────────────
+// -- VOICE ----------------------------------------------
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { const s=document.getElementById('rec-status'); if(s) s.textContent='הדפדפן אינו תומך בזיהוי קול'; return; }
@@ -1281,7 +1334,7 @@ function sendMemoWA() {
   window.location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
 }
 
-// ── EOD — NOW USES SUPABASE, NOT sessionStorage ─────────
+// -- EOD - NOW USES SUPABASE, NOT sessionStorage ---------
 async function loadEODFromSupabase() {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -1406,8 +1459,8 @@ function shareEODSummary() {
   window.location.href='https://wa.me/?text='+encodeURIComponent(text);
 }
 
-// ── QUICK REPLIES ───────────────────────────────────────
-// ── QUICK REPLIES — 100% Supabase driven ─────────────────────────
+// -- QUICK REPLIES ---------------------------------------
+// -- QUICK REPLIES - 100% Supabase driven -------------------------
 // Edit replies in Supabase → quick_replies table
 // Fields: id, label, emoji, message, is_active, sort_order
 async function loadQuickReplies() {
@@ -1470,7 +1523,7 @@ async function saveCallLog(name,phone,replyLabel,notes,waSent){
 }
 function clearCallerForm(){['caller-name','caller-phone','caller-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
 
-// ── TODO ────────────────────────────────────────────────
+// -- TODO ------------------------------------------------
 async function loadTodos(){
   try{const res=await fetch(SB_URL+'/rest/v1/reminders?order=created_at.desc',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});todos=await res.json();}catch(e){todos=[];}
   if(!Array.isArray(todos))todos=[];
@@ -1500,7 +1553,7 @@ async function toggleTodo(id,isDone){try{await fetch(SB_URL+'/rest/v1/reminders?
 async function deleteTodo(id){try{await fetch(SB_URL+'/rest/v1/reminders?id=eq.'+id,{method:'DELETE',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});await loadTodos();}catch(e){}}
 function filterTodos(f){todoFilter=f;['all','active','done'].forEach(x=>{const btn=document.getElementById('f-'+x);if(!btn)return;if(x===f){btn.style.background='var(--orange)';btn.style.color='white';btn.style.borderColor='var(--orange)';}else{btn.style.background='transparent';btn.style.color='var(--text2)';btn.style.borderColor='var(--border)';}});renderTodos();}
 
-// ── CALL LOG ────────────────────────────────────────────
+// -- CALL LOG --------------------------------------------
 async function loadLog(){
   const list=document.getElementById('log-list');const empty=document.getElementById('log-empty');if(!list)return;
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">טוען...</div>';
@@ -1545,7 +1598,7 @@ function renderLog(logs){
         '</div>'+
         '<div class="call-phone">'+escHtml(r.phone||'')+'</div>'+
         (r.quick_reply?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">תשובה: '+escHtml(r.quick_reply)+'</div>':'')+
-        // ── THE FIX: show note field ──────────────────────────
+        // -- THE FIX: show note field --------------------------
         (note?'<div class="call-note">📝 '+escHtml(note)+'</div>':'')+
         '<div class="call-actions">'+
           '<button class="call-act-btn" onclick="_callPhone(\''+id+'\')">📞 התקשר</button>'+
@@ -1561,10 +1614,10 @@ function _callPhone(id){const d=window._callData?.[id];if(d?.phone)window.locati
 function _prefillFromLog(id){const d=window._callData?.[id];if(!d)return;const cn=document.getElementById('caller-name');const cp=document.getElementById('caller-phone');if(cn)cn.value=d.name;if(cp)cp.value=d.phone;switchTab('call');toast('✅ הטופס מולא');}
 function _waFromLog(id){const d=window._callData?.[id];if(d?.phone)window.location.href='https://wa.me/'+d.phone.replace(/\D/g,'');}
 
-// ── DIRECTION ───────────────────────────────────────────
+// -- DIRECTION -------------------------------------------
 function setDir(dir){currentDirection=dir;['in','out','miss'].forEach(d=>{const btn=document.getElementById('dir-'+d);if(btn)btn.classList.remove('dir-active');});const map={incoming:'in',outgoing:'out',missed:'miss'};const btn=document.getElementById('dir-'+map[dir]);if(btn)btn.classList.add('dir-active');}
 
-// ── PHONE LOOKUP ────────────────────────────────────────
+// -- PHONE LOOKUP ----------------------------------------
 let _lookupTimeout=null,_lookupResult=null;
 async function autoLookupPhone(val){
   const clean=val.replace(/\D/g,'');const box=document.getElementById('lookup-result');if(!box)return;
@@ -1577,13 +1630,13 @@ async function autoLookupPhone(val){
 }
 function applyLookup(){if(!_lookupResult)return;const cn=document.getElementById('caller-name');const cp=document.getElementById('caller-phone');if(cn)cn.value=_lookupResult.caller_name;if(cp)cp.value=_lookupResult.phone;document.getElementById('lookup-result').style.display='none';_lookupResult=null;}
 
-// ── HELPERS ─────────────────────────────────────────────
+// -- HELPERS ---------------------------------------------
 function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function timeAgo(iso){if(!iso)return'';const diff=Math.floor((Date.now()-new Date(iso))/1000);if(diff<60)return'עכשיו';if(diff<3600)return Math.floor(diff/60)+' דק׳';if(diff<86400)return Math.floor(diff/3600)+' שע׳';return Math.floor(diff/86400)+' ימים';}
 
 
-// ── GOOGLE CALENDAR MOBILE ────────────────────────────────
+// -- GOOGLE CALENDAR MOBILE --------------------------------
 let gcalMobileInited = false;
 
 function initGcalMobile() {
@@ -1614,9 +1667,9 @@ function switchGcalMobile(view) {
 }
 
 
-// ══════════════════════════════════════════════════════
+// ======================================================
 // GOOGLE TASKS INTEGRATION
-// ══════════════════════════════════════════════════════
+// ======================================================
 
 // ⚠️  Replace with your real Client ID from Google Cloud Console
 const GTASKS_CLIENT_ID = '900160560035-th3ok333jm84e5clvs38k2fo3v7dbnki.apps.googleusercontent.com';
@@ -1628,7 +1681,7 @@ let gtasksLists      = [];     // all task lists
 let gtasksCurrentList= null;   // selected list id
 let gtasksInited     = false;
 
-// ── Init: called when tab opens ──────────────────────────
+// -- Init: called when tab opens --------------------------
 function gtasksInit() {
   if (gtasksInited) return;
   gtasksInited = true;
@@ -1642,7 +1695,7 @@ function gtasksInit() {
   // else: connect screen is shown by default
 }
 
-// ── Sign in with Google ──────────────────────────────────
+// -- Sign in with Google ----------------------------------
 function gtasksSignIn() {
   const status = document.getElementById('gtasks-signin-status');
   if (status) status.textContent = 'מתחבר...';
@@ -1669,7 +1722,7 @@ function gtasksSignIn() {
   client.requestAccessToken();
 }
 
-// ── Sign out ─────────────────────────────────────────────
+// -- Sign out ---------------------------------------------
 function gtasksSignOut() {
   gtasksToken = null;
   sessionStorage.removeItem('gtasks_token');
@@ -1680,7 +1733,7 @@ function gtasksSignOut() {
   if (connect) connect.style.display = 'block';
 }
 
-// ── Show main panel after login ──────────────────────────
+// -- Show main panel after login --------------------------
 function gtasksShowMain() {
   const main    = document.getElementById('gtasks-main');
   const connect = document.getElementById('gtasks-connect-screen');
@@ -1691,7 +1744,7 @@ function gtasksShowMain() {
   if (connect) connect.style.display = 'none';
 }
 
-// ── Load all task lists ──────────────────────────────────
+// -- Load all task lists ----------------------------------
 async function gtasksLoadLists() {
   if (!gtasksToken) return;
   try {
@@ -1722,7 +1775,7 @@ async function gtasksLoadLists() {
   }
 }
 
-// ── Load tasks for selected list ─────────────────────────
+// -- Load tasks for selected list -------------------------
 async function gtasksLoadTasks() {
   if (!gtasksToken || !gtasksCurrentList) return;
   const listEl = document.getElementById('gtasks-list');
@@ -1750,7 +1803,7 @@ async function gtasksLoadTasks() {
   }
 }
 
-// ── Render tasks list ────────────────────────────────────
+// -- Render tasks list ------------------------------------
 function gtasksRenderTasks(tasks) {
   const listEl = document.getElementById('gtasks-list');
   if (!listEl) return;
@@ -1822,7 +1875,7 @@ function gtasksRenderTasks(tasks) {
   });
 }
 
-// ── Toggle task complete/incomplete ─────────────────────
+// -- Toggle task complete/incomplete ---------------------
 async function gtasksToggle(taskId, currentStatus) {
   if (!gtasksToken || !gtasksCurrentList) return;
   const newStatus = currentStatus === 'completed' ? 'needsAction' : 'completed';
@@ -1836,14 +1889,14 @@ async function gtasksToggle(taskId, currentStatus) {
       }
     );
     gtasksLoadTasks();
-    // If completed — also save to Smart Notes as done item
+    // If completed - also save to Smart Notes as done item
     if (newStatus === 'completed' && typeof sb !== 'undefined') {
       gtasksSaveCompletedToNotes(taskId);
     }
   } catch(e) { console.error('gtasksToggle:', e); }
 }
 
-// ── Save completed task to יומן חכם ─────────────────────
+// -- Save completed task to יומן חכם ---------------------
 async function gtasksSaveCompletedToNotes(taskId) {
   try {
     const res  = await fetch(
@@ -1860,7 +1913,7 @@ async function gtasksSaveCompletedToNotes(taskId) {
   } catch(e) { console.error('gtasksSaveCompletedToNotes:', e); }
 }
 
-// ── Add new task ─────────────────────────────────────────
+// -- Add new task -----------------------------------------
 async function gtasksAddTask() {
   if (!gtasksToken || !gtasksCurrentList) return;
   const titleEl = document.getElementById('gtasks-new-title');
@@ -1889,7 +1942,7 @@ async function gtasksAddTask() {
   } catch(e) { toast('שגיאה: ' + e.message); }
 }
 
-// ── Delete task ──────────────────────────────────────────
+// -- Delete task ------------------------------------------
 async function gtasksDelete(taskId) {
   if (!gtasksToken || !gtasksCurrentList || !confirm('מחק מטלה זו?')) return;
   try {
@@ -1901,13 +1954,13 @@ async function gtasksDelete(taskId) {
   } catch(e) { console.error('gtasksDelete:', e); }
 }
 
-// ── Refresh ──────────────────────────────────────────────
+// -- Refresh ----------------------------------------------
 function gtasksRefresh() { gtasksLoadTasks(); }
 
-// ── Push task from voice memo (called by Field Intel) ────
+// -- Push task from voice memo (called by Field Intel) ----
 async function gtasksPushFromMemo(title, dueDate, notes) {
   if (!gtasksToken || !gtasksCurrentList) {
-    // Not connected — fall back to reminders table
+    // Not connected - fall back to reminders table
     await sb.from('reminders').insert({ text: title, source: 'voice', is_done: false, created_at: new Date().toISOString() });
     toast('📋 נשמר במשימות (Google Tasks לא מחובר)');
     return;
@@ -1927,9 +1980,9 @@ async function gtasksPushFromMemo(title, dueDate, notes) {
 }
 
 
-// ══════════════════════════════════════════════════════
+// ======================================================
 // FEATURE 1: VOICE → GOOGLE CALENDAR EVENT
-// ══════════════════════════════════════════════════════
+// ======================================================
 
 const GCAL_API = 'https://www.googleapis.com/calendar/v3';
 
@@ -2076,9 +2129,9 @@ async function calCreateEvent() {
 }
 
 
-// ══════════════════════════════════════════════════════
+// ======================================================
 // FEATURE 2: PHOTO OCR → HEBREW TEXT
-// ══════════════════════════════════════════════════════
+// ======================================================
 
 async function ocrProcessImage(input) {
   const file = input?.files?.[0];
@@ -2201,13 +2254,13 @@ async function ocrToNote() {
 }
 
 
-// ══════════════════════════════════════════════════════
-// QUICK CALL LOG — 3-tap missed/callback logging
-// ══════════════════════════════════════════════════════
+// ======================================================
+// QUICK CALL LOG - 3-tap missed/callback logging
+// ======================================================
 
 var _quickLogMode = 'missed'; // 'missed' | 'callback'
 
-// ── Open quick log panel ────────────────────────────
+// -- Open quick log panel ----------------------------
 function quickMissedLog() {
   _quickLogMode = 'missed';
   var title = document.getElementById('quick-log-title');
@@ -2244,7 +2297,7 @@ function closeQuickLog() {
   if (panel) panel.style.display = 'none';
 }
 
-// ── Load recent callers for quick-pick ──────────────
+// -- Load recent callers for quick-pick --------------
 async function loadRecentContacts() {
   var row = document.getElementById('recent-contacts-row');
   if (!row) return;
@@ -2285,7 +2338,7 @@ function fillQuickLog(name, phone) {
   if (noteEl) noteEl.focus();
 }
 
-// ── Save quick log to Supabase ───────────────────────
+// -- Save quick log to Supabase -----------------------
 async function saveQuickLog() {
   var name  = (document.getElementById('ql-name')?.value  || '').trim();
   var phone = (document.getElementById('ql-phone')?.value || '').trim();
@@ -2325,7 +2378,7 @@ async function saveQuickLog() {
   }
 }
 
-// ── Save and immediately dial ────────────────────────
+// -- Save and immediately dial ------------------------
 async function saveQuickLogAndCall() {
   var phone = (document.getElementById('ql-phone')?.value || '').trim();
   if (!phone) { toast('נא להזין מספר טלפון לחיוג'); return; }
@@ -2336,7 +2389,7 @@ async function saveQuickLogAndCall() {
   window.location.href = 'tel:' + phone;
 }
 
-// ── Callback from main form ──────────────────────────
+// -- Callback from main form --------------------------
 function callBackAndLog() {
   var name  = (document.getElementById('caller-name')?.value  || '').trim();
   var phone = (document.getElementById('caller-phone')?.value || '').trim();
@@ -2358,7 +2411,7 @@ function callBackAndLog() {
   setTimeout(function() { window.location.href = 'tel:' + phone; }, 400);
 }
 
-// ── WhatsApp quick reply + auto-log ─────────────────
+// -- WhatsApp quick reply + auto-log -----------------
 // Override the existing sendReply to also log the call
 var _origSendWAReply = window.sendWAReply;
 function sendWAReplyAndLog(phone, message, callerName) {
@@ -2383,16 +2436,16 @@ function sendWAReplyAndLog(phone, message, callerName) {
 }
 
 
-// ══════════════════════════════════════════════════════
+// ======================================================
 // SITE INSPECTION MODULE
-// ══════════════════════════════════════════════════════
+// ======================================================
 
 var _inspectStatus   = 'green';
 var _inspectDeadline = 'today';
 var _inspectPhotos   = [];
 var _inspectInited   = false;
 
-// ── INSPECT CHECKLIST — loaded from Supabase ─────────────────────
+// -- INSPECT CHECKLIST - loaded from Supabase ---------------------
 // Edit items in Supabase → inspection_checklist table
 // Fields: key, label, sort_order, is_active
 // To add a new checklist item: INSERT a row. No code change.
@@ -2406,7 +2459,7 @@ async function loadInspectChecklist() {
     if (Array.isArray(data) && data.length) {
       INSPECT_CHECKLIST = data;
     } else {
-      // Fallback only if table missing — seed SQL is in SQL_SitePulse file
+      // Fallback only if table missing - seed SQL is in SQL_SitePulse file
       INSPECT_CHECKLIST = [
         { key:'safety_equip', label:'ציוד בטיחות (קסדות, אפודים, נעליים)' },
         { key:'plan_match',   label:'עבודה תואמת תכנית מאושרת' },
@@ -2418,11 +2471,11 @@ async function loadInspectChecklist() {
       ];
     }
   } catch(e) {
-    // Supabase blocked by ad blocker — using built-in fallback checklist
+    // Supabase blocked by ad blocker - using built-in fallback checklist
   }
 }
 
-// ── Init inspection tab ──────────────────────────────
+// -- Init inspection tab ------------------------------
 function inspectInit() {
   if (_inspectInited) return;
   _inspectInited = true;
@@ -2486,7 +2539,7 @@ function inspectFillProjects() {
   var contractorId = document.getElementById('inspect-contractor')?.value;
   var projSel = document.getElementById('inspect-project');
   if (!projSel) return;
-  // For now show all active projects — could filter by contractor if linked
+  // For now show all active projects - could filter by contractor if linked
   fetch(SB_URL + '/rest/v1/projects?status=eq.active&select=id,project_name&order=project_name',
     { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } })
     .then(function(r){ return r.json(); })
@@ -2498,7 +2551,7 @@ function inspectFillProjects() {
     }).catch(function(e){ console.error(e); });
 }
 
-// ── Checklist item ────────────────────────────────────
+// -- Checklist item ------------------------------------
 function setCheckItem(btn) {
   var key = btn.dataset.key;
   var val = btn.dataset.val;
@@ -2522,7 +2575,7 @@ function collectChecklist() {
   return result;
 }
 
-// ── Overall status ────────────────────────────────────
+// -- Overall status ------------------------------------
 function setInspectStatus(btn, status) {
   _inspectStatus = status;
   var colors = { green:'#22c55e', yellow:'#f59e0b', red:'#ef4444', safety:'#dc2626' };
@@ -2541,7 +2594,7 @@ function setInspectStatus(btn, status) {
   if (badge) { badge.textContent = status === 'safety' ? '🚨' : '!'; badge.style.display = 'inline'; }
 }
 
-// ── Deadline ──────────────────────────────────────────
+// -- Deadline ------------------------------------------
 function setDeadline(btn, val) {
   _inspectDeadline = val;
   document.querySelectorAll('.deadline-btn').forEach(function(b) {
@@ -2550,7 +2603,7 @@ function setDeadline(btn, val) {
   });
 }
 
-// ── Photos ────────────────────────────────────────────
+// -- Photos --------------------------------------------
 function inspectHandlePhotos(input) {
   Array.from(input.files || []).forEach(function(file) {
     var reader = new FileReader();
@@ -2583,7 +2636,7 @@ function renderInspectPhotos() {
   });
 }
 
-// ── Build WhatsApp message ────────────────────────────
+// -- Build WhatsApp message ----------------------------
 function buildInspectWAMessage(data) {
   var STATUS_LABELS = { green:'✅ APPROVED', yellow:'⚠️ WARNING', red:'❌ REJECTED', safety:'🚨 SAFETY STOP' };
   var contractorName = document.getElementById('inspect-contractor')?.selectedOptions[0]?.text || '';
@@ -2643,7 +2696,7 @@ function buildInspectWAMessage(data) {
   return msg.join('\n');
 }
 
-// ── Save to Supabase ──────────────────────────────────
+// -- Save to Supabase ----------------------------------
 async function inspectSave() {
   var contractorSel = document.getElementById('inspect-contractor');
   var projectSel    = document.getElementById('inspect-project');
@@ -2703,7 +2756,7 @@ async function inspectSave() {
   return { payload, contractorName, projectName, findings, instructions, safetyHazard };
 }
 
-// ── Save + WhatsApp ───────────────────────────────────
+// -- Save + WhatsApp -----------------------------------
 async function inspectSaveAndSend() {
   try {
     var data = await inspectSave();
@@ -2778,8 +2831,8 @@ function inspectReset() {
   toast('Form reset');
 }
 
-// ── Scenario 1: Send Site Pulse request from mobile ──
-// ── SITE PULSE — SUPABASE-FIRST ARCHITECTURE ─────────────────────
+// -- Scenario 1: Send Site Pulse request from mobile --
+// -- SITE PULSE - SUPABASE-FIRST ARCHITECTURE ---------------------
 // Flow: pick contractor → pick project → INSERT site_pulse_requests
 //       → get UUID → send ?req={UUID} in WhatsApp
 // Contractor opens link → site-pulse.html fetches everything from Supabase
@@ -2863,7 +2916,7 @@ async function spCreateRequestAndSend(contractor, project) {
     var rows = await res.json();
     if (!rows || !rows[0] || !rows[0].id) throw new Error('לא הוחזר ID מ-Supabase');
     var requestId = rows[0].id;
-    // Clean URL — just a UUID, zero encoding issues
+    // Clean URL - just a UUID, zero encoding issues
     var formUrl = 'https://avshi2-maker.github.io/site-pulse/?req=' + requestId;
     spShowWASheet(contractor, project, formUrl);
   } catch(e) { toast('שגיאה ביצירת בקשה: ' + e.message); }
@@ -2933,7 +2986,7 @@ function spShowWASheet(contractor, project, formUrl) {
   document.body.appendChild(sheet);
 }
 
-// ── UI Helper Functions ───────────────────────────────────────────
+// -- UI Helper Functions -------------------------------------------
 function spModal() {
   var el = document.createElement('div');
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:flex-end;';
@@ -2967,7 +3020,7 @@ function spCancelBtn(sheet, onClick) {
 
 
 
-// ═══ END beni-pocket.js ════════════════════════════════
+// === END beni-pocket.js ================================
 
 </script>
 </body>
