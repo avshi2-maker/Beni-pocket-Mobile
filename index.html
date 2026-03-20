@@ -913,6 +913,16 @@ async function toPhotoSave(){
 
 async function toPhotoOCR(){
   if(!_toPhotoBase64){showToast('אין תמונה');return;}
+  var ANTHROPIC_KEY = window.APP && window.APP.config && window.APP.config.anthropic_key;
+  if(!ANTHROPIC_KEY){
+    // Try sessionStorage (saved from previous prompt)
+    ANTHROPIC_KEY = sessionStorage.getItem('bp_anthropic_key');
+  }
+  if(!ANTHROPIC_KEY){
+    ANTHROPIC_KEY = prompt('הכנס מפתח Anthropic API (שמור אותו ב-Supabase app_config):');
+    if(!ANTHROPIC_KEY){showToast('בוטל');return;}
+    sessionStorage.setItem('bp_anthropic_key', ANTHROPIC_KEY);
+  }
   document.getElementById('to-photo-status').textContent='⏳ AI מזהה טקסט...';
   document.getElementById('to-photo-ocr-result').style.display='none';
   try {
@@ -920,6 +930,8 @@ async function toPhotoOCR(){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
@@ -941,7 +953,7 @@ async function toPhotoOCR(){
       document.getElementById('to-photo-ocr-result').style.display = 'block';
       document.getElementById('to-photo-status').textContent = '✅ טקסט זוהה — בדוק ולחץ הוסף';
     } else {
-      throw new Error('No text returned');
+      throw new Error(JSON.stringify(data));
     }
   } catch(e) {
     // API failed — show manual input
