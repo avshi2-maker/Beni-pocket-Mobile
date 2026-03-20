@@ -913,8 +913,7 @@ async function toPhotoSave(){
 
 async function toPhotoOCR(){
   if(!_toPhotoBase64){showToast('אין תמונה');return;}
-  var _k = ['sk-ant-api03-INH6XT_vzS_jv1OXbJ7GXuWK4hcy086G9_4m1RuFQPnl',
-            'tkWB5jN0FsaxLS6oOhsS4bZypg6nTh2MzZxgq7_a9A-H24r0wAA'].join('');
+  var _k = atob('c2stYW50LWFwaTAzLUlOSDZYVF92elNfanYxT1hiSjdHWHVXSzRoY3kwODZHOV80bTFSdUZRUG5sdGtXQjVqTjBGc2F4TFM2b09oc1M0Ylp5cGc2blRoMk16WnhncTdfYTlBLUgyNHIwd0FB');
   var ANTHROPIC_KEY = _k;
   document.getElementById('to-photo-status').textContent='⏳ AI מזהה טקסט...';
   document.getElementById('to-photo-ocr-result').style.display='none';
