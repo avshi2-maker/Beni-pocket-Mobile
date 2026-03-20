@@ -913,16 +913,7 @@ async function toPhotoSave(){
 
 async function toPhotoOCR(){
   if(!_toPhotoBase64){showToast('אין תמונה');return;}
-  var ANTHROPIC_KEY = window.APP && window.APP.config && window.APP.config.anthropic_key;
-  if(!ANTHROPIC_KEY){
-    // Try sessionStorage (saved from previous prompt)
-    ANTHROPIC_KEY = sessionStorage.getItem('bp_anthropic_key');
-  }
-  if(!ANTHROPIC_KEY){
-    ANTHROPIC_KEY = prompt('הכנס מפתח Anthropic API (שמור אותו ב-Supabase app_config):');
-    if(!ANTHROPIC_KEY){showToast('בוטל');return;}
-    sessionStorage.setItem('bp_anthropic_key', ANTHROPIC_KEY);
-  }
+  var ANTHROPIC_KEY = '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';
   document.getElementById('to-photo-status').textContent='⏳ AI מזהה טקסט...';
   document.getElementById('to-photo-ocr-result').style.display='none';
   try {
@@ -956,11 +947,12 @@ async function toPhotoOCR(){
       throw new Error(JSON.stringify(data));
     }
   } catch(e) {
-    // API failed — show manual input
-    document.getElementById('to-photo-ocr-text').value = '';
-    document.getElementById('to-photo-ocr-text').placeholder = 'כתוב את המדידות שאתה רואה בתמונה\nלדוגמה: סלון 6.5 4.2';
-    document.getElementById('to-photo-ocr-result').style.display = 'block';
-    document.getElementById('to-photo-status').textContent = 'הכנס מדידות ידנית';
+    sessionStorage.removeItem('bp_anthropic_key');
+    if(window.APP && window.APP.config) window.APP.config.anthropic_key = null;
+    document.getElementById('to-photo-ocr-result').style.display='block';
+    document.getElementById('to-photo-ocr-text').value='';
+    document.getElementById('to-photo-ocr-text').placeholder='כתוב את המדידות שאתה רואה בתמונה\nלדוגמה: סלון 6.5 4.2';
+    document.getElementById('to-photo-status').textContent='שגיאה — נסה שוב';
   }
 }
 
