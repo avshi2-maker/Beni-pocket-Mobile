@@ -580,7 +580,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div id="to-photo-status" style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:8px;"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="toPhotoSave()" id="to-photo-save-btn" style="display:none;background:linear-gradient(135deg,#1a3d5c,#2d6a9f);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">💾 שמור לפרויקט</button>
-        <button onclick="toPhotoOCR()" id="to-photo-ocr-btn" style="display:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">AI OCR → שורות</button>
+        <button onclick="toPhotoSendToDashboard()" id="to-photo-ocr-btn" style="display:none;background:linear-gradient(135deg,#1e6b30,#22c55e);color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Heebo,sans-serif;">שלח ל-Dashboard → שורות</button>
       </div>
       <div id="to-photo-ocr-result" style="display:none;margin-top:10px;">
         <textarea id="to-photo-ocr-text" rows="3" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;background:var(--surface);color:var(--text);resize:none;margin-bottom:8px;text-align:right;"></textarea>
@@ -1308,7 +1308,7 @@ function onTab_eod()   { renderEOD(); }
 
 // -- CLAUDE AI ------------------------------------------
 async function analyzeWithClaude(transcript) {
-  const ANTHROPIC_KEY = null; // OCR disabled
+  const ANTHROPIC_KEY = null; if(!ANTHROPIC_KEY){return null;}
   const prompt = `אתה עוזר אישי בשטח לקבלן בנייה. נתח את ההקלטה הבאה והחזר JSON בלבד.
 
 הקלטה: "${transcript}"
@@ -2126,7 +2126,7 @@ async function voiceCreateCalendarEvent() {
 
   toast('🧠 מנתח פגישה...');
 
-  const ANTHROPIC_KEY = null; // OCR disabled
+  const ANTHROPIC_KEY = null; if(!ANTHROPIC_KEY){toast('אין מפתח API');return;}
 
   // Ask Claude to extract meeting details from Hebrew text
   const prompt = `אתה עוזר שמחלץ פרטי פגישה מטקסט עברי.
@@ -2263,7 +2263,7 @@ async function ocrProcessImage(input) {
   const file = input?.files?.[0];
   if (!file) return;
 
-  const ANTHROPIC_KEY = null; // OCR disabled
+  const ANTHROPIC_KEY = null; if(!ANTHROPIC_KEY){toast('אין מפתח API');return;}
 
   const loadingEl = document.getElementById('ocr-loading');
   const resultEl  = document.getElementById('ocr-result');
@@ -3146,6 +3146,34 @@ function spCancelBtn(sheet, onClick) {
 
 
 // === END beni-pocket.js ================================
+
+function toPhotoSendToDashboard(){
+  if(!_toPhotoBase64){showToast('אין תמונה');return;}
+  var project=(document.getElementById('to-project-name').value.trim()||'general').replace(/ /g,'_');
+  document.getElementById('to-photo-status').textContent='⏳ שולח...';
+  var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
+  for(var i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+  var fname='takeoffs/'+project+'_'+Date.now()+'.jpg';
+  sb.storage.from('photos').upload(fname,new Blob([ab],{type:_toPhotoType}),{upsert:false})
+  .then(function(res){
+    if(res.error)throw res.error;
+    return sb.from('site_takeoffs').insert({
+      project_name:project.replace(/_/g,' '),
+      takeoff_date:new Date().toISOString().split('T')[0],
+      rows:'[]',total_area:0,
+      created_at:new Date().toISOString(),
+      takeoff_type:'photo_pending_ocr',
+      photo_path:fname
+    });
+  })
+  .then(function(){
+    document.getElementById('to-photo-status').textContent='✅ נשמר! פתח Dashboard לעיבוד OCR';
+    showToast('✅ נשלח ל-Dashboard');
+  })
+  .catch(function(e){
+    document.getElementById('to-photo-status').textContent='שגיאה: '+e.message;
+  });
+}
 
 </script>
 </body>
