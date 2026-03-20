@@ -926,33 +926,95 @@ async function toParseVoice(){await toAIParse(document.getElementById('to-voice-
 async function toAIParse(rawText){
   if(!rawText){showToast('אין טקסט');return;}
   showToast('מפרש מדידות...');
-  // Local parser - works offline, no CORS issues
-  // Parses lines like: "salon 6.5 4.2", "mirdaf 30", "kir 10 2.8"
-  var lines = rawText.split(/[\n,;]+/);
+
+  // Convert Hebrew number words to digits
+  function hebrewToNumber(text) {
+    var map = {
+      'אפס':0, 'אחד':1, 'אחת':1, 'שתיים':2, 'שניים':2, 'שני':2, 'שתי':2,
+      'שלוש':3, 'שלושה':3, 'ארבע':4, 'ארבעה':4, 'חמש':5, 'חמישה':5,
+      'שש':6, 'ששה':6, 'שבע':7, 'שבעה':7, 'שמונה':8, 'תשע':9, 'תשעה':9,
+      'עשר':10, 'עשרה':10, 'אחד עשר':11, 'שתים עשרה':12, 'שלושה עשר':13,
+      'ארבעה עשר':14, 'חמישה עשר':15, 'עשרים':20, 'שלושים':30,
+      'ארבעים':40, 'חמישים':50, 'שישים':60, 'שבעים':70, 'שמונים':80, 'תשעים':90,
+      'מאה':100
+    };
+    // Handle fractions: וחצי (+0.5), ורבע (+0.25), ושלושה רבעים (+0.75)
+    var fractions = {
+      'וחצי': 0.5, 'וחצי': 0.5, 'חצי': 0.5,
+      'ורבע': 0.25, 'רבע': 0.25,
+      'ושלושה רבעים': 0.75, 'שלושה רבעים': 0.75
+    };
+    var result = text;
+    // Replace number words
+    Object.keys(map).sort(function(a,b){return b.length-a.length;}).forEach(function(word){
+      result = result.replace(new RegExp(word,'g'), map[word]);
+    });
+    return result;
+  }
+
+  // Strip measurement units — keep numbers
+  function stripUnits(text) {
+    return text
+      .replace(/מטר(?:ים)?/g, ' ')
+      .replace(/מ[\'׳]?\s/g, ' ')
+      .replace(/ס[\"״]?מ/g, ' 0.') // cm → divide by 100 approx
+      .replace(/וחצי/g, '.5')
+      .replace(/ורבע/g, '.25')
+      .replace(/חצי/g, '0.5')
+      .replace(/רבע/g, '0.25');
+  }
+
+  // Keywords that indicate room/area names (not measurements)
+  var roomKeywords = ['סלון','מטבח','חדר','שינה','ממ"ד','מקלחת','שירותים',
+    'כניסה','פרוזדור','מרפסת','גג','חצר','מחסן','גרז','חניה','לובי','מסדרון',
+    'אמבטיה','ספרייה','משרד','פינת','אכילה','מגורים','קבלה','ישיבות'];
+
+  var processed = hebrewToNumber(rawText);
+  processed = stripUnits(processed);
+
+  var lines = processed.split(/[\n,;.]+/);
   var added = 0;
+
   lines.forEach(function(line) {
     line = line.trim();
     if (!line) return;
-    // Extract numbers from line
-    var nums = line.match(/[\d.]+/g);
+
+    // Extract all numbers (including decimals)
+    var nums = line.match(/\d+(?:\.\d+)?/g);
     if (!nums || nums.length === 0) return;
-    // Extract room name (non-numeric words)
-    var roomWords = line.replace(/[\d.x×\/\(\)]+/g, ' ').trim();
-    roomWords = roomWords.replace(/\s+/g, ' ').trim();
-    var room = roomWords || 'חדר ' + (_toRows.length + added + 1);
+
+    // Try to find room name from original line
+    var origLine = rawText.split(/[\n,;.]+/)[lines.indexOf(line)] || line;
+    var roomName = '';
+    roomKeywords.forEach(function(kw){
+      if (rawText.indexOf(kw) >= 0 && !roomName) roomName = kw;
+    });
+    // Also extract Hebrew words from line as room name
+    var hebrewWords = line.replace(/\d+(?:\.\d+)?/g,'').replace(/\s+/g,' ').trim();
+    if (!roomName && hebrewWords.length > 1) roomName = hebrewWords;
+    if (!roomName) roomName = 'מדידה ' + (_toRows.length + added + 1);
+
     var d1 = parseFloat(nums[0]) || 0;
     var d2 = parseFloat(nums[1]) || 0;
     if (!d1) return;
+
     var shape = d2 > 0 ? 'rect' : 'manual';
     var area = d2 > 0 ? d1 * d2 : d1;
-    var dimLabel = d2 > 0 ? d1 + '×' + d2 : d1 + ' מ״ר';
-    _toRows.push({id:Date.now()+Math.random(), room:room, shape:shape, d1:d1, d2:d2,
+    var dimLabel = d2 > 0 ? d1 + '×' + d2 : d1 + ' מ"ר';
+    _toRows.push({id:Date.now()+Math.random(), room:roomName.trim(),
+      shape:shape, d1:d1, d2:d2,
       area:Math.round(area*100)/100, dimLabel:dimLabel, note:''});
     added++;
   });
+
   toRenderRows();
   if (added > 0) showToast('✅ הוספו ' + added + ' שורות');
-  else showToast('לא זוהו מדידות — נסה לכתוב מספרים בלבד');
+  else {
+    showToast('לא זוהו מדידות');
+    // Show help message in voice text area
+    var el = document.getElementById('to-voice-text');
+    if (el) el.value = rawText + '\n\n💡 טיפ: אמור למשל:\n"סלון אורך שלושה וחצי רוחב חמש"\n"מטבח ארבע על שלוש"';
+  }
 }
 
 function toCalcShape(s){
