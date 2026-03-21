@@ -158,6 +158,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-tab"        onclick="switchTab('inspect')" id="tab-inspect"><span class="tab-icon">🔍</span>ביקורת<span class="nav-badge" id="inspect-badge" style="display:none">!</span></div>
         <div class="nav-tab"        onclick="switchTab('eod')"   id="tab-eod"  ><span class="tab-icon">🧠</span>סוף יום<span class="nav-badge" id="eod-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('takeoff')" id="tab-takeoff"><span class="tab-icon">📐</span>טייקאוף</div>
+    <div class="nav-tab" onclick="switchTab('memo')" id="tab-memo"><span class="tab-icon">📝</span>מזכרים</div>
   </div>
 
   <div id="panel-call"  class="panel active">
@@ -714,7 +715,19 @@ window.addEventListener('unhandledrejection', function(e) {
 
 
 // -- TAB SWITCHER ----------------------------------------
+
+// Sanitize filename for Supabase Storage (ASCII only, no Hebrew)
+function sanitizeStorageKey(str) {
+  return (str || 'file')
+    .replace(/[\u0080-\uFFFF]/g, '')   // strip non-ASCII (Hebrew etc)
+    .replace(/[^a-zA-Z0-9._-]/g, '_')    // replace remaining special chars
+    .replace(/_+/g, '_')                  // collapse multiple underscores
+    .replace(/^_|_$/g, '')               // trim leading/trailing underscores
+    || 'photo';                           // fallback if empty after sanitize
+}
+
 function switchTab(tab) {
+  if (tab === 'memo') { setTimeout(onTab_memo, 50); }
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   // Hide all panels using inline style - guaranteed regardless of CSS loading
   document.querySelectorAll('.panel').forEach(function(p) {
@@ -924,11 +937,11 @@ function toPhotoCapture(input){
 
 async function toPhotoSave(){
   if(!_toPhotoBase64){showToast('\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4');return;}
-  var project=(document.getElementById('to-project-name').value.trim()||'general').replace(/\s+/g,'_');
+  var project=sanitizeStorageKey(document.getElementById('to-project-name').value.trim()||'general');
   try{
     var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
     for(var i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
-    var res=await sb.storage.from('photos').upload('takeoffs/'+project+'_'+Date.now()+'.jpg',new Blob([ab],{type:_toPhotoType}),{upsert:false});
+    var res=await sb.storage.from('photos').upload('takeoffs/'+sanitizeStorageKey(project)+'_'+Date.now()+'.jpg',new Blob([ab],{type:_toPhotoType}),{upsert:false});
     if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');
   }catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
@@ -2866,7 +2879,7 @@ async function inspectSave() {
     try {
       var ph   = _inspectPhotos[i];
       var ext  = ph.file.name.split('.').pop() || 'jpg';
-      var path = 'inspections/' + Date.now() + '_' + i + '.' + ext;
+      var path = 'inspections/' + Date.now() + '_' + i + '.' + (ext.replace(/[^a-z0-9]/gi,'') || 'jpg');
       var { error } = await sb.storage.from('photos').upload(path, ph.file, { upsert: true });
       if (!error) photoPaths.push(path);
     } catch(e) { console.error(e); }
@@ -3170,11 +3183,11 @@ function spCancelBtn(sheet, onClick) {
 
 function toPhotoSendToDashboard(){
   if(!_toPhotoBase64){showToast('אין תמונה');return;}
-  var project=(document.getElementById('to-project-name').value.trim()||'general').replace(/ /g,'_');
+  var project=sanitizeStorageKey(document.getElementById('to-project-name').value.trim()||'general');
   document.getElementById('to-photo-status').textContent='⏳ שולח...';
   var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
   for(var i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
-  var fname='takeoffs/'+project+'_'+Date.now()+'.jpg';
+  var fname='takeoffs/'+sanitizeStorageKey(project)+'_'+Date.now()+'.jpg';
   sb.storage.from('photos').upload(fname,new Blob([ab],{type:_toPhotoType}),{upsert:false})
   .then(function(res){
     if(res.error)throw res.error;
@@ -3197,5 +3210,93 @@ function toPhotoSendToDashboard(){
 }
 
 </script>
+<!-- ══ MEMO PANEL ══════════════════════════════════════════════════════ -->
+<div id="panel-memo" class="panel" style="display:none;padding:14px 14px 80px;">
+
+  <!-- Header -->
+  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">📝 מזכרים אישיים</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">צלם, הקלט, או הקלד הערה — תישמר ביומן החכם</div>
+
+  <!-- Project tag (optional) -->
+  <div style="margin-bottom:12px;">
+    <select id="memo-project-sel" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface);color:var(--text);">
+      <option value="">🏷️ ללא פרויקט</option>
+    </select>
+  </div>
+
+  <!-- Optional text remark -->
+  <textarea id="memo-text" placeholder="הערה / כותרת (אופציונלי)..." rows="2"
+    style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;
+           font-family:Heebo,sans-serif;font-size:14px;direction:rtl;resize:none;
+           background:var(--surface);color:var(--text);margin-bottom:12px;box-sizing:border-box;"></textarea>
+
+  <!-- 4 Action buttons -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+
+    <!-- 📷 Camera -->
+    <button onclick="memoCapture()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">📷</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם</span>
+      <span style="font-size:10px;color:var(--text2);">צלם הערה / ממצא</span>
+    </button>
+
+    <!-- 🎙️ Voice -->
+    <button id="memo-voice-btn" onclick="memoVoiceToggle()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">🎙️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלט</span>
+      <span style="font-size:10px;color:var(--text2);">הקלטת קולית</span>
+    </button>
+
+    <!-- ✏️ Type (focuses textarea) -->
+    <button onclick="document.getElementById('memo-text').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">✏️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלד</span>
+      <span style="font-size:10px;color:var(--text2);">הקלדה ידנית</span>
+    </button>
+
+    <!-- 🏷️ Tag project -->
+    <button onclick="document.getElementById('memo-project-sel').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">🏷️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">תייג פרויקט</span>
+      <span style="font-size:10px;color:var(--text2);">קשר לפרויקט</span>
+    </button>
+  </div>
+
+  <!-- Photo preview (hidden until photo taken) -->
+  <div id="memo-photo-wrap" style="display:none;margin-bottom:12px;text-align:center;">
+    <img id="memo-photo-preview" style="max-width:100%;border-radius:10px;border:2px solid var(--border);">
+    <div style="margin-top:6px;">
+      <button onclick="memoClearPhoto()" style="font-size:12px;padding:5px 14px;background:var(--surface2);
+        border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;">✕ הסר תמונה</button>
+    </div>
+  </div>
+
+  <!-- Voice transcript result -->
+  <div id="memo-voice-result" style="display:none;background:var(--surface2);border-radius:10px;
+    padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--text);direction:rtl;"></div>
+
+  <!-- hidden file input -->
+  <input type="file" id="memo-file-input" accept="image/*" capture="environment" style="display:none" onchange="memoFileChosen(this)">
+
+  <!-- Send button -->
+  <button onclick="memoSend()" style="width:100%;padding:14px;background:linear-gradient(135deg,#9a6f00,#c9a84c);
+    color:#1a1a2e;border:none;border-radius:12px;font-size:16px;font-weight:800;
+    font-family:Heebo,sans-serif;cursor:pointer;letter-spacing:0.5px;">
+    📤 שלח ליומן החכם
+  </button>
+
+  <div id="memo-status" style="text-align:center;font-size:13px;margin-top:10px;color:var(--text2);min-height:18px;"></div>
+
+</div>
+<!-- ══ END MEMO PANEL ══ -->
+
 </body>
 </html>
