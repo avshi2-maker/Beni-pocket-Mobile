@@ -3209,6 +3209,133 @@ function toPhotoSendToDashboard(){
   });
 }
 
+
+// ══════════════════════════════════════════════════════
+// MEMO MODULE — מזכרים אישיים
+// ══════════════════════════════════════════════════════
+var _memoPhotoBase64 = null;
+var _memoPhotoType   = 'image/jpeg';
+var _memoVoiceRecog  = null;
+var _memoVoiceActive = false;
+
+function initPanel_memo() {
+  var sel = document.getElementById('memo-project-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">🏷️ ללא פרויקט</option>';
+  (window._memoProjects || []).forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = '📁 ' + p.project_name;
+    sel.appendChild(opt);
+  });
+}
+
+async function onTab_memo() {
+  try {
+    var res = await fetch(SB_URL + '/rest/v1/projects?select=id,project_name&order=project_name.asc',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    window._memoProjects = res.ok ? await res.json() : [];
+  } catch(e) { window._memoProjects = []; }
+  initPanel_memo();
+}
+
+function memoCapture() {
+  document.getElementById('memo-file-input').click();
+}
+
+function memoFileChosen(input) {
+  var file = input.files[0];
+  if (!file) return;
+  _memoPhotoType = file.type || 'image/jpeg';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _memoPhotoBase64 = e.target.result.split(',')[1];
+    document.getElementById('memo-photo-preview').src = e.target.result;
+    document.getElementById('memo-photo-wrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function memoClearPhoto() {
+  _memoPhotoBase64 = null;
+  document.getElementById('memo-photo-wrap').style.display = 'none';
+  document.getElementById('memo-file-input').value = '';
+}
+
+function memoVoiceToggle() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    toast('דפדפן זה אינו תומך בזיהוי קול'); return;
+  }
+  var btn = document.getElementById('memo-voice-btn');
+  if (_memoVoiceActive) {
+    if (_memoVoiceRecog) _memoVoiceRecog.stop();
+    _memoVoiceActive = false;
+    btn.style.background = 'var(--surface2)';
+    btn.style.borderColor = 'var(--border)';
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _memoVoiceRecog = new SR();
+  _memoVoiceRecog.lang = 'he-IL';
+  _memoVoiceRecog.continuous = false;
+  _memoVoiceRecog.interimResults = false;
+  _memoVoiceRecog.onresult = function(e) {
+    var transcript = Array.from(e.results).map(function(r){return r[0].transcript;}).join(' ');
+    var resEl = document.getElementById('memo-voice-result');
+    resEl.textContent = '🎙️ ' + transcript;
+    resEl.style.display = 'block';
+    var ta = document.getElementById('memo-text');
+    ta.value = (ta.value ? ta.value + ' ' : '') + transcript;
+    _memoVoiceActive = false;
+    btn.style.background = 'var(--surface2)';
+    btn.style.borderColor = 'var(--border)';
+  };
+  _memoVoiceRecog.onerror = function() {
+    _memoVoiceActive = false;
+    btn.style.background = 'var(--surface2)';
+  };
+  _memoVoiceRecog.start();
+  _memoVoiceActive = true;
+  btn.style.background = 'rgba(239,68,68,0.15)';
+  btn.style.borderColor = '#ef4444';
+}
+
+async function memoSend() {
+  var text     = (document.getElementById('memo-text').value || '').trim();
+  var projId   = document.getElementById('memo-project-sel').value || null;
+  var statusEl = document.getElementById('memo-status');
+  if (!text && !_memoPhotoBase64) { toast('הוסף הערה או תמונה תחילה'); return; }
+  statusEl.textContent = '⏳ שולח...';
+  try {
+    var photoUrl = null;
+    if (_memoPhotoBase64) {
+      var byteStr=atob(_memoPhotoBase64), ab=new ArrayBuffer(byteStr.length), ia=new Uint8Array(ab);
+      for (var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+      var fname = 'memos/' + Date.now() + '.jpg';
+      var upRes = await window.sb.storage.from('photos').upload(fname, new Blob([ab],{type:_memoPhotoType}), {upsert:false});
+      if (upRes.error) throw upRes.error;
+      photoUrl = fname;
+    }
+    var noteText = text || (photoUrl ? '📷 תמונה' : '');
+    var ins = await window.sb.from('beni_notes').insert({
+      note_text:  noteText,
+      color:      'yellow',
+      project_id: projId || null,
+      photo_url:  photoUrl
+    });
+    if (ins.error) throw ins.error;
+    document.getElementById('memo-text').value = '';
+    document.getElementById('memo-voice-result').style.display = 'none';
+    memoClearPhoto();
+    statusEl.textContent = '✅ נשמר ביומן החכם';
+    setTimeout(function(){ statusEl.textContent = ''; }, 3000);
+    toast('✅ מזכר נשמר');
+  } catch(e) {
+    statusEl.textContent = '❌ ' + e.message;
+    toast('שגיאה: ' + e.message);
+  }
+}
+
 </script>
 <!-- ══ MEMO PANEL ══════════════════════════════════════════════════════ -->
 <div id="panel-memo" class="panel" style="display:none;padding:14px 14px 80px;">
