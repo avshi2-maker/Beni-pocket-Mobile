@@ -735,6 +735,7 @@ function switchTab(tab) {
       var inner = document.getElementById('panel-detailed-inner');
       if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול מדידות...</div>';
       await loadScript('detailed_takeoff');
+      await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
       if(typeof dtInit==='function') dtInit();
       else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה detailed_takeoff.js לסופרבייס Storage</div>';
     })();
@@ -744,6 +745,7 @@ function switchTab(tab) {
       var inner = document.getElementById('panel-laser-inner');
       if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול גבהים...</div>';
       await loadScript('laser_level');
+      await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
       if(typeof llInit==='function') llInit();
       else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה laser_level.js לסופרבייס Storage</div>';
     })();
