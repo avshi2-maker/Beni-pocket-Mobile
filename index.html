@@ -30,8 +30,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .topbar-name{font-size:18px;font-weight:900;color:var(--text);}
 .topbar-sub{font-size:10px;color:var(--text2);line-height:1;}
 .topbar-time{font-size:13px;font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums;}
-.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:#f5e9c4;border-bottom:2px solid #c9a84c;}
-.nav-tab{padding:9px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;border-top:1px solid #e8d9a0;}
+.nav-tabs{display:flex;flex-direction:row;overflow-x:auto;background:#f5e9c4;border-bottom:2px solid #c9a84c;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;}.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:9px 8px 8px;display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;border-top:1px solid #e8d9a0;}
 .nav-tab:nth-child(-n+4){border-top:none;}
 .nav-tab .tab-icon{font-size:18px;}
 .nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);background:rgba(201,132,26,0.08);}
@@ -736,7 +736,7 @@ function switchTab(tab) {
       if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול מדידות...</div>';
       await loadScript('detailed_takeoff');
       await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
-      if(typeof dtInit==='function') dtInit();
+      if(typeof dtInit==='function') { dtInit(); window.scrollTo(0,0); }
       else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה detailed_takeoff.js לסופרבייס Storage</div>';
     })();
   }
@@ -746,7 +746,7 @@ function switchTab(tab) {
       if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול גבהים...</div>';
       await loadScript('laser_level');
       await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
-      if(typeof llInit==='function') llInit();
+      if(typeof llInit==='function') { llInit(); window.scrollTo(0,0); }
       else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה laser_level.js לסופרבייס Storage</div>';
     })();
   }
