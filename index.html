@@ -827,31 +827,10 @@ function sanitizeStorageKey(str) {
 }
 
 function switchTab(tab) {
-  if (tab === 'memo')     { setTimeout(onTab_memo, 50); }
-  if (tab === 'detailed') {
-    if (typeof dtInit === 'function') { dtInit(); window.scrollTo(0,0); return; }
-    var s = document.createElement('script');
-    s.src = STORAGE + '/detailed_takeoff.js';
-    s.onload = function() { if(typeof dtInit==='function') { dtInit(); window.scrollTo(0,0); } };
-    s.onerror = function() {
-      var el = document.getElementById('panel-detailed-inner');
-      if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
-    };
-    document.head.appendChild(s);
-  }
-  if (tab === 'laser') {
-    if (typeof llInit === 'function') { llInit(); window.scrollTo(0,0); return; }
-    var s = document.createElement('script');
-    s.src = STORAGE + '/laser_level.js';
-    s.onload = function() { if(typeof llInit==='function') { llInit(); window.scrollTo(0,0); } };
-    s.onerror = function() {
-      var el = document.getElementById('panel-laser-inner');
-      if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
-    };
-    document.head.appendChild(s);
-  }
+  if (tab === 'memo') { setTimeout(onTab_memo, 50); }
+
+  // Always run panel show/hide first, then init the module
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  // Hide all panels using inline style - guaranteed regardless of CSS loading
   document.querySelectorAll('.panel').forEach(function(p) {
     p.style.display = 'none';
     p.classList.remove('active');
@@ -862,6 +841,36 @@ function switchTab(tab) {
     activePanel.style.display = 'block';
     activePanel.classList.add('active');
   }
+
+  if (tab === 'detailed') {
+    if (typeof dtInit === 'function') {
+      setTimeout(function(){ dtInit(); window.scrollTo(0,0); }, 30);
+    } else {
+      var s = document.createElement('script');
+      s.src = STORAGE + '/detailed_takeoff.js';
+      s.onload = function() { if(typeof dtInit==='function') { dtInit(); window.scrollTo(0,0); } };
+      s.onerror = function() {
+        var el = document.getElementById('panel-detailed-inner');
+        if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
+      };
+      document.head.appendChild(s);
+    }
+  }
+  if (tab === 'laser') {
+    if (typeof llInit === 'function') {
+      setTimeout(function(){ llInit(); window.scrollTo(0,0); }, 30);
+    } else {
+      var s = document.createElement('script');
+      s.src = STORAGE + '/laser_level.js';
+      s.onload = function() { if(typeof llInit==='function') { llInit(); window.scrollTo(0,0); } };
+      s.onerror = function() {
+        var el = document.getElementById('panel-laser-inner');
+        if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
+      };
+      document.head.appendChild(s);
+    }
+  }
+
   if (tab === 'log')     loadLog();
   if (tab === 'eod')     renderEOD();
   if (tab === 'todo')    renderTodos();
