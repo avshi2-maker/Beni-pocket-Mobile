@@ -730,8 +730,24 @@ function sanitizeStorageKey(str) {
 
 function switchTab(tab) {
   if (tab === 'memo')     { setTimeout(onTab_memo, 50); }
-  if (tab === 'detailed') { (async function(){ await loadScript('detailed_takeoff'); if(typeof dtInit==='function') dtInit(); })(); }
-  if (tab === 'laser')    { (async function(){ await loadScript('laser_level');    if(typeof llInit==='function') llInit(); })(); }
+  if (tab === 'detailed') {
+    (async function(){
+      var inner = document.getElementById('panel-detailed-inner');
+      if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול מדידות...</div>';
+      await loadScript('detailed_takeoff');
+      if(typeof dtInit==='function') dtInit();
+      else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה detailed_takeoff.js לסופרבייס Storage</div>';
+    })();
+  }
+  if (tab === 'laser') {
+    (async function(){
+      var inner = document.getElementById('panel-laser-inner');
+      if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול גבהים...</div>';
+      await loadScript('laser_level');
+      if(typeof llInit==='function') llInit();
+      else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה laser_level.js לסופרבייס Storage</div>';
+    })();
+  }
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   // Hide all panels using inline style - guaranteed regardless of CSS loading
   document.querySelectorAll('.panel').forEach(function(p) {
@@ -3344,26 +3360,12 @@ async function memoSend() {
 
 <!-- ══ DETAILED TAKEOFF PANEL ══ -->
 <div id="panel-detailed" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">📋 מדידות מפורטות</div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">בסיס / הפחתה · כל הצורות · ייצוא Excel · שטח נטו</div>
-  <div id="panel-detailed-inner">
-    <div style="text-align:center;padding:40px;color:var(--text3);">
-      <div style="font-size:36px;margin-bottom:12px;">📋</div>
-      <div style="font-size:13px;">טוען מודול...</div>
-    </div>
-  </div>
+  <div id="panel-detailed-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
 </div>
 
 <!-- ══ LASER LEVEL PANEL ══ -->
 <div id="panel-laser" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">🔴 מדידת גבהים במאזנת</div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">נקודת ייחוס · סטיות מ/מ״מ · ייצוא · דוח WhatsApp</div>
-  <div id="panel-laser-inner">
-    <div style="text-align:center;padding:40px;color:var(--text3);">
-      <div style="font-size:36px;margin-bottom:12px;">🔴</div>
-      <div style="font-size:13px;">טוען מודול...</div>
-    </div>
-  </div>
+  <div id="panel-laser-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
 </div>
 
 <!-- ══ MEMO PANEL ══════════════════════════════════════════════════════ -->
