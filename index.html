@@ -1962,10 +1962,14 @@ async function autoLookupPhone(val) {
   clearTimeout(_lookupTimeout);
   _lookupTimeout = setTimeout(async () => {
     try {
+      // Normalize phone — try multiple formats for Israeli numbers
+      const digits10 = clean.slice(-10);  // last 10 digits (e.g. 0501234567)
+      const digits9  = clean.slice(-9);   // last 9 digits (e.g. 501234567)
+
       const [callRes, contractorRes] = await Promise.all([
         fetch(SB_URL+'/rest/v1/call_log?phone=ilike.*'+clean+'*&order=created_at.desc&limit=1&select=caller_name,phone',
           {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}),
-        fetch(SB_URL+'/rest/v1/contractors_master?or=(phone.ilike.*'+clean+'*,mobile.ilike.*'+clean+'*)&select=id,company_name,contact_name,phone,mobile,main_occupation,is_active&limit=1',
+        fetch(SB_URL+'/rest/v1/contractors_master?mobile=ilike.*'+digits9+'*&select=id,company_name,contact_name,phone,mobile,main_occupation,is_active&limit=1',
           {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
       ]);
       const callRows       = callRes.ok       ? await callRes.json()       : [];
@@ -3514,7 +3518,13 @@ async function onTab_brief() {
       SB_URL + '/rest/v1/project_briefs?order=sent_at.desc&limit=1',
       { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
     );
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      const errTxt = res.status === 404 || res.status === 400 ?
+        'טבלת project_briefs חסרה — הרץ את ה-SQL ביומן' :
+        'שגיאה: HTTP ' + res.status;
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:700;margin-bottom:8px;">שגיאה בטעינה</div><div style="font-size:13px;color:var(--red);">' + errTxt + '</div></div>';
+      return;
+    }
     var rows = await res.json();
     if (!rows || !rows.length) {
       el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);"><div style="font-size:48px;margin-bottom:12px;">📋</div><div style="font-size:15px;font-weight:700;margin-bottom:8px;">אין בריפינג פעיל</div><div style="font-size:13px;">בקש מאבשי לשלוח בריפינג מהיומן</div></div>';
