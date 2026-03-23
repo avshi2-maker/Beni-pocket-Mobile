@@ -670,6 +670,104 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
   <!-- end panel-takeoff -->
 
+<!-- ══ DETAILED TAKEOFF PANEL ══ -->
+<div id="panel-detailed" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
+  <div id="panel-detailed-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
+</div>
+
+<!-- ══ LASER LEVEL PANEL ══ -->
+<div id="panel-laser" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
+  <div id="panel-laser-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
+</div>
+
+<!-- ══ MEMO PANEL ══════════════════════════════════════════════════════ -->
+<div id="panel-memo" class="panel" style="display:none;padding:14px 14px 80px;">
+
+  <!-- Header -->
+  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">📝 מזכרים אישיים</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">צלם, הקלט, או הקלד הערה — תישמר ביומן החכם</div>
+
+  <!-- Project tag (optional) -->
+  <div style="margin-bottom:12px;">
+    <select id="memo-project-sel" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface);color:var(--text);">
+      <option value="">🏷️ ללא פרויקט</option>
+    </select>
+  </div>
+
+  <!-- Optional text remark -->
+  <textarea id="memo-text" placeholder="הערה / כותרת (אופציונלי)..." rows="2"
+    style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;
+           font-family:Heebo,sans-serif;font-size:14px;direction:rtl;resize:none;
+           background:var(--surface);color:var(--text);margin-bottom:12px;box-sizing:border-box;"></textarea>
+
+  <!-- 4 Action buttons -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+
+    <!-- 📷 Camera -->
+    <button onclick="memoCapture()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">📷</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם</span>
+      <span style="font-size:10px;color:var(--text2);">צלם הערה / ממצא</span>
+    </button>
+
+    <!-- 🎙️ Voice -->
+    <button id="memo-voice-btn" onclick="memoVoiceToggle()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">🎙️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלט</span>
+      <span style="font-size:10px;color:var(--text2);">הקלטת קולית</span>
+    </button>
+
+    <!-- ✏️ Type -->
+    <button onclick="document.getElementById('memo-text').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">✏️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלד</span>
+      <span style="font-size:10px;color:var(--text2);">הקלדה ידנית</span>
+    </button>
+
+    <!-- 🏷️ Tag project -->
+    <button onclick="document.getElementById('memo-project-sel').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">🏷️</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">תייג פרויקט</span>
+      <span style="font-size:10px;color:var(--text2);">קשר לפרויקט</span>
+    </button>
+  </div>
+
+  <!-- Photo preview (hidden until photo taken) -->
+  <div id="memo-photo-wrap" style="display:none;margin-bottom:12px;text-align:center;">
+    <img id="memo-photo-preview" style="max-width:100%;border-radius:10px;border:2px solid var(--border);">
+    <div style="margin-top:6px;">
+      <button onclick="memoClearPhoto()" style="font-size:12px;padding:5px 14px;background:var(--surface2);
+        border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;">✕ הסר תמונה</button>
+    </div>
+  </div>
+
+  <!-- Voice transcript result -->
+  <div id="memo-voice-result" style="display:none;background:var(--surface2);border-radius:10px;
+    padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--text);direction:rtl;"></div>
+
+  <!-- hidden file input -->
+  <input type="file" id="memo-file-input" accept="image/*" capture="environment" style="display:none" onchange="memoFileChosen(this)">
+
+  <!-- Send button -->
+  <button onclick="memoSend()" style="width:100%;padding:14px;background:linear-gradient(135deg,#9a6f00,#c9a84c);
+    color:#1a1a2e;border:none;border-radius:12px;font-size:16px;font-weight:800;
+    font-family:Heebo,sans-serif;cursor:pointer;letter-spacing:0.5px;">
+    📤 שלח ליומן החכם
+  </button>
+
+  <div id="memo-status" style="text-align:center;font-size:13px;margin-top:10px;color:var(--text2);min-height:18px;"></div>
+
+</div>
+<!-- ══ END MEMO PANEL ══ -->
+
 </div>
 
 <!-- Modals -->
@@ -3371,104 +3469,6 @@ async function memoSend() {
 }
 
 </script>
-
-<!-- ══ DETAILED TAKEOFF PANEL ══ -->
-<div id="panel-detailed" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
-  <div id="panel-detailed-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
-</div>
-
-<!-- ══ LASER LEVEL PANEL ══ -->
-<div id="panel-laser" class="panel" style="display:none;padding:12px 14px;padding-bottom:80px;">
-  <div id="panel-laser-inner"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען...</div></div>
-</div>
-
-<!-- ══ MEMO PANEL ══════════════════════════════════════════════════════ -->
-<div id="panel-memo" class="panel" style="display:none;padding:14px 14px 80px;">
-
-  <!-- Header -->
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">📝 מזכרים אישיים</div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">צלם, הקלט, או הקלד הערה — תישמר ביומן החכם</div>
-
-  <!-- Project tag (optional) -->
-  <div style="margin-bottom:12px;">
-    <select id="memo-project-sel" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;background:var(--surface);color:var(--text);">
-      <option value="">🏷️ ללא פרויקט</option>
-    </select>
-  </div>
-
-  <!-- Optional text remark -->
-  <textarea id="memo-text" placeholder="הערה / כותרת (אופציונלי)..." rows="2"
-    style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;
-           font-family:Heebo,sans-serif;font-size:14px;direction:rtl;resize:none;
-           background:var(--surface);color:var(--text);margin-bottom:12px;box-sizing:border-box;"></textarea>
-
-  <!-- 4 Action buttons -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-
-    <!-- 📷 Camera -->
-    <button onclick="memoCapture()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
-      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
-      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
-      <span style="font-size:28px;">📷</span>
-      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם</span>
-      <span style="font-size:10px;color:var(--text2);">צלם הערה / ממצא</span>
-    </button>
-
-    <!-- 🎙️ Voice -->
-    <button id="memo-voice-btn" onclick="memoVoiceToggle()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
-      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
-      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
-      <span style="font-size:28px;">🎙️</span>
-      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלט</span>
-      <span style="font-size:10px;color:var(--text2);">הקלטת קולית</span>
-    </button>
-
-    <!-- ✏️ Type (focuses textarea) -->
-    <button onclick="document.getElementById('memo-text').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
-      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
-      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
-      <span style="font-size:28px;">✏️</span>
-      <span style="font-size:13px;font-weight:700;color:var(--text);">הקלד</span>
-      <span style="font-size:10px;color:var(--text2);">הקלדה ידנית</span>
-    </button>
-
-    <!-- 🏷️ Tag project -->
-    <button onclick="document.getElementById('memo-project-sel').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
-      padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
-      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
-      <span style="font-size:28px;">🏷️</span>
-      <span style="font-size:13px;font-weight:700;color:var(--text);">תייג פרויקט</span>
-      <span style="font-size:10px;color:var(--text2);">קשר לפרויקט</span>
-    </button>
-  </div>
-
-  <!-- Photo preview (hidden until photo taken) -->
-  <div id="memo-photo-wrap" style="display:none;margin-bottom:12px;text-align:center;">
-    <img id="memo-photo-preview" style="max-width:100%;border-radius:10px;border:2px solid var(--border);">
-    <div style="margin-top:6px;">
-      <button onclick="memoClearPhoto()" style="font-size:12px;padding:5px 14px;background:var(--surface2);
-        border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;">✕ הסר תמונה</button>
-    </div>
-  </div>
-
-  <!-- Voice transcript result -->
-  <div id="memo-voice-result" style="display:none;background:var(--surface2);border-radius:10px;
-    padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--text);direction:rtl;"></div>
-
-  <!-- hidden file input -->
-  <input type="file" id="memo-file-input" accept="image/*" capture="environment" style="display:none" onchange="memoFileChosen(this)">
-
-  <!-- Send button -->
-  <button onclick="memoSend()" style="width:100%;padding:14px;background:linear-gradient(135deg,#9a6f00,#c9a84c);
-    color:#1a1a2e;border:none;border-radius:12px;font-size:16px;font-weight:800;
-    font-family:Heebo,sans-serif;cursor:pointer;letter-spacing:0.5px;">
-    📤 שלח ליומן החכם
-  </button>
-
-  <div id="memo-status" style="text-align:center;font-size:13px;margin-top:10px;color:var(--text2);min-height:18px;"></div>
-
-</div>
-<!-- ══ END MEMO PANEL ══ -->
 
 
 </body>
