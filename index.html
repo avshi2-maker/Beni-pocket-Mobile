@@ -30,9 +30,9 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .topbar-name{font-size:18px;font-weight:900;color:var(--text);}
 .topbar-sub{font-size:10px;color:var(--text2);line-height:1;}
 .topbar-time{font-size:13px;font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums;}
-.nav-tabs{display:flex;flex-direction:row;overflow-x:auto;background:#f5e9c4;border-bottom:2px solid #c9a84c;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;}.nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{padding:9px 8px 8px;display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;border-top:1px solid #e8d9a0;}
-.nav-tab:nth-child(-n+4){border-top:none;}
+.nav-tabs{display:flex;flex-direction:row;overflow-x:auto;overflow-y:hidden;background:#f5e9c4;border-bottom:2px solid #c9a84c;-webkit-overflow-scrolling:touch;scrollbar-width:none;height:58px;flex-shrink:0;}.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:6px 10px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:700;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.18s;user-select:none;white-space:nowrap;position:relative;flex-shrink:0;min-width:68px;height:58px;box-sizing:border-box;}
+
 .nav-tab .tab-icon{font-size:18px;}
 .nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);background:rgba(201,132,26,0.08);}
 .nav-badge{background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;position:absolute;margin-top:-28px;margin-right:-20px;}
@@ -731,24 +731,26 @@ function sanitizeStorageKey(str) {
 function switchTab(tab) {
   if (tab === 'memo')     { setTimeout(onTab_memo, 50); }
   if (tab === 'detailed') {
-    (async function(){
-      var inner = document.getElementById('panel-detailed-inner');
-      if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול מדידות...</div>';
-      await loadScript('detailed_takeoff');
-      await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
-      if(typeof dtInit==='function') { dtInit(); window.scrollTo(0,0); }
-      else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה detailed_takeoff.js לסופרבייס Storage</div>';
-    })();
+    if (typeof dtInit === 'function') { dtInit(); window.scrollTo(0,0); return; }
+    var s = document.createElement('script');
+    s.src = STORAGE + '/detailed_takeoff.js';
+    s.onload = function() { if(typeof dtInit==='function') { dtInit(); window.scrollTo(0,0); } };
+    s.onerror = function() {
+      var el = document.getElementById('panel-detailed-inner');
+      if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
+    };
+    document.head.appendChild(s);
   }
   if (tab === 'laser') {
-    (async function(){
-      var inner = document.getElementById('panel-laser-inner');
-      if(inner) inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">⏳ טוען מודול גבהים...</div>';
-      await loadScript('laser_level');
-      await new Promise(function(r){setTimeout(r,50);}); // ensure DOM ready
-      if(typeof llInit==='function') { llInit(); window.scrollTo(0,0); }
-      else if(inner) inner.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;">❌ שגיאה בטעינת המודול — העלה laser_level.js לסופרבייס Storage</div>';
-    })();
+    if (typeof llInit === 'function') { llInit(); window.scrollTo(0,0); return; }
+    var s = document.createElement('script');
+    s.src = STORAGE + '/laser_level.js';
+    s.onload = function() { if(typeof llInit==='function') { llInit(); window.scrollTo(0,0); } };
+    s.onerror = function() {
+      var el = document.getElementById('panel-laser-inner');
+      if(el) el.innerHTML = '<div style="color:#ef4444;padding:16px;font-size:13px;direction:rtl;">❌ לא ניתן לטעון מודול — בדוק חיבור אינטרנט ואת הגדרות bucket app-assets (חייב להיות Public)</div>';
+    };
+    document.head.appendChild(s);
   }
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   // Hide all panels using inline style - guaranteed regardless of CSS loading
@@ -790,11 +792,21 @@ function toast(msg, dur=2500){
 async function loadScript(name) {
   if (window['_loaded_'+name]) return;
   let code = null;
-  try { const r1=await fetch(`${STORAGE}/${name}.js`); if(r1.ok) code=await r1.text(); } catch(e){}
-  if (!code) { try { const r2=await fetch(`${STORAGE_FALLBACK}/${name}.js`); if(r2.ok){code=await r2.text();} } catch(e){} }
-  if (!code) { console.error('Module '+name+'.js error: Failed to fetch'); return; }
-  const s=document.createElement('script'); s.textContent=code; document.head.appendChild(s);
-  window['_loaded_'+name]=true; console.log('Loaded: '+name+'.js');
+  // Try Supabase Storage first (where .js files live)
+  const urls = [
+    `${SB_URL}/storage/v1/object/public/app-assets/${name}.js`,
+    `${STORAGE}/${name}.js`
+  ];
+  for (var i=0; i<urls.length; i++) {
+    try {
+      var r = await fetch(urls[i]);
+      if (r.ok) { code = await r.text(); break; }
+    } catch(e) {}
+  }
+  if (!code) { console.error('Module '+name+'.js not found in Supabase Storage app-assets bucket'); return; }
+  var s = document.createElement('script'); s.textContent = code; document.head.appendChild(s);
+  window['_loaded_'+name] = true;
+  console.log('✅ Loaded: '+name+'.js');
 }
 
 
@@ -3457,6 +3469,7 @@ async function memoSend() {
 
 </div>
 <!-- ══ END MEMO PANEL ══ -->
+
 
 </body>
 </html>
