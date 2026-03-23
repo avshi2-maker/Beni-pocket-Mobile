@@ -161,6 +161,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-tab" onclick="switchTab('detailed')" id="tab-detailed"><span class="tab-icon">📋</span>מדידות</div>
     <div class="nav-tab" onclick="switchTab('laser')"    id="tab-laser"   ><span class="tab-icon">🔴</span>גבהים</div>
     <div class="nav-tab" onclick="switchTab('memo')" id="tab-memo"><span class="tab-icon">📝</span>מזכרים</div>
+    <div class="nav-tab" onclick="switchTab('brief')" id="tab-brief"><span class="tab-icon">📋</span>בריפינג<span class="nav-badge" id="brief-badge" style="display:none">!</span></div>
   </div>
 
   <div id="panel-call"  class="panel active">
@@ -768,6 +769,27 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 <!-- ══ END MEMO PANEL ══ -->
 
+<!-- ══ PROJECT BRIEF PANEL ══════════════════════════════════════ -->
+<div id="panel-brief" class="panel" style="display:none;padding:14px 14px 80px;">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <div style="font-size:18px;font-weight:800;color:var(--text);">📋 בריפינג פרויקט</div>
+    <button onclick="onTab_brief()" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:Heebo,sans-serif;font-size:12px;color:var(--text2);cursor:pointer;">🔄 רענן</button>
+  </div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">מגיע מהיומן — מתעדכן כשאבשי שולח</div>
+
+  <!-- Content -->
+  <div id="brief-content">
+    <div style="text-align:center;padding:40px 20px;color:var(--text3);">
+      <div style="font-size:48px;margin-bottom:12px;">📋</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;">אין בריפינג פעיל</div>
+      <div style="font-size:13px;">בקש מאבשי לשלוח בריפינג מהיומן</div>
+    </div>
+  </div>
+</div>
+<!-- ══ END BRIEF PANEL ══ -->
+
 </div>
 
 <!-- Modals -->
@@ -827,7 +849,8 @@ function sanitizeStorageKey(str) {
 }
 
 function switchTab(tab) {
-  if (tab === 'memo') { setTimeout(onTab_memo, 50); }
+  if (tab === 'memo')  { setTimeout(onTab_memo, 50); }
+  if (tab === 'brief') { setTimeout(onTab_brief, 50); }
 
   // Always run panel show/hide first, then init the module
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -896,15 +919,56 @@ function toast(msg, dur=2500){
 }
 
 // -- JS MODULE LOADER -------------------------------------
+async function loadScript(name) {
+  if (window['_loaded_'+name]) return;
+  let code = null;
+  // Try Supabase Storage first (where .js files live)
+  const urls = [
+    `${SB_URL}/storage/v1/object/public/app-assets/${name}.js`,
+    `${STORAGE}/${name}.js`
+  ];
+  for (var i=0; i<urls.length; i++) {
+    try {
+      var r = await fetch(urls[i]);
+      if (r.ok) { code = await r.text(); break; }
+    } catch(e) {}
+  }
+  if (!code) { console.error('Module '+name+'.js not found in Supabase Storage app-assets bucket'); return; }
+  var s = document.createElement('script'); s.textContent = code; document.head.appendChild(s);
+  window['_loaded_'+name] = true;
+  console.log('✅ Loaded: '+name+'.js');
+}
 
 
 // -- BOOTSTRAP ---------------------------------------------
 async function bootstrap() {
-  // 1. Hide splash, show app
+  // 1. Load CSS from Storage
+  // CSS is inlined - no fetch needed
+
+  // 2. beni-pocket.js is now inlined - no fetch needed
+  // await loadScript('beni-pocket'); // DISABLED - inlined below
+
+  // 3. Load app config from Supabase
+  try {
+    const { data } = await window.sb.from('app_config').select('key,value');
+    // Verify optional tables exist — warn if missing
+    const optionalTables = ['quick_replies','inspection_checklist','site_pulse_requests'];
+    for (const t of optionalTables) {
+      try {
+        const r = await fetch(SB_URL+'/rest/v1/'+t+'?limit=1', {
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
+        });
+        if(!r.ok) console.warn('⚠️ Table missing:', t, '— some features may not work');
+      } catch(e) { /* network issue — ignore */ }
+    }
+    (data||[]).forEach(r => APP.config[r.key] = r.value);
+  } catch(e) { console.warn('app_config load failed:', e.message); }
+
+  // 4. Hide splash, show app
   document.getElementById('splash').style.display = 'none';
   document.getElementById('app').classList.add('ready');
 
-  // 3. Init data panels
+  // 5. Init all data panels
   await Promise.all([
     loadQuickReplies(),
     loadTodos(),
@@ -914,25 +978,37 @@ async function bootstrap() {
   ]);
   initSpeechRecognition();
 
-  // 4. Modal overlay close on outside tap
+  // 6. Modal overlay close on outside tap
   document.querySelectorAll('.modal-overlay').forEach(el =>
     el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); })
   );
 
+  console.log('✅ Beni Pocket ready');
 }
 
 bootstrap();
+// showToast fallback - defined here so takeoff module can use it
+// (beni-pocket.js defines the full version later; this is overridden)
+if (typeof showToast === 'undefined') {
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('on');
+    setTimeout(function(){ t.classList.remove('on'); }, 2800);
+  }
+}
 
 // ===== TAKEOFF MODULE =====
 var _toRows=[], _toVoiceRecog=null, _toVoiceActive=false;
 var _tcShape='rect';
 var _ttData={floors:[],walls:[],ceilings:[],columns:[],openings:[]};
 var _ttCfg={
-  floors:  {cols:['תיאור','אורך','רוחב'],f:function(v){return v[1]*v[2];}},
-  walls:   {cols:['תיאור','אורך','גובה'],f:function(v){return v[1]*v[2];}},
-  ceilings:{cols:['תיאור','אורך','רוחב'],f:function(v){return v[1]*v[2];}},
-  columns: {cols:['תיאור','היקף','גובה'],f:function(v){return v[1]*v[2];}},
-  openings:{cols:['תיאור','רוחב','גובה'],f:function(v){return v[1]*v[2];}}
+  floors:  {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05e8\u05d5\u05d7\u05d1'],f:function(v){return v[1]*v[2];}},
+  walls:   {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}},
+  ceilings:{cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d0\u05d5\u05e8\u05da','\u05e8\u05d5\u05d7\u05d1'],f:function(v){return v[1]*v[2];}},
+  columns: {cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05d4\u05d9\u05e7\u05e3','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}},
+  openings:{cols:['\u05ea\u05d9\u05d0\u05d5\u05e8','\u05e8\u05d5\u05d7\u05d1','\u05d2\u05d5\u05d1\u05d4'],f:function(v){return v[1]*v[2];}}
 };
 var _toPhotoBase64=null,_toPhotoType=null;
 
@@ -960,7 +1036,7 @@ function toPreviewCalc(){
   else if(shape==='circle')a=Math.PI*d1*d1;
   else if(shape==='triangle')a=d1*d2/2;
   else a=d1;
-  document.getElementById('to-preview').textContent=a>0?(Math.round(a*100)/100)+' מ״ר':'—';
+  document.getElementById('to-preview').textContent=a>0?(Math.round(a*100)/100)+' \u05de\u05f4\u05e8':'—';
 }
 
 function toAddRow(){
@@ -969,46 +1045,46 @@ function toAddRow(){
   var d2=parseFloat(document.getElementById('to-dim2').value)||0;
   var shape=document.getElementById('to-shape').value;
   var note=document.getElementById('to-note').value.trim();
-  if(!room||!d1){toast('נא למלא שם ומידה');return;}
+  if(!room||!d1){showToast('\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05e9\u05dd \u05d5\u05de\u05d9\u05d3\u05d4');return;}
   var a=0,dl='';
   if(shape==='rect'){a=d1*d2;dl=d1+'\xd7'+d2;}
   else if(shape==='circle'){a=Math.PI*d1*d1;dl='r='+d1;}
   else if(shape==='triangle'){a=d1*d2/2;dl=d1+'\xd7'+d2+'/2';}
-  else{a=d1;dl=d1+' מ״ר';}
+  else{a=d1;dl=d1+' \u05de\u05f4\u05e8';}
   _toRows.push({id:Date.now()+Math.random(),room:room,shape:shape,d1:d1,d2:d2,area:Math.round(a*100)/100,dimLabel:dl,note:note});
   document.getElementById('to-room').value='';document.getElementById('to-dim1').value='';document.getElementById('to-dim2').value='';document.getElementById('to-note').value='';document.getElementById('to-preview').textContent='—';
-  toRenderRows();toast('\u2705 '+room+' — '+(Math.round(a*100)/100)+' מ״ר');
+  toRenderRows();showToast('\u2705 '+room+' — '+(Math.round(a*100)/100)+' \u05de\u05f4\u05e8');
 }
 
 function toDeleteRow(id){_toRows=_toRows.filter(function(r){return r.id!==id;});toRenderRows();}
 
 function toRenderRows(){
   var list=document.getElementById('to-rows-list');if(!list)return;
-  if(!_toRows.length){list.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">עדיין אין מדידות</div>';document.getElementById('to-total-badge').style.display='none';return;}
+  if(!_toRows.length){list.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px;">\u05e2\u05d3\u05d9\u05d9\u05df \u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea</div>';document.getElementById('to-total-badge').style.display='none';return;}
   var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
-  document.getElementById('to-total-badge').textContent='סה״כ: '+total+' מ״ר';document.getElementById('to-total-badge').style.display='inline';
+  document.getElementById('to-total-badge').textContent='\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8';document.getElementById('to-total-badge').style.display='inline';
   list.innerHTML=_toRows.map(function(r){
     return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;">'
       +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text);">'+r.room+'</div><div style="font-size:12px;color:var(--text2);">'+r.dimLabel+(r.note?' \xb7 '+r.note:'')+'</div></div>'
-      +'<div style="font-size:15px;font-weight:900;color:var(--orange);min-width:58px;text-align:left;">'+r.area+' מ״ר</div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--orange);min-width:58px;text-align:left;">'+r.area+' \u05de\u05f4\u05e8</div>'
       +'<button onclick="toDeleteRow('+r.id+')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;">\u2715</button>'
       +'</div>';
   }).join('');
 }
 
 function toNewSession(){
-  if(_toRows.length&&!confirm('לפתוח סשן חדש?'))return;
-  _toRows=[];document.getElementById('to-project-name').value='';document.getElementById('to-project-label').textContent='אין פרויקט פעיל';
-  document.getElementById('to-date').value=new Date().toISOString().split('T')[0];toRenderRows();toast('סשן חדש');
+  if(_toRows.length&&!confirm('\u05dc\u05e4\u05ea\u05d5\u05d7 \u05e1\u05e9\u05df \u05d7\u05d3\u05e9?'))return;
+  _toRows=[];document.getElementById('to-project-name').value='';document.getElementById('to-project-label').textContent='\u05d0\u05d9\u05df \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8 \u05e4\u05e2\u05d9\u05dc';
+  document.getElementById('to-date').value=new Date().toISOString().split('T')[0];toRenderRows();showToast('\u05e1\u05e9\u05df \u05d7\u05d3\u05e9');
 }
 
 function toVoiceToggle(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('הדפדפן לא תומך');return;}
-  if(_toVoiceActive){if(_toVoiceRecog)_toVoiceRecog.stop();_toVoiceActive=false;document.getElementById('to-voice-btn').textContent='\ud83c\udfa4';document.getElementById('to-voice-status').textContent='לחץ להקלטה';return;}
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('\u05d4\u05d3\u05e4\u05d3\u05e4\u05df \u05dc\u05d0 \u05ea\u05d5\u05de\u05da');return;}
+  if(_toVoiceActive){if(_toVoiceRecog)_toVoiceRecog.stop();_toVoiceActive=false;document.getElementById('to-voice-btn').textContent='\ud83c\udfa4';document.getElementById('to-voice-status').textContent='\u05dc\u05d7\u05e5 \u05dc\u05d4\u05e7\u05dc\u05d8\u05d4';return;}
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;_toVoiceRecog=new SR();_toVoiceRecog.lang='he-IL';_toVoiceRecog.continuous=true;_toVoiceRecog.interimResults=false;
   _toVoiceRecog.onresult=function(e){var t=Array.from(e.results).map(function(r){return r[0].transcript;}).join(' ');var el=document.getElementById('to-voice-text');el.value=(el.value?el.value+' ':'')+t;};
   _toVoiceRecog.onerror=function(){_toVoiceActive=false;document.getElementById('to-voice-btn').textContent='\ud83c\udfa4';};
-  _toVoiceRecog.start();_toVoiceActive=true;document.getElementById('to-voice-btn').textContent='\u23f9';document.getElementById('to-voice-status').textContent='\ud83d\udd34 מקליט...';
+  _toVoiceRecog.start();_toVoiceActive=true;document.getElementById('to-voice-btn').textContent='\u23f9';document.getElementById('to-voice-status').textContent='\ud83d\udd34 \u05de\u05e7\u05dc\u05d9\u05d8...';
 }
 
 function toPhotoCapture(input){
@@ -1018,24 +1094,24 @@ function toPhotoCapture(input){
     _toPhotoBase64=e.target.result.split(',')[1];_toPhotoType=file.type||'image/jpeg';
     var img=document.createElement('img');img.src=e.target.result;img.style.cssText='max-width:100%;max-height:180px;border-radius:8px;';
     var prev=document.getElementById('to-photo-preview');prev.innerHTML='';prev.appendChild(img);
-    document.getElementById('to-photo-status').textContent='\u2705 תמונה מוכנת';
+    document.getElementById('to-photo-status').textContent='\u2705 \u05ea\u05de\u05d5\u05e0\u05d4 \u05de\u05d5\u05db\u05e0\u05ea';
     document.getElementById('to-photo-save-btn').style.display='block';document.getElementById('to-photo-ocr-btn').style.display='block';
   };reader.readAsDataURL(file);
 }
 
 async function toPhotoSave(){
-  if(!_toPhotoBase64){toast('אין תמונה');return;}
+  if(!_toPhotoBase64){showToast('\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4');return;}
   var project=sanitizeStorageKey(document.getElementById('to-project-name').value.trim()||'general');
   try{
     var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
     for(var i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
     var res=await sb.storage.from('photos').upload('takeoffs/'+sanitizeStorageKey(project)+'_'+Date.now()+'.jpg',new Blob([ab],{type:_toPhotoType}),{upsert:false});
-    if(res.error)throw res.error;toast('\u2705 נשמר');
-  }catch(e){toast('שגיאה: '+e.message);}
+    if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');
+  }catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
 
 async function toPhotoOCR(){
-  if(!_toPhotoBase64){toast('אין תמונה');return;}
+  if(!_toPhotoBase64){showToast('אין תמונה');return;}
   var _k = atob('c2stYW50LWFwaTAzLUlOSDZYVF92elNfanYxT1hiSjdHWHVXSzRoY3kwODZHOV80bTFSdUZRUG5sdGtXQjVqTjBGc2F4TFM2b09oc1M0Ylp5cGc2blRoMk16WnhncTdfYTlBLUgyNHIwd0FB');
   var ANTHROPIC_KEY = _k;
   document.getElementById('to-photo-status').textContent='⏳ AI מזהה טקסט...';
@@ -1083,8 +1159,8 @@ async function toPhotoOCR(){
 async function toParseVoice(){await toAIParse(document.getElementById('to-voice-text').value.trim());}
 
 async function toAIParse(rawText){
-  if(!rawText){toast('אין טקסט');return;}
-  toast('מפרש מדידות...');
+  if(!rawText){showToast('אין טקסט');return;}
+  showToast('מפרש מדידות...');
 
   // Convert Hebrew number words to digits
   function hebrewToNumber(text) {
@@ -1183,7 +1259,7 @@ async function toAIParse(rawText){
 
   toRenderRows();
   if (added > 0) {
-    toast('✅ הוספו ' + added + ' שורות');
+    showToast('✅ הוספו ' + added + ' שורות');
     // Clear voice box and reset for next room
     var voiceEl = document.getElementById('to-voice-text');
     if (voiceEl) voiceEl.value = '';
@@ -1198,7 +1274,7 @@ async function toAIParse(rawText){
     }
   }
   else {
-    toast('לא זוהו מדידות');
+    showToast('לא זוהו מדידות');
     // Show help message in voice text area
     var el = document.getElementById('to-voice-text');
     if (el) el.value = rawText + '\n\n💡 טיפ: אמור למשל:\n"סלון אורך שלושה וחצי רוחב חמש"\n"מטבח ארבע על שלוש"';
@@ -1220,20 +1296,20 @@ function tcCalc(){
   else if(_tcShape==='circle'){var r=parseFloat(document.getElementById('tc-c-r').value)||0;a=Math.PI*r*r;}
   else if(_tcShape==='tri'){var b=parseFloat(document.getElementById('tc-t-b').value)||0,h=parseFloat(document.getElementById('tc-t-h').value)||0;a=b*h/2;}
   else if(_tcShape==='trap'){var a1=parseFloat(document.getElementById('tc-p-a').value)||0,b2=parseFloat(document.getElementById('tc-p-b').value)||0,h2=parseFloat(document.getElementById('tc-p-h').value)||0;a=(a1+b2)/2*h2;}
-  var el=document.getElementById('tc-result');el.textContent=a>0?(Math.round(a*100)/100)+' מ״ר':'— מ״ר';el.dataset.val=a;
+  var el=document.getElementById('tc-result');el.textContent=a>0?(Math.round(a*100)/100)+' \u05de\u05f4\u05e8':'— \u05de\u05f4\u05e8';el.dataset.val=a;
 }
 
 function tcAddToList(){
   var a=parseFloat(document.getElementById('tc-result').dataset.val)||0;
   var label=document.getElementById('tc-room-label').value.trim();
-  if(!a||!label){toast('נא למלא שם ולחשב');return;}
+  if(!a||!label){showToast('\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05e9\u05dd \u05d5\u05dc\u05d7\u05e9\u05d1');return;}
   var dims='';
   if(_tcShape==='rect')dims=(document.getElementById('tc-r-l').value||'0')+'\xd7'+(document.getElementById('tc-r-w').value||'0');
   else if(_tcShape==='circle')dims='r='+(document.getElementById('tc-c-r').value||'0');
   else if(_tcShape==='tri')dims=(document.getElementById('tc-t-b').value||'0')+'\xd7'+(document.getElementById('tc-t-h').value||'0')+'/2';
   else if(_tcShape==='trap')dims='('+document.getElementById('tc-p-a').value+'+'+document.getElementById('tc-p-b').value+')\xd7'+document.getElementById('tc-p-h').value+'/2';
   _toRows.push({id:Date.now()+Math.random(),room:label,shape:_tcShape,d1:0,d2:0,area:Math.round(a*100)/100,dimLabel:dims,note:''});
-  document.getElementById('tc-room-label').value='';toRenderRows();toast('\u2705 '+label);
+  document.getElementById('tc-room-label').value='';toRenderRows();showToast('\u2705 '+label);
 }
 
 function toTableTab(tab){
@@ -1275,38 +1351,38 @@ function ttDelRow(tab,id){_ttData[tab]=_ttData[tab].filter(function(r){return r.
 function ttUpdateTotal(tab){
   var total=_ttData[tab].reduce(function(s,r){return s+_ttCfg[tab].f(r.vals);},0);
   var el=document.getElementById('tt-'+tab+'-total');
-  if(el)el.textContent=(tab==='openings'?'סה״כ לניכוי: ':'סה״כ: ')+Math.round(total*100)/100+' מ״ר';
+  if(el)el.textContent=(tab==='openings'?'\u05e1\u05d4\u05f4\u05db \u05dc\u05e0\u05d9\u05db\u05d5\u05d9: ':'\u05e1\u05d4\u05f4\u05db: ')+Math.round(total*100)/100+' \u05de\u05f4\u05e8';
 }
 
 function ttRenderSummary(){
   var tabs=['floors','walls','ceilings','columns','openings'];
-  var names={floors:'רצפות',walls:'קירות',ceilings:'תקרות',columns:'עמודים',openings:'פתחים (ניכוי)'};
+  var names={floors:'\u05e8\u05e6\u05e4\u05d5\u05ea',walls:'\u05e7\u05d9\u05e8\u05d5\u05ea',ceilings:'\u05ea\u05e7\u05e8\u05d5\u05ea',columns:'\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',openings:'\u05e4\u05ea\u05d7\u05d9\u05dd (\u05e0\u05d9\u05db\u05d5\u05d9)'};
   var grand=0,html='';
   tabs.forEach(function(tab){
     var total=Math.round(_ttData[tab].reduce(function(s,r){return s+_ttCfg[tab].f(r.vals);},0)*100)/100;
     if(tab!=='openings')grand+=total;
     html+='<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
       +'<span style="font-size:13px;font-weight:700;color:var(--text);">'+names[tab]+'</span>'
-      +'<span style="font-size:15px;font-weight:900;color:'+(tab==='openings'?'#e53e3e':'var(--orange)')+';">'+total+' מ״ר</span></div>';
+      +'<span style="font-size:15px;font-weight:900;color:'+(tab==='openings'?'#e53e3e':'var(--orange)')+';">'+total+' \u05de\u05f4\u05e8</span></div>';
   });
-  html+='<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:900;color:var(--text);"><span>סה״כ נטו</span><span style="color:var(--orange);">'+Math.round(grand*100)/100+' מ״ר</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:900;color:var(--text);"><span>\u05e1\u05d4\u05f4\u05db \u05e0\u05d8\u05d5</span><span style="color:var(--orange);">'+Math.round(grand*100)/100+' \u05de\u05f4\u05e8</span></div>';
   var el=document.getElementById('tt-rooms-summary');if(el)el.innerHTML=html;
 }
 
 async function ttSaveAll(){
-  var project=document.getElementById('to-project-name').value.trim()||'ללא שם';
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
   var date=document.getElementById('to-date').value||new Date().toISOString().split('T')[0];
   var totals={};['floors','walls','ceilings','columns','openings'].forEach(function(t){totals[t]=Math.round(_ttData[t].reduce(function(s,r){return s+_ttCfg[t].f(r.vals);},0)*100)/100;});
-  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_ttData),total_area:totals.floors,created_at:new Date().toISOString(),takeoff_type:'table',totals:JSON.stringify(totals)});if(res.error)throw res.error;toast('\u2705 נשמר');}catch(e){toast('שגיאה: '+e.message);}
+  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_ttData),total_area:totals.floors,created_at:new Date().toISOString(),takeoff_type:'table',totals:JSON.stringify(totals)});if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');}catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
 
 function ttExportWA(){
-  var project=document.getElementById('to-project-name').value.trim()||'ללא שם';
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
   var date=document.getElementById('to-date').value||'';
-  var names={floors:'רצפות',walls:'קירות',ceilings:'תקרות',columns:'עמודים',openings:'פתחים'};
-  var msg='\ud83d\udcd0 *דוח טייקאוף \u2014 '+project+'*\nתאריך: '+date+'\n\n';
-  ['floors','walls','ceilings','columns','openings'].forEach(function(t){var tot=Math.round(_ttData[t].reduce(function(s,r){return s+_ttCfg[t].f(r.vals);},0)*100)/100;if(tot>0)msg+=names[t]+': '+tot+' מ״ר\n';});
-  msg+='\nבני פרסקי ניהול פרויקטים';
+  var names={floors:'\u05e8\u05e6\u05e4\u05d5\u05ea',walls:'\u05e7\u05d9\u05e8\u05d5\u05ea',ceilings:'\u05ea\u05e7\u05e8\u05d5\u05ea',columns:'\u05e2\u05de\u05d5\u05d3\u05d9\u05dd',openings:'\u05e4\u05ea\u05d7\u05d9\u05dd'};
+  var msg='\ud83d\udcd0 *\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'*\n\u05ea\u05d0\u05e8\u05d9\u05da: '+date+'\n\n';
+  ['floors','walls','ceilings','columns','openings'].forEach(function(t){var tot=Math.round(_ttData[t].reduce(function(s,r){return s+_ttCfg[t].f(r.vals);},0)*100)/100;if(tot>0)msg+=names[t]+': '+tot+' \u05de\u05f4\u05e8\n';});
+  msg+='\n\u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd';
   var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
@@ -1319,37 +1395,37 @@ function toTableInit(){
 }
 
 async function toSaveSupabase(){
-  if(!_toRows.length){toast('אין מדידות');return;}
-  var project=document.getElementById('to-project-name').value.trim()||'ללא שם';
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
   var date=document.getElementById('to-date').value||new Date().toISOString().split('T')[0];
   var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
-  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_toRows),total_area:total,created_at:new Date().toISOString()});if(res.error)throw res.error;toast('\u2705 נשמר');}catch(e){toast('שגיאה: '+e.message);}
+  try{var res=await sb.from('site_takeoffs').insert({project_name:project,takeoff_date:date,rows:JSON.stringify(_toRows),total_area:total,created_at:new Date().toISOString()});if(res.error)throw res.error;showToast('\u2705 \u05e0\u05e9\u05de\u05e8');}catch(e){showToast('\u05e9\u05d2\u05d9\u05d0\u05d4: '+e.message);}
 }
 
 function toGenerateReport(){
-  if(!_toRows.length){toast('אין מדידות');return;}
-  var project=document.getElementById('to-project-name').value.trim()||'ללא שם';
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
   var date=document.getElementById('to-date').value||'';
   var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
-  var rows=_toRows.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.room+'</td><td>'+r.dimLabel+'</td><td style="font-weight:700;color:#1a3d5c;">'+r.area+' מ״ר</td><td>'+r.note+'</td></tr>';}).join('');
+  var rows=_toRows.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.room+'</td><td>'+r.dimLabel+'</td><td style="font-weight:700;color:#1a3d5c;">'+r.area+' \u05de\u05f4\u05e8</td><td>'+r.note+'</td></tr>';}).join('');
   var win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>טייקאוף</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Heebo,sans-serif;padding:28px;direction:rtl}h1{font-size:20px;font-weight:900;color:#1a3d5c;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#1a3d5c;color:#c9a84c;padding:8px}td{padding:7px 8px;border-bottom:1px solid #eee}.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:12px}.btn-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}@media print{.btn-row{display:none}}</style></head><body><div class="btn-row"><button onclick="window.close()" style="background:#f0f0f0;color:#333;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">&#8592; חזור לאפליקציה</button><button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">הדפס / PDF</button><button onclick="toExportXLS()" style="background:#1e6b30;color:white;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">ייצוא XLS</button></div><h1>דוח טייקאוף \u2014 '+project+'</h1><div class="meta">תאריך: '+date+' | בני פרסקי ניהול פרויקטים</div><table><thead><tr><th>#</th><th>חדר / אזור</th><th>מידות</th><th>שטח</th><th>הערות</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">סה״כ: '+total+' מ״ר</div></body></html>');
+  win.document.write('<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>\u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Heebo,sans-serif;padding:28px;direction:rtl}h1{font-size:20px;font-weight:900;color:#1a3d5c;margin-bottom:4px}.meta{font-size:12px;color:#888;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#1a3d5c;color:#c9a84c;padding:8px}td{padding:7px 8px;border-bottom:1px solid #eee}.total{font-size:16px;font-weight:900;color:#1a3d5c;text-align:left;padding-top:12px}.btn-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}@media print{.btn-row{display:none}}</style></head><body><div class="btn-row"><button onclick="window.close()" style="background:#f0f0f0;color:#333;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">&#8592; \u05d7\u05d6\u05d5\u05e8 \u05dc\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4</button><button onclick="window.print()" style="background:#1a3d5c;color:#c9a84c;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">\u05d4\u05d3\u05e4\u05e1 / PDF</button><button onclick="toExportXLS()" style="background:#1e6b30;color:white;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;">\u05d9\u05d9\u05e6\u05d5\u05d0 XLS</button></div><h1>\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3 \u2014 '+project+'</h1><div class="meta">\u05ea\u05d0\u05e8\u05d9\u05da: '+date+' | \u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd</div><table><thead><tr><th>#</th><th>\u05d7\u05d3\u05e8 / \u05d0\u05d6\u05d5\u05e8</th><th>\u05de\u05d9\u05d3\u05d5\u05ea</th><th>\u05e9\u05d8\u05d7</th><th>\u05d4\u05e2\u05e8\u05d5\u05ea</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8</div></body></html>');
   win.document.close();
 }
 
 function toSendWA(){
-  if(!_toRows.length){toast('אין מדידות');return;}
-  var project=document.getElementById('to-project-name').value.trim()||'ללא שם';
+  if(!_toRows.length){showToast('\u05d0\u05d9\u05df \u05de\u05d3\u05d9\u05d3\u05d5\u05ea');return;}
+  var project=document.getElementById('to-project-name').value.trim()||'\u05dc\u05dc\u05d0 \u05e9\u05dd';
   var date=document.getElementById('to-date').value||'';
   var total=Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
-  var lines=_toRows.map(function(r,i){return (i+1)+'. '+r.room+' \u2014 '+r.area+' מ״ר ('+r.dimLabel+')';}).join('\n');
-  var msg='\ud83d\udcd0 *דוח טייקאוף*\nפרויקט: '+project+'\nתאריך: '+date+'\n\n'+lines+'\n\n*סה״כ: '+total+' מ״ר*\n\nבני פרסקי ניהול פרויקטים';
+  var lines=_toRows.map(function(r,i){return (i+1)+'. '+r.room+' \u2014 '+r.area+' \u05de\u05f4\u05e8 ('+r.dimLabel+')';}).join('\n');
+  var msg='\ud83d\udcd0 *\u05d3\u05d5\u05d7 \u05d8\u05d9\u05d9\u05e7\u05d0\u05d5\u05e3*\n\u05e4\u05e8\u05d5\u05d9\u05e7\u05d8: '+project+'\n\u05ea\u05d0\u05e8\u05d9\u05da: '+date+'\n\n'+lines+'\n\n*\u05e1\u05d4\u05f4\u05db: '+total+' \u05de\u05f4\u05e8*\n\n\u05d1\u05e0\u05d9 \u05e4\u05e8\u05e1\u05e7\u05d9 \u05e0\u05d9\u05d4\u05d5\u05dc \u05e4\u05e8\u05d5\u05d9\u05e7\u05d8\u05d9\u05dd';
   var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 
 function toExportXLS() {
-  if (!_toRows.length) { toast('אין מדידות'); return; }
+  if (!_toRows.length) { showToast('אין מדידות'); return; }
   var project = document.getElementById('to-project-name').value.trim() || 'ללא שם';
   var date = document.getElementById('to-date').value || new Date().toISOString().split('T')[0];
   var total = Math.round(_toRows.reduce(function(s,r){return s+r.area;},0)*100)/100;
@@ -1384,14 +1460,15 @@ function toExportXLS() {
   a.download = 'טייקאוף_' + project.replace(/\s/g,'_') + '_' + date + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('✅ קובץ XLS הורד');
+  showToast('✅ קובץ XLS הורד');
 }
 
-function toClearAll(){if(!confirm('למחוק הכל?'))return;_toRows=[];toRenderRows();}
+function toClearAll(){if(!confirm('\u05dc\u05de\u05d7\u05d5\u05e7 \u05d4\u05db\u05dc?'))return;_toRows=[];toRenderRows();}
 
+// === INLINED: beni-pocket.js ===========================
 // ========================================================
 // BENI POCKET - main logic
-// ========================================================
+// Loaded from Supabase Storage at runtime
 // Version: 15-03-2026
 // ========================================================
 
@@ -1417,7 +1494,11 @@ let currentAIResult   = null;
 // initApp() merged into bootstrap() above
 
 // Panel init hooks (called after each panel HTML is injected)
-
+function initPanel_call()  { renderQuickGrid(); }
+function initPanel_todo()  { renderTodos(); }
+function initPanel_log()   { loadLog(); }
+function initPanel_eod()   { renderEOD(); }
+function initPanel_voice() { initSpeechRecognition(); }
 
 // Tab hooks
 function onTab_log()   { loadLog(); }
@@ -1713,6 +1794,7 @@ async function loadQuickReplies() {
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     const data = await res.json();
     quickReplies = Array.isArray(data) && data.length ? data : [];
+    if (!quickReplies.length) console.warn('quick_replies table empty — add rows in Supabase');
   } catch(e) { quickReplies = []; }
   renderQuickGrid();
 }
@@ -3261,8 +3343,10 @@ function spCancelBtn(sheet, onClick) {
 
 
 
+// === END beni-pocket.js ================================
+
 function toPhotoSendToDashboard(){
-  if(!_toPhotoBase64){toast('אין תמונה');return;}
+  if(!_toPhotoBase64){showToast('אין תמונה');return;}
   var project=sanitizeStorageKey(document.getElementById('to-project-name').value.trim()||'general');
   document.getElementById('to-photo-status').textContent='⏳ שולח...';
   var byteStr=atob(_toPhotoBase64),ab=new ArrayBuffer(byteStr.length),ia=new Uint8Array(ab);
@@ -3282,7 +3366,7 @@ function toPhotoSendToDashboard(){
   })
   .then(function(){
     document.getElementById('to-photo-status').textContent='✅ נשמר! פתח Dashboard לעיבוד OCR';
-    toast('✅ נשלח ל-Dashboard');
+    showToast('✅ נשלח ל-Dashboard');
   })
   .catch(function(e){
     document.getElementById('to-photo-status').textContent='שגיאה: '+e.message;
@@ -3317,6 +3401,173 @@ async function onTab_memo() {
     window._memoProjects = res.ok ? await res.json() : [];
   } catch(e) { window._memoProjects = []; }
   initPanel_memo();
+}
+
+// ══ PROJECT BRIEF — read from project_briefs table ══════════════
+async function onTab_brief() {
+  var el = document.getElementById('brief-content');
+  var badge = document.getElementById('brief-badge');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px;">טוען בריפינג...</div>';
+  try {
+    var res = await fetch(
+      SB_URL + '/rest/v1/project_briefs?order=sent_at.desc&limit=1',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var rows = await res.json();
+    if (!rows || !rows.length) {
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);"><div style="font-size:48px;margin-bottom:12px;">📋</div><div style="font-size:15px;font-weight:700;margin-bottom:8px;">אין בריפינג פעיל</div><div style="font-size:13px;">בקש מאבשי לשלוח בריפינג מהיומן</div></div>';
+      if (badge) badge.style.display = 'none';
+      return;
+    }
+    var brief = rows[0];
+    var d = brief.data || {};
+    var proj = d.project || {};
+    var sentAt = brief.sent_at ? new Date(brief.sent_at).toLocaleString('he-IL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    var tasks = d.gantt_tasks || [];
+    var contractors = d.active_contractors || [];
+    var cos = d.change_orders || [];
+    var pos = d.purchase_orders || [];
+    var inspections = d.recent_inspections || [];
+
+    // Status badge color
+    var statusColors = { active:'#22c55e', completed:'#3b82f6', paused:'#f59e0b', planning:'#8b5cf6' };
+    var statusHe = { active:'פעיל', completed:'הושלם', paused:'מושהה', planning:'תכנון' };
+    var statusCol = statusColors[proj.status] || '#888';
+    var statusLabel = statusHe[proj.status] || proj.status || '';
+
+    // Budget progress
+    var budgetPct = proj.total_budget && proj.total_paid
+      ? Math.min(100, Math.round((proj.total_paid / proj.total_budget) * 100)) : null;
+
+    // Today's tasks
+    var today = new Date().toISOString().split('T')[0];
+    var todayTasks = tasks.filter(function(t) { return t.start_date <= today && t.end_date >= today; });
+
+    function fmtD(d) {
+      if (!d) return '—';
+      var parts = d.split('-');
+      return parts[2] + '/' + parts[1] + '/' + parts[0].slice(2);
+    }
+    function fmtM(n) {
+      if (!n) return '—';
+      return '₪' + Number(n).toLocaleString('he-IL', {maximumFractionDigits:0});
+    }
+    function esc2(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    var html = '';
+
+    // ── Title card
+    html += '<div style="background:linear-gradient(135deg,#1a3d5c,#2d6a9f);border-radius:16px;padding:18px;margin-bottom:14px;color:white;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">';
+    html += '<div style="font-size:20px;font-weight:900;line-height:1.2;">' + esc2(proj.name) + '</div>';
+    html += '<span style="background:' + statusCol + ';color:white;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">' + statusLabel + '</span>';
+    html += '</div>';
+    if (proj.client) html += '<div style="font-size:13px;opacity:0.85;margin-bottom:4px;">👤 ' + esc2(proj.client) + (proj.client_mobile ? ' — <a href="tel:' + esc2(proj.client_mobile) + '" style="color:#93c5fd;">' + esc2(proj.client_mobile) + '</a>' : '') + '</div>';
+    if (proj.city || proj.address) html += '<div style="font-size:12px;opacity:0.75;margin-bottom:4px;">📍 ' + esc2(proj.city||proj.address||'') + '</div>';
+    if (proj.start_date || proj.end_date) html += '<div style="font-size:12px;opacity:0.75;">📅 ' + fmtD(proj.start_date) + ' → ' + fmtD(proj.end_date) + '</div>';
+    html += '<div style="font-size:10px;opacity:0.6;margin-top:8px;">שלח: ' + sentAt + ' | ' + esc2(brief.sent_by||'') + '</div>';
+    html += '</div>';
+
+    // ── Budget card
+    html += '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;">';
+    html += '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">💰 תקציב ותשלומים</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    html += '<div style="text-align:center;background:var(--surface2);border-radius:10px;padding:10px;"><div style="font-size:18px;font-weight:900;color:var(--orange);">' + fmtM(proj.total_budget) + '</div><div style="font-size:11px;color:var(--text3);">תקציב כולל</div></div>';
+    html += '<div style="text-align:center;background:var(--surface2);border-radius:10px;padding:10px;"><div style="font-size:18px;font-weight:900;color:#ef4444;">' + fmtM(proj.total_paid) + '</div><div style="font-size:11px;color:var(--text3);">שולם לקבלנים</div></div>';
+    html += '</div>';
+    if (budgetPct !== null) {
+      var barCol = budgetPct > 85 ? '#ef4444' : budgetPct > 60 ? '#f59e0b' : '#22c55e';
+      html += '<div style="margin-top:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;"><span>ניצול תקציב</span><span>' + budgetPct + '%</span></div>';
+      html += '<div style="background:var(--surface3);border-radius:4px;height:8px;overflow:hidden;"><div style="width:' + budgetPct + '%;background:' + barCol + ';height:8px;border-radius:4px;transition:width .5s;"></div></div>';
+      html += '</div>';
+    }
+    if (proj.scope) html += '<div style="margin-top:10px;font-size:12px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:8px;">📄 ' + esc2(proj.scope) + '</div>';
+    html += '</div>';
+
+    // ── Today's tasks
+    if (todayTasks.length) {
+      html += '<div style="background:var(--surface);border:1.5px solid #22c55e;border-radius:14px;padding:14px;margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:800;color:#22c55e;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">✅ משימות להיום (' + todayTasks.length + ')</div>';
+      todayTasks.forEach(function(t) {
+        var progCol = t.progress >= 80 ? '#22c55e' : t.progress >= 40 ? '#f59e0b' : 'var(--text3)';
+        var contractor = t.contractors_master ? t.contractors_master.company_name : '';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);last-child:border:none;">';
+        html += '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text);">' + esc2(t.task_name) + '</div>';
+        if (contractor) html += '<div style="font-size:11px;color:var(--text3);">👷 ' + esc2(contractor) + '</div>';
+        html += '</div>';
+        html += '<div style="font-size:13px;font-weight:800;color:' + progCol + ';">' + (t.progress||0) + '%</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // ── Active contractors
+    if (contractors.length) {
+      html += '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">👷 קבלנים פעילים (' + contractors.length + ')</div>';
+      contractors.forEach(function(c) {
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">';
+        html += '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;flex-shrink:0;">' + (c.company_name||'?')[0] + '</div>';
+        html += '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text);">' + esc2(c.company_name||'') + '</div>';
+        if (c.main_occupation) html += '<div style="font-size:11px;color:var(--text3);">' + esc2(c.main_occupation) + '</div>';
+        html += '</div>';
+        if (c.phone) html += '<a href="tel:' + esc2(c.phone) + '" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:20px;text-decoration:none;">📞</a>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // ── Active POs
+    if (pos.length) {
+      html += '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">🏷️ הזמנות עבודה פעילות</div>';
+      pos.forEach(function(po) {
+        html += '<div style="padding:8px 0;border-bottom:1px solid var(--border);">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<div><div style="font-size:12px;font-weight:800;color:var(--text);">' + esc2(po.po_number||'') + '</div>';
+        html += '<div style="font-size:11px;color:var(--text3);">' + esc2(po.contractor_name||'') + '</div></div>';
+        html += '<div style="font-size:14px;font-weight:900;color:var(--orange);">' + fmtM(po.grand_total) + '</div>';
+        html += '</div>';
+        html += '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📅 ' + fmtD(po.start_date) + ' — ' + fmtD(po.end_date) + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // ── Approved change orders
+    if (cos.length) {
+      html += '<div style="background:var(--surface);border:1.5px solid #f59e0b;border-radius:14px;padding:14px;margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:800;color:#f59e0b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">⚡ פקודות שינוי מאושרות (' + cos.length + ')</div>';
+      cos.forEach(function(co) {
+        html += '<div style="font-size:13px;color:var(--text);padding:5px 0;border-bottom:1px solid var(--border);">✓ ' + esc2(co.title||'') + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // ── Recent inspections
+    if (inspections.length) {
+      html += '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">🔍 ביקורות אחרונות</div>';
+      inspections.forEach(function(ins) {
+        var isOk = ins.status === 'approved' || ins.status === 'passed';
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">';
+        html += '<div style="font-size:18px;">' + (isOk ? '✅' : '⚠️') + '</div>';
+        html += '<div><div style="font-size:12px;color:var(--text);">' + fmtD(ins.inspection_date) + '</div>';
+        if (ins.notes) html += '<div style="font-size:11px;color:var(--text3);">' + esc2(ins.notes.substring(0,60)) + (ins.notes.length>60?'...':'') + '</div>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+    if (badge) { badge.style.display = 'inline'; badge.textContent = '✓'; }
+
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);font-size:13px;">שגיאה: ' + e.message + '</div>';
+  }
 }
 
 function memoCapture() {
