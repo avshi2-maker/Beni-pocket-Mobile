@@ -2011,14 +2011,6 @@ async function bootstrap() {
       try { if (typeof loadFieldIntel      === 'function') loadFieldIntel(); }      catch(e){}
     }, 500);
 
-    // Auto-refresh Field Intel + Beni Tasks every 60 seconds (only when CRM tab visible)
-    setInterval(function() {
-      const crmActive = document.getElementById('crm-panel')?.classList.contains('active');
-      if (!crmActive) return;
-      try { if (typeof loadFieldIntel === 'function') loadFieldIntel(); } catch(e){}
-      try { if (typeof loadBeniTasks  === 'function') loadBeniTasks();  } catch(e){}
-    }, 60000);
-
     // 7. Done — hide loading screen
     const loadingEl = document.getElementById('global-loading');
     if (loadingEl) loadingEl.style.display = 'none';
@@ -5497,11 +5489,8 @@ async function loadFieldIntel() {
         btnNote.style.cssText = 'background:linear-gradient(135deg,#9a6f00,#c9a84c);color:#1a1a2e;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;';
         btnNote.dataset.id = m.id;
         btnNote.dataset.summary = summary;
-        btnNote.dataset.transcript = m.transcript || '';
         btnNote.dataset.priority = priority;
-        btnNote.addEventListener('click', function(){
-          fiShowColorPicker(this.dataset.id, this.dataset.summary, this.dataset.transcript, this.dataset.priority, this.parentElement);
-        });
+        btnNote.addEventListener('click', function(){ fiSaveNote(this.dataset.id, this.dataset.summary, this.dataset.priority); });
         btnRow.appendChild(btnNote);
 
         // Link to project dropdown
@@ -5539,113 +5528,6 @@ async function loadFieldIntel() {
     list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--red);font-size:13px;">שגיאה: ' + e.message + '</div>';
   }
 }
-
-// ══ FIELD INTEL — ACTION FUNCTIONS ════════════════════════════
-
-// Color tag picker — shown inline below button row
-function fiShowColorPicker(memoId, summary, transcript, priority, btnRow) {
-  // Remove any existing picker
-  const existingPicker = document.getElementById('fi-color-picker-' + memoId);
-  if (existingPicker) { existingPicker.remove(); return; }
-
-  const NC = NOTE_COLORS || {
-    yellow:{ bg:'#f59e0b', label:'🟡 כללי' },
-    red:   { bg:'#ef4444', label:'🔴 דחוף' },
-    green: { bg:'#22c55e', label:'🟢 בוצע' },
-    blue:  { bg:'#3b82f6', label:'🔵 תכנון' },
-    purple:{ bg:'#a855f7', label:'🟣 אישי' },
-  };
-
-  var picker = document.createElement('div');
-  picker.id = 'fi-color-picker-' + memoId;
-  picker.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;';
-
-  var label = document.createElement('span');
-  label.style.cssText = 'font-size:11px;font-weight:700;color:var(--text3);margin-left:4px;';
-  label.textContent = 'תייג ושמור:';
-  picker.appendChild(label);
-
-  Object.keys(NC).forEach(function(colorKey) {
-    var c = NC[colorKey];
-    var btn = document.createElement('button');
-    btn.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1.5px solid ' + c.bg + ';background:' + c.bg + '20;color:' + c.bg + ';font-size:12px;font-weight:700;cursor:pointer;font-family:Heebo,sans-serif;white-space:nowrap;';
-    btn.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:' + c.bg + ';display:inline-block;"></span>' + c.label.replace(/[🟡🔴🟢🔵🟣]/g,'').trim();
-    btn.addEventListener('click', function() {
-      fiSaveNote(memoId, summary, transcript, colorKey);
-      picker.remove();
-    });
-    picker.appendChild(btn);
-  });
-
-  // Insert after the button row
-  btnRow.parentNode.insertBefore(picker, btnRow.nextSibling);
-}
-
-async function fiSaveNote(memoId, summary, transcript, color) {
-  color = color || 'yellow';
-  var noteText = summary || transcript || 'הקלטה שדה';
-  if (transcript && transcript !== summary && transcript.length > 0) {
-    noteText = summary + (transcript.length > 100 ? '' : '\n' + transcript);
-  }
-  try {
-    var res = await fetch(SB_URL + '/rest/v1/beni_notes', {
-      method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ note_text: '🎙️ ' + noteText.trim(), color: color, project_id: null })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    showToast('✅ נשמר ביומן חכם', 'success');
-    fiMarkDone(memoId);
-  } catch(e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
-async function fiCreateTask(memoId, summary) {
-  try {
-    var res = await fetch(SB_URL + '/rest/v1/reminders', {
-      method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ text: summary, source: 'voice', priority: 'normal', is_done: false, created_at: new Date().toISOString() })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    showToast('✅ משימה נוצרה', 'success');
-    fiMarkDone(memoId);
-  } catch(e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
-async function fiMarkDone(memoId) {
-  try {
-    await fetch(SB_URL + '/rest/v1/voice_memos?id=eq.' + memoId, {
-      method: 'PATCH',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ is_processed: true })
-    });
-  } catch(e) {}
-  // Fade the card
-  var card = document.getElementById('fi-memo-' + memoId);
-  if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
-  setTimeout(loadFieldIntel, 1200);
-}
-
-async function fiLinkProject(memoId, projectId) {
-  var proj = (allProjects || []).find(function(p){ return p.id === projectId; });
-  if (!proj) return;
-  try {
-    await fetch(SB_URL + '/rest/v1/voice_memos?id=eq.' + memoId, {
-      method: 'PATCH',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ project_hint: proj.project_name })
-    });
-    showToast('✅ קושר לפרויקט: ' + proj.project_name, 'success');
-    setTimeout(loadFieldIntel, 800);
-  } catch(e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  }
-}
-
 
 // ══ EOD INTELLIGENCE REPORT ════════════════════════════════════
 
