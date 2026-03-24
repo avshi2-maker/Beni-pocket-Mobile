@@ -2111,8 +2111,8 @@ function switchGcalMobile(view) {
 // ======================================================
 
 // ⚠️  Replace with your real Client ID from Google Cloud Console
-const GTASKS_CLIENT_ID = '900160560035-th3ok333jm84e5clvs38k2fo3v7dbnki.apps.googleusercontent.com';
-const GTASKS_SCOPE = 'https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/calendar.events';
+const GTASKS_CLIENT_ID = '1032186026911-udoo90nb505u83n2etgejpj6n5dj4e65.apps.googleusercontent.com';
+const GTASKS_SCOPE = 'https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file';
 const GTASKS_API   = 'https://tasks.googleapis.com/tasks/v1';
 
 let gtasksToken      = null;   // OAuth access token
@@ -3798,6 +3798,76 @@ function memoVoiceToggle() {
   btn.style.borderColor = '#ef4444';
 }
 
+// ── GOOGLE DRIVE VIDEO UPLOAD ─────────────────────────────────
+const DRIVE_FOLDER_ID = '1a9DTHsveUNavLzFrX-MAwD6GHix1Xioi';
+const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink';
+const DRIVE_PERM_URL   = 'https://www.googleapis.com/drive/v3/files/';
+
+async function memoUploadToDrive(file, statusEl) {
+  // Check Google token
+  if (!gtasksToken) {
+    toast('⚠️ יש להתחבר תחילה ב-☑️ G-Tasks');
+    switchTab('gtasks');
+    return null;
+  }
+
+  try {
+    // ── Step 1: Upload file using multipart ──────────────────
+    if (statusEl) statusEl.textContent = '⬆️ מעלה ל-Google Drive...';
+
+    const metadata = JSON.stringify({
+      name:    'BeniSite_' + Date.now() + '.' + (file.name.split('.').pop() || 'mp4'),
+      parents: [DRIVE_FOLDER_ID],
+      mimeType: file.type
+    });
+
+    const form = new FormData();
+    form.append('metadata', new Blob([metadata], { type: 'application/json' }));
+    form.append('file', file);
+
+    const uploadRes = await fetch(DRIVE_UPLOAD_URL, {
+      method:  'POST',
+      headers: { Authorization: 'Bearer ' + gtasksToken },
+      body:    form
+    });
+
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json().catch(() => ({}));
+      // Token expired — clear and ask to reconnect
+      if (uploadRes.status === 401) {
+        gtasksToken = null;
+        sessionStorage.removeItem('gtasks_token');
+        toast('פג תוקף החיבור — התחבר שוב ב-G-Tasks');
+        switchTab('gtasks');
+        return null;
+      }
+      throw new Error(err.error?.message || 'Drive upload failed ' + uploadRes.status);
+    }
+
+    const fileData = await uploadRes.json();
+    const fileId   = fileData.id;
+
+    // ── Step 2: Set permission — anyone with link can view ───
+    if (statusEl) statusEl.textContent = '🔗 מגדיר הרשאות...';
+
+    await fetch(DRIVE_PERM_URL + fileId + '/permissions', {
+      method:  'POST',
+      headers: { Authorization: 'Bearer ' + gtasksToken, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ role: 'reader', type: 'anyone' })
+    });
+
+    // ── Step 3: Return shareable URL ─────────────────────────
+    const driveUrl = 'https://drive.google.com/file/d/' + fileId + '/view';
+    if (statusEl) statusEl.textContent = '🧠 מנתח סרטון...';
+    return driveUrl;
+
+  } catch(e) {
+    toast('שגיאה ב-Drive: ' + e.message, 'error');
+    if (statusEl) statusEl.textContent = '❌ ' + e.message;
+    return null;
+  }
+}
+
 // Extract a single frame from a video File object
 function memoExtractVideoFrame(file) {
   return new Promise(function(resolve) {
@@ -3833,19 +3903,11 @@ async function memoSend() {
   try {
     var photoUrl = null;
 
-    // ── VIDEO upload path ──────────────────────────────────────
+    // ── VIDEO upload path — Google Drive ──────────────────────
     if (_memoVideoFile) {
-      statusEl.textContent = '⬆️ מעלה סרטון...';
-      var ext   = _memoVideoFile.name.split('.').pop() || 'mp4';
-      var fname = Date.now() + '.' + ext;
-      // Pass File directly — Supabase JS client handles MIME type automatically
-      var upRes  = await window.sb.storage.from('photos').upload('memos/' + fname, _memoVideoFile, {
-        contentType: _memoVideoFile.type,
-        cacheControl: '3600',
-        upsert: false
-      });
-      if (upRes.error) throw upRes.error;
-      photoUrl = SB_URL + '/storage/v1/object/public/photos/memos/' + fname;
+      statusEl.textContent = '⬆️ מעלה סרטון ל-Google Drive...';
+      photoUrl = await memoUploadToDrive(_memoVideoFile, statusEl);
+      if (!photoUrl) return; // error already shown by memoUploadToDrive
       var noteText = text || '🎬 סרטון שדה';
       // Claude Vision on first frame if API key available
       var apiKey = (window.APP && window.APP.config && window.APP.config.anthropic_key) || null;
@@ -3869,7 +3931,8 @@ async function memoSend() {
           }
         } catch(e) { /* fallback */ }
       }
-      var ins = await window.sb.from('beni_notes').insert({ note_text: noteText + ' 🔗 ' + photoUrl, color: 'yellow', project_id: projId || null, photo_url: photoUrl });
+      var driveNoteText = noteText + '\n📁 Google Drive: ' + photoUrl;
+      var ins = await window.sb.from('beni_notes').insert({ note_text: driveNoteText, color: 'yellow', project_id: projId || null, photo_url: photoUrl });
       if (ins.error) throw ins.error;
       document.getElementById('memo-text').value = '';
       memoClearPhoto();
