@@ -3839,13 +3839,13 @@ async function memoSend() {
       var ext   = _memoVideoFile.name.split('.').pop() || 'mp4';
       var fname = Date.now() + '.' + ext;
       // Pass File directly — Supabase JS client handles MIME type automatically
-      var upRes  = await window.sb.storage.from('videos').upload(fname, _memoVideoFile, {
+      var upRes  = await window.sb.storage.from('photos').upload('memos/' + fname, _memoVideoFile, {
         contentType: _memoVideoFile.type,
         cacheControl: '3600',
         upsert: false
       });
       if (upRes.error) throw upRes.error;
-      photoUrl = SB_URL + '/storage/v1/object/public/videos/' + fname;
+      photoUrl = SB_URL + '/storage/v1/object/public/photos/memos/' + fname;
       var noteText = text || '🎬 סרטון שדה';
       // Claude Vision on first frame if API key available
       var apiKey = (window.APP && window.APP.config && window.APP.config.anthropic_key) || null;
