@@ -996,6 +996,10 @@ async function bootstrap() {
     el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); })
   );
 
+  // Pre-load Google token from sessionStorage so Drive upload works
+  // from any tab without needing to open G-Tasks tab first
+  try { gtasksInit(); } catch(e) {}
+
   console.log('✅ Beni Pocket ready');
 }
 
@@ -3804,11 +3808,38 @@ const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files?uploa
 const DRIVE_PERM_URL   = 'https://www.googleapis.com/drive/v3/files/';
 
 async function memoUploadToDrive(file, statusEl) {
-  // Check Google token
+  // Check Google token — try to load from sessionStorage first
   if (!gtasksToken) {
-    toast('⚠️ יש להתחבר תחילה ב-☑️ G-Tasks');
-    switchTab('gtasks');
-    return null;
+    const saved = sessionStorage.getItem('gtasks_token');
+    if (saved) { gtasksToken = saved; }
+  }
+  if (!gtasksToken) {
+    // Trigger sign-in inline without leaving memo tab
+    if (statusEl) statusEl.textContent = '🔑 מתחבר ל-Google...';
+    await new Promise(function(resolve) {
+      if (!window.google || !window.google.accounts) {
+        toast('Google SDK לא נטען — רענן ונסה שוב');
+        if (statusEl) statusEl.textContent = '';
+        resolve();
+        return;
+      }
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: GTASKS_CLIENT_ID,
+        scope: GTASKS_SCOPE,
+        callback: function(response) {
+          if (response.error) {
+            toast('שגיאת Google: ' + response.error);
+            if (statusEl) statusEl.textContent = '';
+          } else {
+            gtasksToken = response.access_token;
+            sessionStorage.setItem('gtasks_token', gtasksToken);
+          }
+          resolve();
+        }
+      });
+      client.requestAccessToken();
+    });
+    if (!gtasksToken) return null; // sign-in failed or cancelled
   }
 
   try {
