@@ -705,13 +705,22 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   <!-- 4 Action buttons -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
 
-    <!-- 📷 Camera -->
-    <button onclick="memoCapture()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+    <!-- 📷 Photo -->
+    <button onclick="memoCapturePhoto()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
       padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
       border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
       <span style="font-size:28px;">📷</span>
-      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם</span>
-      <span style="font-size:10px;color:var(--text2);">צלם הערה / ממצא</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם תמונה</span>
+      <span style="font-size:10px;color:var(--text2);">מצלמה / גלריה</span>
+    </button>
+
+    <!-- 🎬 Video -->
+    <button onclick="memoCaptureVideo()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:16px 10px;background:var(--surface2);border:1.5px solid rgba(139,92,246,0.5);
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      <span style="font-size:28px;">🎬</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">צלם סרטון</span>
+      <span style="font-size:10px;color:var(--text2);">וידאו מהשטח</span>
     </button>
 
     <!-- 🎙️ Voice -->
@@ -732,22 +741,23 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
       <span style="font-size:10px;color:var(--text2);">הקלדה ידנית</span>
     </button>
 
-    <!-- 🏷️ Tag project -->
+    <!-- 🏷️ Tag project — spans full width -->
     <button onclick="document.getElementById('memo-project-sel').focus()" style="display:flex;flex-direction:column;align-items:center;gap:6px;
       padding:16px 10px;background:var(--surface2);border:1.5px solid var(--border);
-      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;">
+      border-radius:12px;font-family:Heebo,sans-serif;cursor:pointer;grid-column:1/-1;">
       <span style="font-size:28px;">🏷️</span>
       <span style="font-size:13px;font-weight:700;color:var(--text);">תייג פרויקט</span>
       <span style="font-size:10px;color:var(--text2);">קשר לפרויקט</span>
     </button>
   </div>
 
-  <!-- Photo preview (hidden until photo taken) -->
+  <!-- Photo/Video preview (hidden until media taken) -->
   <div id="memo-photo-wrap" style="display:none;margin-bottom:12px;text-align:center;">
-    <img id="memo-photo-preview" style="max-width:100%;border-radius:10px;border:2px solid var(--border);">
+    <img id="memo-photo-preview" style="max-width:100%;border-radius:10px;border:2px solid var(--border);display:none;">
+    <video id="memo-video-preview" controls playsinline style="max-width:100%;border-radius:10px;border:2px solid rgba(139,92,246,0.5);display:none;background:#000;"></video>
     <div style="margin-top:6px;">
       <button onclick="memoClearPhoto()" style="font-size:12px;padding:5px 14px;background:var(--surface2);
-        border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;">✕ הסר תמונה</button>
+        border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;">✕ הסר מדיה</button>
     </div>
   </div>
 
@@ -755,8 +765,10 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div id="memo-voice-result" style="display:none;background:var(--surface2);border-radius:10px;
     padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--text);direction:rtl;"></div>
 
-  <!-- hidden file input -->
-  <input type="file" id="memo-file-input" accept="image/*" capture="environment" style="display:none" onchange="memoFileChosen(this)">
+  <!-- hidden file inputs — separate for photo vs video (Android requires this) -->
+  <input type="file" id="memo-photo-input" accept="image/*" capture="environment" style="display:none" onchange="memoFileChosen(this,'photo')">
+  <input type="file" id="memo-video-input" accept="video/*" capture="environment" style="display:none" onchange="memoFileChosen(this,'video')">
+  <input type="file" id="memo-gallery-input" accept="image/*,video/*"              style="display:none" onchange="memoFileChosen(this,'gallery')">
 
   <!-- Send button -->
   <button onclick="memoSend()" style="width:100%;padding:14px;background:linear-gradient(135deg,#9a6f00,#c9a84c);
@@ -3483,6 +3495,8 @@ function toPhotoSendToDashboard(){
 // ══════════════════════════════════════════════════════
 var _memoPhotoBase64 = null;
 var _memoPhotoType   = 'image/jpeg';
+var _memoVideoFile   = null;
+var _memoIsVideo     = false;;
 var _memoVoiceRecog  = null;
 var _memoVoiceActive = false;
 
@@ -3680,27 +3694,70 @@ async function onTab_brief() {
   }
 }
 
-function memoCapture() {
-  document.getElementById('memo-file-input').click();
+// Photo — opens camera in photo mode
+function memoCapturePhoto() {
+  document.getElementById('memo-photo-input').click();
 }
+// Video — opens camera in video recording mode
+function memoCaptureVideo() {
+  document.getElementById('memo-video-input').click();
+}
+// Legacy alias (used elsewhere in the code)
+function memoCapture() { memoCapturePhoto(); }
 
-function memoFileChosen(input) {
+var _memoIsVideo = false;  // track whether current media is video
+
+function memoFileChosen(input, mediaType) {
   var file = input.files[0];
   if (!file) return;
-  _memoPhotoType = file.type || 'image/jpeg';
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    _memoPhotoBase64 = e.target.result.split(',')[1];
-    document.getElementById('memo-photo-preview').src = e.target.result;
-    document.getElementById('memo-photo-wrap').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+
+  _memoIsVideo   = mediaType === 'video' || file.type.startsWith('video/');
+  _memoPhotoType = file.type || (_memoIsVideo ? 'video/mp4' : 'image/jpeg');
+
+  var imgEl   = document.getElementById('memo-photo-preview');
+  var vidEl   = document.getElementById('memo-video-preview');
+  var wrapEl  = document.getElementById('memo-photo-wrap');
+
+  if (_memoIsVideo) {
+    // Video — show <video> preview, hide <img>
+    _memoPhotoBase64 = null;        // no base64 for video (too large)
+    _memoVideoFile   = file;        // store file reference for upload
+    var objectUrl = URL.createObjectURL(file);
+    vidEl.src = objectUrl;
+    vidEl.style.display = 'block';
+    imgEl.style.display = 'none';
+    imgEl.src = '';
+    wrapEl.style.display = 'block';
+    toast('🎬 סרטון נטען — לחץ שלח ליומן החכם');
+  } else {
+    // Photo — read as base64 for Claude OCR + Supabase upload
+    _memoVideoFile = null;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      _memoPhotoBase64 = e.target.result.split(',')[1];
+      imgEl.src = e.target.result;
+      imgEl.style.display = 'block';
+      vidEl.style.display = 'none';
+      vidEl.src = '';
+      wrapEl.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 function memoClearPhoto() {
   _memoPhotoBase64 = null;
-  document.getElementById('memo-photo-wrap').style.display = 'none';
-  document.getElementById('memo-file-input').value = '';
+  _memoVideoFile   = null;
+  _memoIsVideo     = false;
+  var wrapEl = document.getElementById('memo-photo-wrap');
+  var imgEl  = document.getElementById('memo-photo-preview');
+  var vidEl  = document.getElementById('memo-video-preview');
+  if (wrapEl) wrapEl.style.display = 'none';
+  if (imgEl)  { imgEl.src = ''; imgEl.style.display = 'none'; }
+  if (vidEl)  { vidEl.src = ''; vidEl.style.display = 'none'; }
+  ['memo-photo-input','memo-video-input','memo-gallery-input'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
 }
 
 function memoVoiceToggle() {
@@ -3741,14 +3798,84 @@ function memoVoiceToggle() {
   btn.style.borderColor = '#ef4444';
 }
 
+// Extract a single frame from a video File object
+function memoExtractVideoFrame(file) {
+  return new Promise(function(resolve) {
+    var url   = URL.createObjectURL(file);
+    var video = document.createElement('video');
+    video.muted = true; video.playsInline = true; video.src = url;
+    video.addEventListener('loadeddata', function() {
+      video.currentTime = Math.min(1.5, (video.duration || 2) * 0.1);
+    });
+    video.addEventListener('seeked', function() {
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = Math.round(640 * (video.videoHeight / (video.videoWidth || 1)));
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url); video.remove();
+        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      } catch(e) { URL.revokeObjectURL(url); video.remove(); resolve(null); }
+    });
+    video.addEventListener('error', function() { URL.revokeObjectURL(url); resolve(null); });
+    document.body.appendChild(video);
+    video.load();
+  });
+}
+
+
 async function memoSend() {
   var text     = (document.getElementById('memo-text').value || '').trim();
   var projId   = document.getElementById('memo-project-sel').value || null;
   var statusEl = document.getElementById('memo-status');
-  if (!text && !_memoPhotoBase64) { toast('הוסף הערה או תמונה תחילה'); return; }
+  if (!text && !_memoPhotoBase64 && !_memoVideoFile) { toast('הוסף הערה, תמונה או סרטון תחילה'); return; }
   statusEl.textContent = '⏳ שולח...';
   try {
     var photoUrl = null;
+
+    // ── VIDEO upload path ──────────────────────────────────────
+    if (_memoVideoFile) {
+      statusEl.textContent = '⬆️ מעלה סרטון...';
+      var ext   = _memoVideoFile.name.split('.').pop() || 'mp4';
+      var fname = 'videos/' + Date.now() + '.' + ext;
+      var arrBuf = await _memoVideoFile.arrayBuffer();
+      var upRes  = await window.sb.storage.from('photos').upload(fname, new Uint8Array(arrBuf), { contentType: _memoVideoFile.type, upsert: false });
+      if (upRes.error) throw upRes.error;
+      photoUrl = SB_URL + '/storage/v1/object/public/photos/' + fname;
+      var noteText = text || '🎬 סרטון שדה';
+      // Claude Vision on first frame if API key available
+      var apiKey = (window.APP && window.APP.config && window.APP.config.anthropic_key) || null;
+      if (apiKey && !text) {
+        try {
+          statusEl.textContent = '🧠 מנתח סרטון...';
+          var frameBase64 = await memoExtractVideoFrame(_memoVideoFile);
+          if (frameBase64) {
+            var vRes = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+              body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:250,
+                messages:[{role:'user',content:[
+                  {type:'image',source:{type:'base64',media_type:'image/jpeg',data:frameBase64}},
+                  {type:'text',text:'תאר בקצרה מה רואים בפריים מהסרטון הזה — מצב השטח, עבודה שבוצעה, בעיות. 1-2 משפטים בעברית בלבד.'}
+                ]}]})
+            });
+            var vData = await vRes.json();
+            var vDesc = vData.content && vData.content[0] && vData.content[0].text;
+            if (vDesc) noteText = '🎬 ' + vDesc.trim();
+          }
+        } catch(e) { /* fallback */ }
+      }
+      var ins = await window.sb.from('beni_notes').insert({ note_text: noteText + ' 🔗 ' + photoUrl, color: 'yellow', project_id: projId || null, photo_url: photoUrl });
+      if (ins.error) throw ins.error;
+      document.getElementById('memo-text').value = '';
+      memoClearPhoto();
+      statusEl.textContent = '✅ סרטון נשמר ביומן החכם';
+      setTimeout(function(){ statusEl.textContent = ''; }, 3000);
+      toast('✅ סרטון נשמר');
+      return;
+    }
+
+    // ── PHOTO upload path ──────────────────────────────────────
     if (_memoPhotoBase64) {
       var byteStr=atob(_memoPhotoBase64), ab=new ArrayBuffer(byteStr.length), ia=new Uint8Array(ab);
       for (var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
