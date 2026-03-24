@@ -3837,11 +3837,11 @@ async function memoSend() {
     if (_memoVideoFile) {
       statusEl.textContent = '⬆️ מעלה סרטון...';
       var ext   = _memoVideoFile.name.split('.').pop() || 'mp4';
-      var fname = 'videos/' + Date.now() + '.' + ext;
+      var fname = Date.now() + '.' + ext;
       var arrBuf = await _memoVideoFile.arrayBuffer();
-      var upRes  = await window.sb.storage.from('photos').upload(fname, new Uint8Array(arrBuf), { contentType: _memoVideoFile.type, upsert: false });
+      var upRes  = await window.sb.storage.from('videos').upload(fname, new Uint8Array(arrBuf), { contentType: _memoVideoFile.type, upsert: false });
       if (upRes.error) throw upRes.error;
-      photoUrl = SB_URL + '/storage/v1/object/public/photos/' + fname;
+      photoUrl = SB_URL + '/storage/v1/object/public/videos/' + fname;
       var noteText = text || '🎬 סרטון שדה';
       // Claude Vision on first frame if API key available
       var apiKey = (window.APP && window.APP.config && window.APP.config.anthropic_key) || null;
