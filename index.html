@@ -304,7 +304,39 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div class="transcript-actions" id="transcript-actions" style="display:none">
       <button class="big-btn btn-green"  style="margin:0;flex:1" onclick="saveMemoAsReminder()">✅ שמור כמשימה</button>
-      <button class="big-btn btn-orange" style="margin:0;flex:1" onclick="sendMemoWA()">💬 וואטסאפ</button>
+      <button class="big-btn btn-orange" style="margin:0;flex:1" onclick="voiceSmartWA()">💬 שלח וואטסאפ</button>
+    </div>
+
+    <!-- Smart WhatsApp confirmation card — appears after AI extracts recipient -->
+    <div id="wa-smart-card" style="display:none;background:linear-gradient(135deg,#0d1a0d,#0a2010);border:1.5px solid rgba(37,211,102,0.4);border-radius:14px;padding:16px;margin-top:10px;">
+      <div style="font-size:12px;font-weight:800;color:#25d366;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">💬 שליחת וואטסאפ חכמה</div>
+
+      <!-- Recipient row -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#888;margin-bottom:5px;">נמען:</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div id="wa-recipient-name" style="flex:1;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700;color:#fff;"></div>
+          <div id="wa-recipient-phone" style="font-size:12px;color:#25d366;font-family:monospace;"></div>
+        </div>
+        <!-- Contractor picker — shown when no match found -->
+        <select id="wa-contractor-picker" style="display:none;width:100%;margin-top:8px;padding:9px 12px;border:1.5px solid rgba(37,211,102,0.4);border-radius:8px;background:#0a2010;color:#fff;font-family:Heebo,sans-serif;font-size:13px;direction:rtl;" onchange="waPickContractor(this.value)">
+          <option value="">— בחר קבלן מהרשימה —</option>
+        </select>
+      </div>
+
+      <!-- Message row -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:#888;margin-bottom:5px;">הודעה:</div>
+        <textarea id="wa-message-text" rows="3"
+          style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px 12px;border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;resize:none;direction:rtl;outline:none;line-height:1.6;box-sizing:border-box;"></textarea>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;">
+        <button onclick="waConfirmSend()" style="flex:2;background:linear-gradient(135deg,#128c7e,#25d366);border:none;color:#fff;padding:12px;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;font-weight:800;cursor:pointer;">📲 פתח וואטסאפ ושלח</button>
+        <button onclick="waCancelSmart()" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#888;padding:12px;border-radius:10px;font-family:Heebo,sans-serif;font-size:13px;cursor:pointer;">ביטול</button>
+      </div>
+      <div id="wa-smart-status" style="font-size:11px;color:#888;margin-top:8px;min-height:14px;text-align:center;"></div>
     </div>
     <button class="big-btn" style="background:linear-gradient(135deg,#1a73e8,#0d47a1);color:white;width:100%;margin-top:8px;" onclick="voiceCreateCalendarEvent()">📅 צור פגישה ביומן Google</button>
     <div style="height:10px"></div>
@@ -1667,6 +1699,184 @@ async function saveMemoAsReminder() {
   await addReminderToDB(label, 'voice', currentAIResult?.priority==='גבוה'?'high':'normal');
   await loadTodos(); switchTab('todo'); toast('✅ נשמר כמשימה');
 }
+
+// ══ SMART WHATSAPP — voice command → send to contact ══════════════════
+var _waCurrentPhone = '';
+var _waAllContractors = [];
+
+// Main entry — called when Beni taps 💬 שלח וואטסאפ
+async function voiceSmartWA() {
+  var transcript = (window.currentTranscript || '').trim();
+  if (!transcript) { toast('אין תמליל — הקלט תחילה'); return; }
+
+  var statusEl = document.getElementById('wa-smart-status');
+  var card     = document.getElementById('wa-smart-card');
+
+  // Show card in loading state
+  card.style.display = 'block';
+  if (statusEl) statusEl.textContent = '🧠 מנתח הודעה...';
+  document.getElementById('wa-recipient-name').textContent  = '...';
+  document.getElementById('wa-recipient-phone').textContent = '';
+  document.getElementById('wa-message-text').value          = '';
+  document.getElementById('wa-contractor-picker').style.display = 'none';
+
+  var apiKey = (window.APP && window.APP.config && window.APP.config.anthropic_key) || null;
+  if (!apiKey) {
+    // No API key — just pre-fill the message, let Beni pick contact manually
+    waShowManualPicker(transcript);
+    return;
+  }
+
+  try {
+    // Ask Claude to extract recipient + message from Hebrew transcript
+    var prompt = 'מהטקסט הבא חלץ:\n1. שם הנמען (אם הוזכר)\n2. תוכן ההודעה לשליחה\n\nטקסט: "' + transcript + '"\n\nהחזר JSON בלבד:\n{"recipient_name": "שם או null", "message": "תוכן ההודעה"}';
+
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:200, messages:[{ role:'user', content:prompt }] })
+    });
+    var data = await res.json();
+    var raw  = data.content && data.content[0] && data.content[0].text;
+    var parsed = {};
+    try { parsed = JSON.parse((raw||'{}').replace(/```json|```/g,'').trim()); } catch(e) {}
+
+    var recipientName = parsed.recipient_name || null;
+    var message       = parsed.message || transcript;
+
+    // Pre-fill message
+    document.getElementById('wa-message-text').value = message;
+
+    if (recipientName && recipientName !== 'null') {
+      if (statusEl) statusEl.textContent = '🔍 מחפש "' + recipientName + '" ברשימת הקבלנים...';
+      await waLookupRecipient(recipientName);
+    } else {
+      // No recipient mentioned — show picker
+      waShowManualPicker(message);
+    }
+
+  } catch(e) {
+    // API failed — fall back to manual
+    document.getElementById('wa-message-text').value = transcript;
+    waShowManualPicker(transcript);
+  }
+}
+
+// Look up recipient in contractors_master by name similarity
+async function waLookupRecipient(name) {
+  var statusEl = document.getElementById('wa-smart-status');
+  try {
+    // Search by company_name or contact_name
+    var searchTerm = name.split(' ')[0]; // use first word for broader match
+    var res = await fetch(
+      SB_URL + '/rest/v1/contractors_master?or=(company_name.ilike.*' + encodeURIComponent(searchTerm) + '*,contact_name.ilike.*' + encodeURIComponent(searchTerm) + '*)&select=id,company_name,contact_name,mobile&is_active=eq.true&limit=5',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+    );
+    var rows = res.ok ? await res.json() : [];
+
+    if (rows && rows.length === 1) {
+      // Exact single match
+      waSetRecipient(rows[0].contact_name || rows[0].company_name, rows[0].mobile);
+      if (statusEl) statusEl.textContent = '✅ נמצא — בדוק ולחץ שלח';
+    } else if (rows && rows.length > 1) {
+      // Multiple matches — show picker with filtered list
+      waShowPickerWithOptions(rows);
+      if (statusEl) statusEl.textContent = 'נמצאו ' + rows.length + ' אנשי קשר — בחר:';
+    } else {
+      // No match — show full contractor list
+      waShowManualPicker(document.getElementById('wa-message-text').value);
+      if (statusEl) statusEl.textContent = '"' + name + '" לא נמצא — בחר ידנית:';
+    }
+  } catch(e) {
+    waShowManualPicker(document.getElementById('wa-message-text').value);
+  }
+}
+
+function waSetRecipient(name, mobile) {
+  _waCurrentPhone = mobile ? '972' + mobile.replace(/[^0-9]/g,'').replace(/^0/,'') : '';
+  document.getElementById('wa-recipient-name').textContent  = name || 'לא ידוע';
+  document.getElementById('wa-recipient-phone').textContent = mobile || '';
+  document.getElementById('wa-contractor-picker').style.display = 'none';
+}
+
+async function waShowManualPicker(message) {
+  document.getElementById('wa-recipient-name').textContent  = '— לא זוהה —';
+  document.getElementById('wa-recipient-phone').textContent = '';
+  document.getElementById('wa-message-text').value          = message || '';
+  _waCurrentPhone = '';
+
+  // Load all active contractors for picker
+  try {
+    var res  = await fetch(
+      SB_URL + '/rest/v1/contractors_master?is_active=eq.true&select=id,company_name,contact_name,mobile&order=company_name&limit=100',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+    );
+    var rows = res.ok ? await res.json() : [];
+    waPopulatePicker(rows);
+  } catch(e) {
+    waPopulatePicker([]);
+  }
+}
+
+function waShowPickerWithOptions(rows) {
+  document.getElementById('wa-recipient-name').textContent  = '— בחר מהרשימה —';
+  document.getElementById('wa-recipient-phone').textContent = '';
+  _waCurrentPhone = '';
+  waPopulatePicker(rows);
+}
+
+function waPopulatePicker(rows) {
+  var sel = document.getElementById('wa-contractor-picker');
+  sel.innerHTML = '<option value="">— בחר קבלן / איש קשר —</option>';
+  (rows || []).forEach(function(r) {
+    if (!r.mobile) return; // only show contacts with a phone
+    var opt = document.createElement('option');
+    opt.value = r.mobile;
+    opt.textContent = (r.contact_name || r.company_name) + ' · ' + r.mobile;
+    sel.appendChild(opt);
+  });
+  sel.style.display = rows.length ? 'block' : 'none';
+}
+
+function waPickContractor(mobile) {
+  if (!mobile) return;
+  _waCurrentPhone = '972' + mobile.replace(/[^0-9]/g,'').replace(/^0/,'');
+  var sel = document.getElementById('wa-contractor-picker');
+  var selectedText = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.split(' · ')[0] : '';
+  document.getElementById('wa-recipient-name').textContent  = selectedText;
+  document.getElementById('wa-recipient-phone').textContent = mobile;
+  var statusEl = document.getElementById('wa-smart-status');
+  if (statusEl) statusEl.textContent = '✅ נמען נבחר — בדוק הודעה ולחץ שלח';
+}
+
+function waConfirmSend() {
+  var message = (document.getElementById('wa-message-text').value || '').trim();
+  if (!message) { toast('כתוב הודעה תחילה'); return; }
+
+  var url;
+  if (_waCurrentPhone) {
+    url = 'https://wa.me/' + _waCurrentPhone + '?text=' + encodeURIComponent(message);
+  } else {
+    // No specific contact — open WhatsApp with just the message text
+    url = 'https://wa.me/?text=' + encodeURIComponent(message);
+  }
+
+  // Use anchor tag for iOS/Android compatibility
+  var a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+
+  toast('💬 פותח וואטסאפ...');
+  setTimeout(waCancelSmart, 1000);
+}
+
+function waCancelSmart() {
+  document.getElementById('wa-smart-card').style.display = 'none';
+  _waCurrentPhone = '';
+}
+
+
 function sendMemoWA() {
   const text = currentTranscript.trim();
   if (!text) { toast('אין תמליל לשליחה'); return; }
