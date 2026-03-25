@@ -869,8 +869,20 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STORAGE = 'https://avshi2-maker.github.io/Beni-pocket-Mobile';
 const STORAGE_FALLBACK = `${SB_URL}/storage/v1/object/public/app-assets`;
 window.sb = window.supabase.createClient(SB_URL, SB_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  global: { headers: { 'X-Client-Info': 'beni-pocket/1.0' } },
+  realtime: { params: { eventsPerSecond: 0 } }
 });
+// Suppress Supabase telemetry fetch to api.supabase.com
+(function() {
+  var _origFetch = window.fetch;
+  window.fetch = function(url) {
+    if (typeof url === 'string' && url.includes('api.supabase.com')) {
+      return Promise.resolve(new Response('{}', { status: 200 }));
+    }
+    return _origFetch.apply(this, arguments);
+  };
+})();
 window.APP = { config: {}, loaded: {} };
 
 // Suppress DataCloneError from browser extension service worker
