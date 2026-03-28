@@ -14,8 +14,8 @@
   --bg2:   #1a1a2e;
   --bg3:   #242438;
   --text:  #e8e6f0;
-  --text2: #a09ab8;
-  --text3: #5a546e;
+  --text2: #c0bcd8;
+  --text3: #8888a8;
   --border: rgba(255,255,255,0.1);
   --orange: #c9a84c;
   --orange2:#fde68a;
@@ -35,15 +35,15 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .panel { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 14px 14px 80px; -webkit-overflow-scrolling: touch; }
 .panel.active { display: block; }
 #nav { flex-shrink: 0; display: flex; background: #0a0a18; border-top: 1px solid var(--border); }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 10px; cursor: pointer; position: relative; user-select: none; }
-.nav-item .ni { font-size: 20px; }
-.nav-item .nl { font-size: 9px; color: var(--text3); font-weight: 700; }
-.nav-item.active .nl { color: var(--orange); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px 6px; cursor: pointer; position: relative; user-select: none; }
+.nav-item .ni { font-size: 22px; }
+.nav-item .nl { font-size: 10px; color: #8888aa; font-weight: 800; }
+.nav-item.active .nl { color: var(--orange); font-weight: 900; }
 .nav-badge { position: absolute; top: 4px; right: 18%; background: var(--red); color: #fff; font-size: 9px; font-weight: 900; padding: 1px 4px; border-radius: 8px; min-width: 14px; text-align: center; }
 
 /* ── HEADER ── */
 .h-title { font-size: 16px; font-weight: 700; color: var(--text); }
-.h-proj { font-size: 10px; color: var(--orange); margin-top: 1px; }
+.h-proj { font-size: 11px; color: var(--orange); margin-top: 1px; font-weight: 800; }
 .h-time { font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
 
 /* ── BIG ACTION BUTTONS ── */
@@ -51,8 +51,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .big-btn:active { transform: scale(0.97); }
 .big-btn .bico { font-size: 26px; flex-shrink: 0; }
 .big-btn .btxt { display: flex; flex-direction: column; align-items: flex-start; }
-.big-btn .bmain { font-size: 15px; font-weight: 800; }
-.big-btn .bsub { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+.big-btn .bmain { font-size: 15px; font-weight: 900; }
+.big-btn .bsub { font-size: 11px; opacity: 0.85; margin-top: 2px; font-weight: 600; }
 .btn-call { background: rgba(239,68,68,0.15); border: 1.5px solid rgba(239,68,68,0.4); }
 .btn-call .bmain { color: #fca5a5; }
 .btn-voice { background: rgba(201,168,76,0.15); border: 1.5px solid rgba(201,168,76,0.4); }
@@ -65,13 +65,13 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .btn-eod .bmain { color: #86efac; }
 
 /* ── CARDS ── */
-.section-title { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 0 8px; }
+.section-title { font-size: 11px; font-weight: 900; color: #9090b8; text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 0 8px; }
 .card { background: var(--bg3); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; border: 0.5px solid var(--border); }
 .card-header { display: flex; align-items: center; gap: 8px; }
 .card-ico { font-size: 16px; flex-shrink: 0; }
 .card-body { flex: 1; min-width: 0; }
-.card-title { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-meta  { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.card-title { font-size: 13px; font-weight: 800; color: #e8e6f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta  { font-size: 11px; color: #9090b0; margin-top: 2px; font-weight: 600; }
 .badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
 .badge-red    { background: rgba(239,68,68,0.2);  color: #fca5a5; }
 .badge-amber  { background: rgba(201,168,76,0.2); color: var(--orange2); }
@@ -111,8 +111,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .task-item.done { opacity: 0.4; }
 .task-item .tcheck { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 11px; }
 .task-item .tcheck.done-check { background: var(--green); border-color: var(--green); }
-.task-text { flex: 1; font-size: 13px; color: var(--text); }
-.task-src  { font-size: 9px; color: var(--text3); margin-top: 2px; }
+.task-text { flex: 1; font-size: 13px; color: #e8e6f0; font-weight: 700; }
+.task-src  { font-size: 10px; color: #8888a8; margin-top: 2px; font-weight: 600; }
 
 /* ── MISC ── */
 .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
@@ -124,6 +124,23 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .modal-bg.open { display: flex; }
 .modal { background: var(--bg2); border-radius: 20px 20px 0 0; padding: 20px 16px 36px; width: 100%; max-width: 480px; border-top: 1px solid var(--border); }
 .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 16px; }
+
+/* ── DAY BRIEF ── */
+.brief-banner { background: linear-gradient(135deg, #1a3d5c, #2d6a9f); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; cursor: pointer; }
+.brief-banner.expanded { padding-bottom: 0; }
+.brief-header { display: flex; align-items: center; justify-content: space-between; }
+.brief-proj { font-size: 14px; font-weight: 800; color: #fff; }
+.brief-date { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.brief-chevron { font-size: 14px; color: rgba(255,255,255,0.6); transition: transform 0.2s; }
+.brief-chevron.open { transform: rotate(180deg); }
+.brief-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.brief-body.open { max-height: 600px; }
+.brief-text { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.7; padding: 12px 0 6px; white-space: pre-wrap; }
+.brief-task-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+.brief-task-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.brief-task-name { font-size: 11px; font-weight: 700; color: #fff; flex: 1; }
+.brief-task-meta { font-size: 9px; color: rgba(255,255,255,0.5); }
+.brief-no-brief { font-size: 12px; color: rgba(255,255,255,0.5); text-align: center; padding: 8px 0; }
 
 /* ── EOD SCREEN ── */
 .eod-day-card { background: var(--bg3); border-radius: var(--r); padding: 14px; margin-bottom: 12px; border: 1px solid rgba(22,163,74,0.3); }
@@ -148,6 +165,22 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 
     <!-- HOME -->
     <div id="panel-home" class="panel active">
+      <!-- DAY BRIEF BANNER — loaded from project_briefs table -->
+      <div class="brief-banner" id="day-brief-banner" onclick="toggleBrief()" style="display:none;">
+        <div class="brief-header">
+          <div>
+            <div class="brief-proj" id="brief-proj-name">📋 בריפינג יומי</div>
+            <div class="brief-date" id="brief-date"></div>
+          </div>
+          <div class="brief-chevron" id="brief-chevron">▾</div>
+        </div>
+        <div class="brief-body" id="brief-body">
+          <div class="brief-text" id="brief-text"></div>
+          <div id="brief-tasks-list"></div>
+          <div style="padding:10px 0 6px;font-size:9px;color:rgba(255,255,255,0.3);text-align:center;">מעודכן מהמחשב בבוקר — לחץ לסגירה</div>
+        </div>
+      </div>
+
       <button class="big-btn btn-call" onclick="openCallModal()">
         <span class="bico">📞</span>
         <div class="btxt"><span class="bmain">תעד שיחה</span><span class="bsub">נכנסת · יוצאת · לא ענה — 10 שניות</span></div>
@@ -342,9 +375,61 @@ let _taskFilter = 'all';
 let todayStr = new Date().toISOString().split('T')[0];
 
 // ── INIT ──────────────────────────────────────────────────────────────
+async function loadDayBrief() {
+  try {
+    var { data, error } = await sb.from('project_briefs')
+      .select('*').order('sent_at', { ascending: false }).limit(1);
+    if (error || !data || !data.length) return;
+    var brief = data[0];
+    var banner = document.getElementById('day-brief-banner');
+    var briefData = brief.data || {};
+    // Project name
+    document.getElementById('brief-proj-name').textContent = '📋 ' + (brief.project_name || 'בריפינג יומי');
+    // Date
+    var sentAt = brief.sent_at ? new Date(brief.sent_at) : new Date();
+    document.getElementById('brief-date').textContent = sentAt.toLocaleDateString('he-IL',{weekday:'long',day:'2-digit',month:'2-digit'}) + ' · מהמחשב';
+    // AI brief text
+    if (briefData.brief_text) {
+      document.getElementById('brief-text').textContent = briefData.brief_text;
+    }
+    // Today's tasks
+    var tasks = briefData.tasks || [];
+    var sColors = { done:'#888', 'in-progress':'#f59e0b', planned:'#3b82f6', delayed:'#ef4444' };
+    if (tasks.length) {
+      document.getElementById('brief-tasks-list').innerHTML =
+        '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.8px;padding:6px 0 4px;">משימות היום</div>' +
+        tasks.slice(0,5).map(function(t){
+          var col = sColors[t.status] || '#3b82f6';
+          var contr = (t.contractors_master && t.contractors_master.company_name) ? ' · ' + t.contractors_master.company_name : '';
+          return '<div class="brief-task-item">'
+            + '<div class="brief-task-dot" style="background:'+col+';"></div>'
+            + '<div class="brief-task-name">' + (t.task_name||'') + '</div>'
+            + '<div class="brief-task-meta">' + contr + '</div>'
+            + '</div>';
+        }).join('');
+    }
+    banner.style.display = 'block';
+    // Auto-expand on fresh brief (same day)
+    var briefDate = new Date(brief.sent_at);
+    var isToday = briefDate.toDateString() === new Date().toDateString();
+    if (isToday) {
+      document.getElementById('brief-body').classList.add('open');
+      document.getElementById('brief-chevron').classList.add('open');
+    }
+  } catch(e) { /* brief unavailable — silent fail */ }
+}
+
+function toggleBrief() {
+  var body    = document.getElementById('brief-body');
+  var chevron = document.getElementById('brief-chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
 async function init() {
   updateClock();
   setInterval(updateClock, 30000);
+  loadDayBrief();
   try {
     const { data } = await sb.from('app_config').select('key,value');
     (data||[]).forEach(r => { APP.config[r.key] = r.value; });
@@ -499,11 +584,7 @@ async function saveCall() {
   const note  = document.getElementById('call-note').value.trim();
   if (!name && !phone) { toast('הכנס שם או מספר'); return; }
   try {
-    await fetch(SB_URL + '/rest/v1/call_log', {
-      method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ caller_name: name || 'לא ידוע', phone: phone || null, notes: note || null, direction: callDirection, created_at: new Date().toISOString() })
-    });
+    await sb.from('call_log').insert({ caller_name: name || 'לא ידוע', phone: phone || null, notes: note || null, direction: callDirection, created_at: new Date().toISOString() });
     closeModal('call-modal');
     toast('✅ שיחה נשמרה');
     // Auto-create task if missed call with note
@@ -593,17 +674,15 @@ async function stopRec(e) {
   document.getElementById('mic-timer').textContent = '';
   // Save to voice_memos immediately
   try {
-    await fetch(SB_URL + '/rest/v1/voice_memos', {
-      method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({
+    await sb.from('voice_memos').insert({
         transcript: text, duration_sec: recSeconds,
         ai_result: result ? JSON.stringify(result) : null,
-        ai_summary: result?.summary || null, ai_category: result?.category || null,
-        ai_priority: result?.priority || null, project_hint: result?.project_hint || null,
+        ai_summary: result ? result.summary || null : null,
+        ai_category: result ? result.category || null : null,
+        ai_priority: result ? result.priority || null : null,
+        project_hint: result ? result.project_hint || null : null,
         is_processed: false, created_at: new Date().toISOString()
-      })
-    });
+      });
     loadVoiceMemos(); loadEODCounts();
   } catch(err) { console.error('voice save:', err); }
 }
@@ -655,11 +734,7 @@ function clearMic() {
 }
 
 async function markMemoProcessed(id) {
-  await fetch(SB_URL + '/rest/v1/voice_memos?id=eq.' + id, {
-    method: 'PATCH',
-    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ is_processed: true })
-  });
+  await sb.from('voice_memos').update({ is_processed: true }).eq('id', id);
   toast('✔ סומן כטופל');
   loadVoiceMemos(); loadHomePending();
 }
@@ -763,11 +838,7 @@ async function addReminderToDB(text, source, priority) {
 }
 
 async function doneTask(id) {
-  await fetch(SB_URL + '/rest/v1/reminders?id=eq.' + id, {
-    method: 'PATCH',
-    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ is_done: true })
-  });
+  await sb.from('reminders').update({ is_done: true }).eq('id', id);
   toast('✅ סיימתי!');
   loadTasks(); loadHomePending();
 }
