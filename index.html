@@ -319,6 +319,20 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
     </div>
   </div>
 
+  <!-- PHOTO NOTE MODAL -->
+  <div class="modal-bg" id="photo-modal">
+    <div class="modal">
+      <div class="modal-title">📸 תמונה חדשה</div>
+      <img id="photo-preview-img" src="" style="width:100%;border-radius:10px;margin-bottom:12px;max-height:200px;object-fit:cover;">
+      <div class="form-label">הערה לתמונה</div>
+      <input class="inp" id="photo-note-inp" placeholder="מה רואים בתמונה? ליקוי, חומר, אתר..." style="margin-bottom:14px;">
+      <div style="display:flex;gap:8px;">
+        <button class="ca" style="flex:1;padding:12px;" onclick="document.getElementById('photo-modal').classList.remove('open')">ביטול</button>
+        <button class="ca primary" style="flex:2;padding:12px;font-size:14px;" onclick="savePhotoMemo()">💾 שמור תמונה</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /app -->
 
 <!-- CALL MODAL -->
@@ -700,7 +714,15 @@ async function stopRec(e) {
         is_processed: false, created_at: new Date().toISOString()
       });
     if (vErr) { toast('שגיאה בשמירת מזכר: ' + vErr.message); console.error('voice save:', vErr); }
-    else { toast('✅ מזכר נשמר'); loadVoiceMemos(); loadEODCounts(); }
+    else {
+      toast('✅ מזכר נשמר');
+      // Also save to beni_notes so it appears in CRM יומן חכם wall
+      await sb.from('beni_notes').insert({
+        note_text: (result && result.summary ? result.summary : text.substring(0, 200)),
+        color: 'purple', created_at: new Date().toISOString()
+      });
+      loadVoiceMemos(); loadEODCounts();
+    }
   } catch(err) { toast('שגיאת רשת בשמירה'); console.error('voice save:', err); }
 }
 
@@ -768,21 +790,38 @@ function openPhotoMemo() { document.getElementById('photo-input').click(); }
 
 async function handlePhoto(input) {
   const file = input.files[0]; if (!file) return;
-  const note = prompt('הוסף הערה לתמונה (אופציונלי):') || '';
-  toast('📤 שומר...');
+  // Show photo preview modal for note input
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('photo-preview-img').src = ev.target.result;
+    document.getElementById('photo-note-inp').value = '';
+    document.getElementById('photo-modal').classList.add('open');
+    window._pendingPhotoFile = file;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function savePhotoMemo() {
+  const file = window._pendingPhotoFile; if (!file) return;
+  const note = document.getElementById('photo-note-inp').value.trim() || '📸 תמונה';
+  document.getElementById('photo-modal').classList.remove('open');
+  toast('📤 שומר תמונה...');
   try {
     const ext = file.name.split('.').pop() || 'jpg';
     const fname = 'memo_' + Date.now() + '.' + ext;
     const { error: upErr } = await sb.storage.from('app-assets').upload('photos/' + fname, file, { upsert: true, contentType: file.type });
-    const photoUrl = upErr ? null : SB_URL + '/storage/v1/object/public/app-assets/photos/' + fname;
-    await sb.from('beni_notes').insert({
-      note_text: note || '📸 תמונה', color: 'blue',
+    if (upErr) { toast('שגיאת העלאה: ' + upErr.message); console.error('photo upload:', upErr); return; }
+    const photoUrl = SB_URL + '/storage/v1/object/public/app-assets/photos/' + fname;
+    const { error: dbErr } = await sb.from('beni_notes').insert({
+      note_text: note, color: 'blue',
       photo_url: photoUrl, created_at: new Date().toISOString()
     });
+    if (dbErr) { toast('שגיאת שמירה: ' + dbErr.message); return; }
     toast('✅ תמונה נשמרה');
     loadHomePending(); loadEODCounts();
   } catch(e) { toast('שגיאה: ' + e.message); }
-  input.value = '';
+  window._pendingPhotoFile = null;
 }
 
 // ── TEXT MEMO ─────────────────────────────────────────────────────────
