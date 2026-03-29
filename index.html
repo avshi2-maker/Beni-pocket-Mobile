@@ -809,16 +809,24 @@ async function savePhotoMemo() {
   try {
     const ext = file.name.split('.').pop() || 'jpg';
     const fname = 'memo_' + Date.now() + '.' + ext;
-    // Use direct fetch for storage — avoids RLS issues with sb.storage client
-    const uploadRes = await fetch(SB_URL + '/storage/v1/object/app-assets/photos/' + fname, {
+    // Try POST first, fall back to PUT (upsert)
+    let uploadRes = await fetch(SB_URL + '/storage/v1/object/app-assets/photos/' + fname, {
       method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
       body: file
     });
     if (!uploadRes.ok) {
+      // Try PUT (update existing)
+      uploadRes = await fetch(SB_URL + '/storage/v1/object/app-assets/photos/' + fname, {
+        method: 'PUT',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+        body: file
+      });
+    }
+    if (!uploadRes.ok) {
       const errText = await uploadRes.text();
-      toast('שגיאת העלאה: ' + uploadRes.status);
-      console.error('photo upload:', errText);
+      toast('שגיאת העלאה ' + uploadRes.status + ': ' + errText.substring(0,60));
+      console.error('photo upload:', uploadRes.status, errText);
       return;
     }
     const photoUrl = SB_URL + '/storage/v1/object/public/app-assets/photos/' + fname;
