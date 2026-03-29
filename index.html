@@ -702,28 +702,27 @@ async function stopRec(e) {
   btn.classList.remove('analyzing'); btn.textContent = '🎙️';
   document.getElementById('mic-status').textContent = 'לחץ והחזק להקלטה';
   document.getElementById('mic-timer').textContent = '';
-  // Save to voice_memos immediately
+  // Save to beni_notes (simple — always works) + voice_memos
   try {
-    const { error: vErr } = await sb.from('voice_memos').insert({
-        transcript: text, duration_sec: recSeconds,
-        ai_result: result ? JSON.stringify(result) : null,
-        ai_summary: result ? result.summary || null : null,
-        ai_category: result ? result.category || null : null,
-        ai_priority: result ? result.priority || null : null,
-        project_hint: result ? result.project_hint || null : null,
-        is_processed: false, created_at: new Date().toISOString()
-      });
-    if (vErr) { toast('שגיאה בשמירת מזכר: ' + vErr.message); console.error('voice save:', vErr); }
-    else {
-      toast('✅ מזכר נשמר');
-      // Also save to beni_notes so it appears in CRM יומן חכם wall
-      await sb.from('beni_notes').insert({
-        note_text: (result && result.summary ? result.summary : text.substring(0, 200)),
-        color: 'purple', created_at: new Date().toISOString()
-      });
-      loadVoiceMemos(); loadEODCounts();
-    }
-  } catch(err) { toast('שגיאת רשת בשמירה'); console.error('voice save:', err); }
+    const noteText = (result && result.summary) ? result.summary : text.substring(0, 300);
+    // Save to beni_notes first — this is what CRM reads
+    const { error: nErr } = await sb.from('beni_notes').insert({
+      note_text: '🎙️ ' + noteText,
+      color: 'purple',
+      created_at: new Date().toISOString()
+    });
+    if (nErr) { toast('שגיאה: ' + nErr.message); console.error('beni_notes insert:', nErr); return; }
+    // Also save full data to voice_memos
+    await sb.from('voice_memos').insert({
+      transcript: text, duration_sec: recSeconds,
+      ai_summary: result ? result.summary || null : null,
+      ai_category: result ? result.category || null : null,
+      ai_priority: result ? result.priority || null : null,
+      is_processed: false, created_at: new Date().toISOString()
+    }).then(function(r) { if (r.error) console.warn('voice_memos:', r.error.message); });
+    toast('✅ מזכר נשמר');
+    loadVoiceMemos(); loadEODCounts();
+  } catch(err) { toast('שגיאה: ' + err.message); console.error('voice save:', err); }
 }
 
 function renderAIResult(result, text) {
@@ -810,8 +809,18 @@ async function savePhotoMemo() {
   try {
     const ext = file.name.split('.').pop() || 'jpg';
     const fname = 'memo_' + Date.now() + '.' + ext;
-    const { error: upErr } = await sb.storage.from('app-assets').upload('photos/' + fname, file, { upsert: true, contentType: file.type });
-    if (upErr) { toast('שגיאת העלאה: ' + upErr.message); console.error('photo upload:', upErr); return; }
+    // Use direct fetch for storage — avoids RLS issues with sb.storage client
+    const uploadRes = await fetch(SB_URL + '/storage/v1/object/app-assets/photos/' + fname, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'image/jpeg' },
+      body: file
+    });
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      toast('שגיאת העלאה: ' + uploadRes.status);
+      console.error('photo upload:', errText);
+      return;
+    }
     const photoUrl = SB_URL + '/storage/v1/object/public/app-assets/photos/' + fname;
     const { error: dbErr } = await sb.from('beni_notes').insert({
       note_text: note, color: 'blue',
