@@ -849,12 +849,15 @@ async function savePhotoMemo() {
   const isVideo = file.type.startsWith('video/');
   toast((isVideo ? '🎬' : '📤') + ' מעלה לענן...');
   try {
-    // Upload to Cloudinary — works for both photos and videos
+    // Upload to Cloudinary — separate endpoints for image vs video
     const fd = new FormData();
     fd.append('file', file);
     fd.append('upload_preset', CLD_PRESET);
     fd.append('folder', 'beni_field');
-    const res = await fetch(CLD_UPLOAD_URL, { method: 'POST', body: fd });
+    const endpoint = isVideo
+      ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+      : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
+    const res = await fetch(endpoint, { method: 'POST', body: fd });
     if (!res.ok) {
       const err = await res.json();
       toast('שגיאת העלאה: ' + (err.error && err.error.message ? err.error.message : res.status));
