@@ -634,14 +634,19 @@ function startRec(e) {
   isRecording = true;
   currentTranscript = '';
   recognition = new SR();
-  recognition.lang = 'he-IL'; recognition.continuous = false; recognition.interimResults = false;
+  recognition.lang = 'he-IL'; recognition.continuous = true; recognition.interimResults = false;
   recognition.onresult = ev => {
     const heard = Array.from(ev.results).map(r => r[0].transcript).join(' ');
     currentTranscript += (currentTranscript ? ' ' : '') + heard;
+    document.getElementById('mic-status').textContent = '🎙️ ' + currentTranscript.substring(0, 40) + (currentTranscript.length > 40 ? '...' : '');
   };
-  recognition.onerror = ev => { if (ev.error !== 'no-speech' && ev.error !== 'aborted') toast('שגיאה: ' + ev.error); };
-  recognition.onend = () => { if (isRecording) recognition.start(); };
-  recognition.start();
+  recognition.onerror = ev => {
+    console.error('speech error:', ev.error);
+    if (ev.error === 'not-allowed') { toast('אשר הרשאת מיקרופון בדפדפן'); stopRec(null); return; }
+    if (ev.error !== 'no-speech' && ev.error !== 'aborted') toast('שגיאה: ' + ev.error);
+  };
+  recognition.onend = () => { if (isRecording) { try { recognition.start(); } catch(e) {} } };
+  try { recognition.start(); } catch(e) { toast('שגיאה בפתיחת מיקרופון: ' + e.message); isRecording = false; return; }
   const btn = document.getElementById('mic-btn');
   btn.classList.add('recording'); btn.textContent = '⏹️';
   document.getElementById('mic-status').textContent = 'מקליט... שחרר לסיום';
@@ -679,7 +684,7 @@ async function stopRec(e) {
   document.getElementById('mic-timer').textContent = '';
   // Save to voice_memos immediately
   try {
-    await sb.from('voice_memos').insert({
+    const { error: vErr } = await sb.from('voice_memos').insert({
         transcript: text, duration_sec: recSeconds,
         ai_result: result ? JSON.stringify(result) : null,
         ai_summary: result ? result.summary || null : null,
@@ -688,8 +693,9 @@ async function stopRec(e) {
         project_hint: result ? result.project_hint || null : null,
         is_processed: false, created_at: new Date().toISOString()
       });
-    loadVoiceMemos(); loadEODCounts();
-  } catch(err) { console.error('voice save:', err); }
+    if (vErr) { toast('שגיאה בשמירת מזכר: ' + vErr.message); console.error('voice save:', vErr); }
+    else { toast('✅ מזכר נשמר'); loadVoiceMemos(); loadEODCounts(); }
+  } catch(err) { toast('שגיאת רשת בשמירה'); console.error('voice save:', err); }
 }
 
 function renderAIResult(result, text) {
@@ -831,15 +837,17 @@ function filterTasks(f) {
 
 async function addTask() {
   const inp = document.getElementById('new-task-inp');
-  const text = inp.value.trim(); if (!text) return;
-  await addReminderToDB(text, 'manual', 'normal');
-  inp.value = '';
-  toast('✅ משימה נוספה');
-  loadTasks();
+  const text = inp.value.trim(); if (!text) { toast('הקלד טקסט למשימה'); return; }
+  const ok = await addReminderToDB(text, 'manual', 'normal');
+  if (ok) { inp.value = ''; toast('✅ משימה נוספה'); loadTasks(); loadHomePending(); }
 }
 
 async function addReminderToDB(text, source, priority) {
-  await sb.from('reminders').insert({ text, source: source||'manual', priority: priority||'normal', is_done: false, created_at: new Date().toISOString() });
+  try {
+    const { error } = await sb.from('reminders').insert({ text, source: source||'manual', priority: priority||'normal', is_done: false, created_at: new Date().toISOString() });
+    if (error) { toast('שגיאה: ' + error.message); console.error('reminders insert:', error); return false; }
+    return true;
+  } catch(e) { toast('שגיאת רשת — בדוק חיבור'); console.error('reminders insert:', e); return false; }
 }
 
 async function doneTask(id) {
