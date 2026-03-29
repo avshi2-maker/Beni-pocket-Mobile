@@ -47,22 +47,22 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 .h-time { font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
 
 /* ── BIG ACTION BUTTONS ── */
-.big-btn { display: flex; align-items: center; gap: 12px; border-radius: 14px; padding: 14px 16px; width: 100%; cursor: pointer; border: none; text-align: right; margin-bottom: 10px; position: relative; overflow: hidden; }
-.big-btn:active { transform: scale(0.97); }
-.big-btn .bico { font-size: 26px; flex-shrink: 0; }
+.big-btn { display: flex; align-items: center; gap: 14px; border-radius: 16px; padding: 18px 18px; width: 100%; cursor: pointer; border: none; text-align: right; margin-bottom: 12px; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.big-btn:active { transform: scale(0.97); opacity: 0.9; }
+.big-btn .bico { font-size: 30px; flex-shrink: 0; }
 .big-btn .btxt { display: flex; flex-direction: column; align-items: flex-start; }
-.big-btn .bmain { font-size: 15px; font-weight: 900; }
-.big-btn .bsub { font-size: 11px; opacity: 0.85; margin-top: 2px; font-weight: 600; }
-.btn-call { background: rgba(239,68,68,0.15); border: 1.5px solid rgba(239,68,68,0.4); }
-.btn-call .bmain { color: #fca5a5; }
-.btn-voice { background: rgba(201,168,76,0.15); border: 1.5px solid rgba(201,168,76,0.4); }
-.btn-voice .bmain { color: var(--orange2); }
-.btn-photo { background: rgba(59,130,246,0.15); border: 1.5px solid rgba(59,130,246,0.35); }
-.btn-photo .bmain { color: #93c5fd; }
-.btn-text { background: rgba(124,58,237,0.15); border: 1.5px solid rgba(124,58,237,0.35); }
-.btn-text .bmain { color: #c4b5fd; }
-.btn-eod  { background: rgba(22,163,74,0.15); border: 1.5px solid rgba(22,163,74,0.35); }
-.btn-eod .bmain { color: #86efac; }
+.big-btn .bmain { font-size: 16px; font-weight: 900; }
+.big-btn .bsub { font-size: 11px; opacity: 0.8; margin-top: 3px; font-weight: 600; }
+.btn-call { background: linear-gradient(135deg,#7f1d1d,#dc2626); border: none; }
+.btn-call .bmain { color: #fff; } .btn-call .bsub { color: rgba(255,255,255,0.75); }
+.btn-voice { background: linear-gradient(135deg,#78350f,#d97706); border: none; }
+.btn-voice .bmain { color: #fff; } .btn-voice .bsub { color: rgba(255,255,255,0.75); }
+.btn-photo { background: linear-gradient(135deg,#1e3a5f,#2563eb); border: none; }
+.btn-photo .bmain { color: #fff; } .btn-photo .bsub { color: rgba(255,255,255,0.75); }
+.btn-text { background: linear-gradient(135deg,#3b0764,#7c3aed); border: none; }
+.btn-text .bmain { color: #fff; } .btn-text .bsub { color: rgba(255,255,255,0.75); }
+.btn-eod  { background: linear-gradient(135deg,#14532d,#16a34a); border: none; }
+.btn-eod .bmain { color: #fff; } .btn-eod .bsub { color: rgba(255,255,255,0.75); }
 
 /* ── CARDS ── */
 .section-title { font-size: 11px; font-weight: 900; color: #9090b8; text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 0 8px; }
@@ -152,12 +152,15 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 <div id="app">
 
   <!-- HEADER -->
-  <div id="header">
+  <div id="header" style="background:#1a3d5c;border-bottom:1px solid rgba(201,168,76,0.3);">
     <div>
-      <div class="h-title">👷 בני פוקט</div>
-      <div class="h-proj" id="h-proj">📍 טוען...</div>
+      <div class="h-title" style="font-size:17px;font-weight:900;color:#fde68a;">👷 בני פוקט</div>
+      <div class="h-proj" id="h-proj" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;">📍 טוען...</div>
     </div>
-    <div class="h-time" id="h-time">--:--</div>
+    <div style="text-align:left;">
+      <div class="h-time" id="h-time" style="font-size:18px;font-weight:900;color:#c9a84c;">--:--</div>
+      <div id="h-date" style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;"></div>
+    </div>
   </div>
 
   <!-- PANELS -->
@@ -446,6 +449,8 @@ function updateClock() {
   const h = String(now.getHours()).padStart(2,'0');
   const m = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('h-time').textContent = h + ':' + m;
+  const dateEl = document.getElementById('h-date');
+  if (dateEl) dateEl.textContent = now.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'});
 }
 
 // ── TAB SWITCH ────────────────────────────────────────────────────────
