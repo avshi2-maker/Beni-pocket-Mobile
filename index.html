@@ -370,7 +370,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 </div>
 
 <!-- PHOTO INPUT (hidden) -->
-<input type="file" id="photo-input" accept="image/*,video/*" style="display:none;" onchange="handlePhoto(this)">
+<input type="file" id="photo-input" accept="image/*,video/*" capture="environment" style="display:none;" onchange="handlePhoto(this)">
 
 <script>
 const SB_URL = 'https://vmcipofovheztbjmhwsl.supabase.co';
@@ -645,89 +645,112 @@ async function loadVoiceMemos() {
   } catch(e) { list.innerHTML = '<div class="empty">שגיאה</div>'; }
 }
 
-function startRec(e) {
+// ── VOICE RECORDING via MediaRecorder → Cloudinary ──────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+
+async function startRec(e) {
   if (e) e.preventDefault();
   if (isRecording) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('הדפדפן לא תומך בזיהוי קול'); return; }
-  isRecording = true;
-  currentTranscript = '';
-  recognition = new SR();
-  recognition.lang = 'he-IL'; recognition.continuous = false; recognition.interimResults = true;
-  recognition.onresult = ev => {
-    var final = '', interim = '';
-    for (var i = ev.resultIndex; i < ev.results.length; i++) {
-      if (ev.results[i].isFinal) final += ev.results[i][0].transcript + ' ';
-      else interim += ev.results[i][0].transcript;
-    }
-    if (final) currentTranscript += final;
-    var display = (currentTranscript + interim).substring(0, 50);
-    document.getElementById('mic-status').textContent = '🎙️ ' + display + (display.length >= 50 ? '...' : '');
-  };
-  recognition.onerror = ev => {
-    console.error('speech error:', ev.error);
-    if (ev.error === 'not-allowed') { toast('אשר הרשאת מיקרופון בדפדפן'); stopRec(null); return; }
-    if (ev.error === 'network') { toast('שגיאת רשת — נסה שוב'); stopRec(null); return; }
-    if (ev.error !== 'no-speech' && ev.error !== 'aborted') toast('שגיאה: ' + ev.error);
-  };
-  recognition.onend = () => { if (isRecording) { try { recognition.start(); } catch(e) { stopRec(null); } } };
-  try { recognition.start(); } catch(e) { toast('שגיאה: ' + e.message); isRecording = false; return; }
-  const btn = document.getElementById('mic-btn');
-  btn.classList.add('recording'); btn.textContent = '⏹️';
-  document.getElementById('mic-status').textContent = 'מקליט... שחרר לסיום';
-  const timer = document.getElementById('mic-timer');
-  timer.textContent = '0:00';
-  recSeconds = 0;
-  recInterval = setInterval(() => {
-    recSeconds++;
-    const m = Math.floor(recSeconds/60), s = recSeconds % 60;
-    timer.textContent = m + ':' + String(s).padStart(2,'0');
-  }, 1000);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    isRecording = true;
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = ev => { if (ev.data.size > 0) audioChunks.push(ev.data); };
+    mediaRecorder.start(200);
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording'); btn.textContent = '⏹️';
+    document.getElementById('mic-status').textContent = 'מקליט... שחרר לסיום';
+    document.getElementById('mic-timer').textContent = '0:00';
+    recSeconds = 0;
+    recInterval = setInterval(() => {
+      recSeconds++;
+      const m = Math.floor(recSeconds/60), s = recSeconds % 60;
+      document.getElementById('mic-timer').textContent = m + ':' + String(s).padStart(2,'0');
+    }, 1000);
+  } catch(e) {
+    toast('אשר הרשאת מיקרופון: ' + e.message);
+    isRecording = false;
+  }
 }
 
 async function stopRec(e) {
   if (e) e.preventDefault();
-  if (!isRecording) return;
+  if (!isRecording || !mediaRecorder) return;
   isRecording = false;
   clearInterval(recInterval);
-  try { recognition.onend = null; recognition.stop(); } catch(err) {}
+
   const btn = document.getElementById('mic-btn');
   btn.classList.remove('recording'); btn.classList.add('analyzing'); btn.textContent = '🧠';
-  document.getElementById('mic-status').textContent = 'מנתח עם AI...';
-  const text = currentTranscript.trim();
-  if (!text) {
+  document.getElementById('mic-status').textContent = 'שומר ומעלה...';
+
+  await new Promise(resolve => {
+    mediaRecorder.onstop = resolve;
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+  });
+
+  if (audioChunks.length === 0) {
     btn.classList.remove('analyzing'); btn.textContent = '🎙️';
     document.getElementById('mic-status').textContent = 'לחץ והחזק להקלטה';
     document.getElementById('mic-timer').textContent = '';
     toast('לא נקלט קול — נסה שוב');
     return;
   }
-  const result = await analyzeWithClaude(text);
-  renderAIResult(result, text);
+
+  try {
+    // Upload audio blob to Cloudinary
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    const fd = new FormData();
+    fd.append('file', audioBlob, 'voice_' + Date.now() + '.webm');
+    fd.append('upload_preset', CLD_PRESET);
+    fd.append('folder', 'beni_voice');
+    fd.append('resource_type', 'video'); // Cloudinary uses 'video' for audio too
+
+    const uploadUrl = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload';
+    const res = await fetch(uploadUrl, { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok || !data.secure_url) {
+      toast('שגיאת העלאה: ' + (data.error ? data.error.message : res.status));
+      btn.classList.remove('analyzing'); btn.textContent = '🎙️';
+      document.getElementById('mic-status').textContent = 'לחץ והחזק להקלטה';
+      document.getElementById('mic-timer').textContent = '';
+      return;
+    }
+
+    const audioUrl = data.secure_url;
+    const dur = recSeconds;
+
+    // Save to beni_notes with audio URL — CRM will show play button
+    const { error: nErr } = await sb.from('beni_notes').insert({
+      note_text: '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0'),
+      color: 'purple',
+      photo_url: audioUrl,
+      created_at: new Date().toISOString()
+    });
+
+    // Save to voice_memos
+    await sb.from('voice_memos').insert({
+      transcript: audioUrl, duration_sec: dur,
+      ai_summary: 'הקלטה קולית — לחץ להפעלה',
+      is_processed: false, created_at: new Date().toISOString()
+    });
+
+    if (nErr) { toast('שגיאת שמירה: ' + nErr.message); }
+    else {
+      toast('✅ הקלטה נשמרה — ' + dur + ' שניות');
+      loadVoiceMemos(); loadEODCounts();
+    }
+  } catch(err) {
+    toast('שגיאה: ' + err.message);
+    console.error('voice upload:', err);
+  }
+
   btn.classList.remove('analyzing'); btn.textContent = '🎙️';
   document.getElementById('mic-status').textContent = 'לחץ והחזק להקלטה';
   document.getElementById('mic-timer').textContent = '';
-  // Save to beni_notes (simple — always works) + voice_memos
-  try {
-    const noteText = (result && result.summary) ? result.summary : text.substring(0, 300);
-    // Save to beni_notes first — this is what CRM reads
-    const { error: nErr } = await sb.from('beni_notes').insert({
-      note_text: '🎙️ ' + noteText,
-      color: 'purple',
-      created_at: new Date().toISOString()
-    });
-    if (nErr) { toast('שגיאה: ' + nErr.message); console.error('beni_notes insert:', nErr); return; }
-    // Also save full data to voice_memos
-    await sb.from('voice_memos').insert({
-      transcript: text, duration_sec: recSeconds,
-      ai_summary: result ? result.summary || null : null,
-      ai_category: result ? result.category || null : null,
-      ai_priority: result ? result.priority || null : null,
-      is_processed: false, created_at: new Date().toISOString()
-    }).then(function(r) { if (r.error) console.warn('voice_memos:', r.error.message); });
-    toast('✅ מזכר נשמר');
-    loadVoiceMemos(); loadEODCounts();
-  } catch(err) { toast('שגיאה: ' + err.message); console.error('voice save:', err); }
 }
 
 function renderAIResult(result, text) {
