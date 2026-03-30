@@ -1073,21 +1073,31 @@ async function uploadSyncQueue() {
           uploadFile = new File([blob], item.file.name.replace(/\.heic$/i,'.jpg').replace(/\.heif$/i,'.jpg'), {type:'image/jpeg'});
         } catch(convErr) { console.warn('HEIC convert failed, uploading raw:', convErr); }
       }
-      // Use auto endpoint — handles all formats including M4A
-      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
+      // Route by type — audio/video use /video/upload, images use /image/upload
+      var endpoint = (item.type === 'audio' || item.type === 'video')
+        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var folder = item.type === 'audio' ? 'beni_voice' : 'beni_field';
       var fd = new FormData();
-      fd.append('file', uploadFile);
+      // M4A: send as raw bytes with audio/mp4 type — Cloudinary video endpoint accepts this
+      if (item.type === 'audio' && /\.m4a$/i.test(item.file.name)) {
+        fd.append('file', new File([uploadFile], 'voice_' + Date.now() + '.m4a', {type: 'video/mp4'}));
+      } else {
+        fd.append('file', uploadFile);
+      }
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
       if (item.type === 'image') { fd.append('format', 'jpg'); }
-      // For M4A specifically — rename to mp4 container which Cloudinary accepts
-      if (item.type === 'audio' && /\.m4a$/i.test(item.file.name)) {
-        fd.set('file', new File([uploadFile], uploadFile.name.replace(/\.m4a$/i, '.mp4'), {type: 'audio/mp4'}));
-      }
       var res = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
-      if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'upload failed');
+      if (!res.ok || !data.secure_url) {
+        var errMsg = data.error ? data.error.message : ('HTTP ' + res.status);
+        item.status = 'error';
+        renderSyncQueue();
+        toast('שגיאה: ' + errMsg);
+        console.error('upload error:', errMsg, data);
+        continue;
+      }
       // Save to beni_notes
       var noteText = item.type === 'image' ? '📸 ' + item.name
         : item.type === 'audio' ? '🎙️ הקלטה: ' + item.name
