@@ -654,6 +654,7 @@ async function saveCall() {
 
 // ── VOICE MEMO ────────────────────────────────────────────────────────
 async function loadVoiceMemos() {
+  if (!document.getElementById('voice-list')) return; // panel removed
   const list = document.getElementById('voice-list');
   try {
     const { data } = await sb.from('voice_memos')
