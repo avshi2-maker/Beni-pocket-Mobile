@@ -1073,15 +1073,18 @@ async function uploadSyncQueue() {
           uploadFile = new File([blob], item.file.name.replace(/\.heic$/i,'.jpg').replace(/\.heif$/i,'.jpg'), {type:'image/jpeg'});
         } catch(convErr) { console.warn('HEIC convert failed, uploading raw:', convErr); }
       }
-      var endpoint = (item.type === 'audio' || item.type === 'video')
-        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
-        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
+      // Use auto endpoint — handles all formats including M4A
+      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
       var folder = item.type === 'audio' ? 'beni_voice' : 'beni_field';
       var fd = new FormData();
       fd.append('file', uploadFile);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
       if (item.type === 'image') { fd.append('format', 'jpg'); }
+      // For M4A specifically — rename to mp4 container which Cloudinary accepts
+      if (item.type === 'audio' && /\.m4a$/i.test(item.file.name)) {
+        fd.set('file', new File([uploadFile], uploadFile.name.replace(/\.m4a$/i, '.mp4'), {type: 'audio/mp4'}));
+      }
       var res = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'upload failed');
