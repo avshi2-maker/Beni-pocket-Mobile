@@ -1062,21 +1062,24 @@ async function uploadSyncQueue() {
     document.getElementById('sync-status-text').textContent = 'מעלה ' + (i+1) + ' מתוך ' + _syncQueue.length + ': ' + item.name;
     try {
       var uploadFile = item.file;
-      // Route by type
-      var endpoint = (item.type === 'audio' || item.type === 'video')
-        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
-        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var folder = item.type === 'audio' ? 'beni_voice' : 'beni_field';
       var fd = new FormData();
+      // Rename files to universally accepted formats
+      var fname, ftype, endpoint;
       if (item.type === 'audio') {
-        // Rename to mp3 — works for all Android audio formats (m4a, 3gp, etc)
-        fd.append('file', new File([uploadFile], 'voice_' + Date.now() + '.mp3', {type: 'audio/mpeg'}));
-      } else if (item.type === 'image' && /\.(heic|heif)$/i.test(item.file.name)) {
-        // Rename HEIC to jpg — Cloudinary preset handles conversion
-        fd.append('file', new File([uploadFile], item.file.name.replace(/\.(heic|heif)$/i, '.jpg'), {type: 'image/jpeg'}));
+        fname = 'voice_' + Date.now() + '.mp3';
+        ftype = 'audio/mpeg';
+        endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload';
+      } else if (item.type === 'video') {
+        fname = 'video_' + Date.now() + '.mp4';
+        ftype = 'video/mp4';
+        endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload';
       } else {
-        fd.append('file', uploadFile);
+        fname = 'photo_' + Date.now() + '.jpg';
+        ftype = 'image/jpeg';
+        endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       }
+      fd.append('file', new File([uploadFile], fname, {type: ftype}));
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
       var res = await fetch(endpoint, { method: 'POST', body: fd });
@@ -1093,7 +1096,7 @@ async function uploadSyncQueue() {
       var noteText = item.type === 'image' ? '📸 ' + item.name
         : item.type === 'audio' ? '🎙️ הקלטה: ' + item.name
         : '🎬 וידאו: ' + item.name;
-      var color = item.type === 'image' ? 'blue' : item.type === 'audio' ? 'orange' : 'green';
+      var color = item.type === 'image' ? 'blue' : item.type === 'audio' ? 'purple' : 'green';
       await sb.from('beni_notes').insert({
         note_text: noteText, color: color,
         photo_url: data.secure_url, created_at: new Date().toISOString()
