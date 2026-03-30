@@ -1060,14 +1060,25 @@ async function uploadSyncQueue() {
     document.getElementById('sync-progress-bar').style.width = pct + '%';
     document.getElementById('sync-status-text').textContent = 'מעלה ' + (i+1) + ' מתוך ' + _syncQueue.length + ': ' + item.name;
     try {
-      // Use /auto/upload for all — Cloudinary detects type automatically
-      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
+      var uploadFile = item.file;
+      // Convert HEIC/HEIF to JPEG via canvas before upload
+      if (item.type === 'image' && /heic|heif/i.test(item.file.name)) {
+        try {
+          var bmp = await createImageBitmap(item.file);
+          var cvs = document.createElement('canvas');
+          cvs.width = bmp.width; cvs.height = bmp.height;
+          cvs.getContext('2d').drawImage(bmp, 0, 0);
+          var blob = await new Promise(function(r){ cvs.toBlob(r, 'image/jpeg', 0.85); });
+          uploadFile = new File([blob], item.file.name.replace(/\.heic$/i,'.jpg').replace(/\.heif$/i,'.jpg'), {type:'image/jpeg'});
+        } catch(convErr) { console.warn('HEIC convert failed, uploading raw:', convErr); }
+      }
+      var endpoint = item.type === 'audio'
+        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var fd = new FormData();
-      fd.append('file', item.file);
+      fd.append('file', uploadFile);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', item.type === 'audio' ? 'beni_voice' : 'beni_field');
-      // Convert any image format (HEIC, HEIF, etc.) to jpg
-      if (item.type === 'image') { fd.append('format', 'jpg'); }
       var res = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'upload failed');
