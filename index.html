@@ -1062,32 +1062,23 @@ async function uploadSyncQueue() {
     document.getElementById('sync-status-text').textContent = 'מעלה ' + (i+1) + ' מתוך ' + _syncQueue.length + ': ' + item.name;
     try {
       var uploadFile = item.file;
-      // Convert HEIC/HEIF to JPEG via canvas before upload
-      if (item.type === 'image' && /heic|heif/i.test(item.file.name)) {
-        try {
-          var bmp = await createImageBitmap(item.file);
-          var cvs = document.createElement('canvas');
-          cvs.width = bmp.width; cvs.height = bmp.height;
-          cvs.getContext('2d').drawImage(bmp, 0, 0);
-          var blob = await new Promise(function(r){ cvs.toBlob(r, 'image/jpeg', 0.85); });
-          uploadFile = new File([blob], item.file.name.replace(/\.heic$/i,'.jpg').replace(/\.heif$/i,'.jpg'), {type:'image/jpeg'});
-        } catch(convErr) { console.warn('HEIC convert failed, uploading raw:', convErr); }
-      }
-      // Route by type — audio/video use /video/upload, images use /image/upload
+      // Route by type
       var endpoint = (item.type === 'audio' || item.type === 'video')
         ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
         : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var folder = item.type === 'audio' ? 'beni_voice' : 'beni_field';
       var fd = new FormData();
-      // Audio: force mp3 mime type — Cloudinary video endpoint accepts mp3 for all audio
       if (item.type === 'audio') {
+        // Rename to mp3 — works for all Android audio formats (m4a, 3gp, etc)
         fd.append('file', new File([uploadFile], 'voice_' + Date.now() + '.mp3', {type: 'audio/mpeg'}));
+      } else if (item.type === 'image' && /\.(heic|heif)$/i.test(item.file.name)) {
+        // Rename HEIC to jpg — Cloudinary preset handles conversion
+        fd.append('file', new File([uploadFile], item.file.name.replace(/\.(heic|heif)$/i, '.jpg'), {type: 'image/jpeg'}));
       } else {
         fd.append('file', uploadFile);
       }
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
-      if (item.type === 'image') { fd.append('format', 'jpg'); }
       var res = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) {
