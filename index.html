@@ -1079,9 +1079,9 @@ async function uploadSyncQueue() {
         : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var folder = item.type === 'audio' ? 'beni_voice' : 'beni_field';
       var fd = new FormData();
-      // M4A: send as raw bytes with audio/mp4 type — Cloudinary video endpoint accepts this
-      if (item.type === 'audio' && /\.m4a$/i.test(item.file.name)) {
-        fd.append('file', new File([uploadFile], 'voice_' + Date.now() + '.m4a', {type: 'video/mp4'}));
+      // Audio: force mp3 mime type — Cloudinary video endpoint accepts mp3 for all audio
+      if (item.type === 'audio') {
+        fd.append('file', new File([uploadFile], 'voice_' + Date.now() + '.mp3', {type: 'audio/mpeg'}));
       } else {
         fd.append('file', uploadFile);
       }
