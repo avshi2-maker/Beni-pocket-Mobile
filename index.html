@@ -178,6 +178,17 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         </div>
       </div>
 
+      <!-- SYNC REMINDER COUNTDOWN -->
+      <div id="sync-reminder-card" style="display:none;background:linear-gradient(135deg,#064e3b,#059669);border-radius:14px;padding:14px 16px;margin-bottom:14px;direction:rtl;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:900;color:#fff;">🔔 זמן לסנכרון יומי!</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;" id="reminder-countdown-text">עוד <span id="reminder-countdown">00:00</span> לסנכרון</div>
+          </div>
+          <a id="reminder-wa-btn" href="" target="_blank" style="background:#fff;color:#064e3b;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">💬 שלח WA</a>
+        </div>
+      </div>
+
       <!-- DAY BRIEF BANNER — loaded from project_briefs table -->
       <div class="brief-banner" id="day-brief-banner" onclick="toggleBrief()" style="display:none;">
         <div class="brief-header">
@@ -490,6 +501,7 @@ function toggleBrief() {
 async function init() {
   updateClock();
   setInterval(updateClock, 30000);
+  requestNotificationPermission();
   loadDayBrief();
   try {
     const { data } = await sb.from('app_config').select('key,value');
@@ -509,6 +521,64 @@ function updateClock() {
   document.getElementById('h-time').textContent = h + ':' + m;
   const dateEl = document.getElementById('h-date');
   if (dateEl) dateEl.textContent = now.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'});
+  updateSyncReminder(now);
+}
+
+function updateSyncReminder(now) {
+  var card = document.getElementById('sync-reminder-card');
+  var countdown = document.getElementById('reminder-countdown');
+  var countdownText = document.getElementById('reminder-countdown-text');
+  var waBtn = document.getElementById('reminder-wa-btn');
+  if (!card || !countdown) return;
+
+  var day = now.getDay(); // 0=Sun, 6=Sat
+  if (day === 6) { card.style.display = 'none'; return; } // Hide Saturday
+
+  var target = new Date(now);
+  target.setHours(18, 0, 0, 0);
+
+  var diffMs = target - now;
+
+  // Show from 17:00, hide after 19:00
+  if (now.getHours() < 17 || now.getHours() >= 19) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+
+  if (diffMs <= 0) {
+    // Past 18:00 — it's time!
+    countdown.textContent = 'עכשיו!';
+    countdownText.innerHTML = '⏰ הגיע הזמן לסנכרן!';
+    card.style.background = 'linear-gradient(135deg,#7f1d1d,#dc2626)';
+    // Trigger browser notification once
+    if (!window._reminderFired) {
+      window._reminderFired = true;
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🔔 בני — זמן סנכרון!', {
+          body: 'הפעל סנכרון יומי למערכת ניהול עסקי בני פרסקי',
+          icon: 'https://avshi2-maker.github.io/work-journal/favicon.ico'
+        });
+      }
+    }
+  } else {
+    var totalMin = Math.floor(diffMs / 60000);
+    var hrs = Math.floor(totalMin / 60);
+    var mins = totalMin % 60;
+    countdown.textContent = (hrs > 0 ? hrs + 'ש ' : '') + mins + 'ד';
+    countdownText.innerHTML = 'עוד <span id="reminder-countdown">' + countdown.textContent + '</span> לסנכרון יומי';
+  }
+
+  // WA link
+  var waMsg = encodeURIComponent('🌟✨ *תזכורת יומית* ✨🌟\n\n🔔 הגיע הזמן!\n\n📱 הפעל סנכרון יומי למערכת ניהול עסקי בני פרסקי\n\n✅ פתח את האפליקציה ולחץ על 🔄 סנכרן');
+  if (waBtn) waBtn.href = 'https://wa.me/972523539239?text=' + waMsg;
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 
 // ── TAB SWITCH ────────────────────────────────────────────────────────
