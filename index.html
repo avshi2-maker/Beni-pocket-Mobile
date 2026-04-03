@@ -168,6 +168,16 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 
     <!-- HOME -->
     <div id="panel-home" class="panel active">
+      <!-- TOP INSTRUCTION BOX — yellow background -->
+      <div style="background:linear-gradient(135deg,#c9a84c,#9a6f00);border-radius:16px;padding:16px 18px;margin-bottom:14px;direction:rtl;">
+        <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:8px;">📱 הוראות שימוש — בני פרסקי</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.92);line-height:1.8;">
+          צלם תמונות · סרטונים · פתקים בכתב יד · כל מסמך שאתה צריך<br>
+          ע"י שימוש ביישומון בנייד (צילום / הקלטה)<br>
+          <strong style="color:#fff;">בסוף היום — הכל יתממשק למערכת ניהול עסקי בני פרסקי ✅</strong>
+        </div>
+      </div>
+
       <!-- DAY BRIEF BANNER — loaded from project_briefs table -->
       <div class="brief-banner" id="day-brief-banner" onclick="toggleBrief()" style="display:none;">
         <div class="brief-header">
@@ -190,12 +200,9 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       </button>
       <button class="big-btn btn-text" onclick="openTextMemo()">
         <span class="bico">✍️</span>
-        <div class="btxt"><span class="bmain">מזכר מהיר בטקסט</span><span class="bsub">הקלד — נשמר מיד לסופרבייס</span></div>
+        <div class="btxt"><span class="bmain">מזכר מהיר בהקלדה ושמירה</span><span class="bsub">הקלד — נשמר מיד למערכת</span></div>
       </button>
-      <button class="big-btn" style="background:linear-gradient(135deg,#064e3b,#059669);box-shadow:0 4px 12px rgba(5,150,105,0.3);" onclick="switchTab('sync')">
-        <span class="bico">🔄</span>
-        <div class="btxt"><span class="bmain" style="color:#fff;">סנכרן למערכת</span><span class="bsub" style="color:rgba(255,255,255,0.75);">העלה תמונות · שמע · וידאו לסוף יום</span></div>
-      </button>
+
 
       <div class="divider"></div>
       <div class="section-title">ממתין לטיפול</div>
@@ -204,7 +211,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div class="section-title">סיכום יום</div>
       <button class="big-btn btn-eod" onclick="switchTab('eod')" style="margin-top:0;">
         <span class="bico">🧠</span>
-        <div class="btxt"><span class="bmain">סוף יום — AI מרכז הכל</span><span class="bsub">שיחות + מזכרים + יומן → שלח לאבשי</span></div>
+        <div class="btxt"><span class="bmain">שלח למערכת ניהול עסקי — בני פרסקי</span><span class="bsub">AI מרכז שיחות+מזכרים+תמונות+סרטונים+מדידות+יומן → ניתוח ודוחות לפי פרויקטים, ייעדים ותוכניות</span></div>
       </button>
     </div>
 
@@ -343,7 +350,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div class="nav-badge" id="badge-tasks" style="display:none">0</div>
     </div>
     <div class="nav-item" onclick="switchTab('eod')" id="nav-eod">
-      <div class="ni">📝</div><div class="nl">יומן</div>
+      <div class="ni">📤</div><div class="nl">שלח</div>
     </div>
     <div class="nav-item" onclick="switchTab('sync')" id="nav-sync">
       <div class="ni">🔄</div><div class="nl">סנכרן</div>
@@ -1092,14 +1099,23 @@ async function uploadSyncQueue() {
         console.error('upload error:', errMsg, data);
         continue;
       }
-      // Save to beni_notes
-      var noteText = item.type === 'image' ? '📸 ' + item.name
-        : item.type === 'audio' ? '🎙️ הקלטה: ' + item.name
-        : '🎬 וידאו: ' + item.name;
-      var color = item.type === 'image' ? 'blue' : item.type === 'audio' ? 'purple' : 'green';
-      await sb.from('beni_notes').insert({
-        note_text: noteText, color: color,
-        photo_url: data.secure_url, created_at: new Date().toISOString()
+      // Save to asset_inbox — Avshi will route from CRM
+      var thumbUrl = item.type === 'image'
+        ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill/')
+        : (item.type === 'video' ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,so_1/') : '');
+      await fetch(SB_URL + '/rest/v1/asset_inbox', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          cloudinary_url: data.secure_url,
+          file_name:      item.name,
+          file_type:      item.type,
+          thumbnail_url:  thumbUrl,
+          duration_sec:   item.duration || null,
+          status:         'pending',
+          uploaded_by:    'beni',
+          created_at:     new Date().toISOString()
+        })
       });
       item.status = 'done';
       done++;
@@ -1119,6 +1135,9 @@ async function uploadSyncQueue() {
     + (errors ? '<div style="font-size:12px;color:#fca5a5;margin-top:4px;">' + errors + ' שגיאות</div>' : '')
     + '</div>';
   document.getElementById('sync-done-actions').style.display = 'block';
+  // Update done text to reflect inbox
+  var doneEl = document.getElementById('sync-done-msg');
+  if (doneEl) doneEl.textContent = done + ' קבצים נשלחו לתיבת הנכנסים של אבשי לאישור ‌';
   document.getElementById('badge-sync').textContent = errors || '';
   document.getElementById('badge-sync').style.display = errors ? 'block' : 'none';
   loadEODCounts();
