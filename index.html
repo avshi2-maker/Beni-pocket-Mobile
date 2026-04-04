@@ -258,6 +258,14 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
           <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">לחץ והחזק</div>
         </label>
 
+        <!-- 📄 PDF → Supabase storage directly -->
+        <label style="background:linear-gradient(135deg,#134e4a,#0d9488);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">📄</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">העלה PDF</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תוכנית · חוזה · דוח</div>
+          <input type="file" accept=".pdf,application/pdf" multiple style="display:none;" onchange="uploadPDFToSupabase(this)">
+        </label>
+
       </div>
 
 
@@ -540,6 +548,59 @@ async function confirmUpload() {
   _pendingUploadFiles = [];
 }
 
+async function uploadPDFToSupabase(input) {
+  var files = Array.from(input.files || []);
+  if (!files.length) return;
+  toast('📄 מעלה ' + files.length + ' PDF...');
+  var done = 0;
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    try {
+      // Upload directly to Supabase storage — 'app-assets' bucket, pdfs folder
+      var path = 'pdfs/beni_' + Date.now() + '_' + (file.name || 'doc.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+      toast('☁️ שולח: ' + file.name.substring(0,25));
+      var { data: storageData, error: storageErr } = await sb.storage
+        .from('app-assets')
+        .upload(path, file, { contentType: 'application/pdf', upsert: false });
+      if (storageErr) throw new Error('Storage: ' + storageErr.message);
+      
+      // Get public URL
+      var { data: urlData } = sb.storage.from('app-assets').getPublicUrl(path);
+      var publicUrl = urlData && urlData.publicUrl ? urlData.publicUrl : (SB_URL + '/storage/v1/object/public/app-assets/' + path);
+      
+      toast('✅ PDF הועלה — שומר ב-Supabase...');
+      
+      // Save to beni_notes
+      await sb.from('beni_notes').insert({
+        note_text: '📄 ' + (file.name || 'מסמך PDF'),
+        photo_url: publicUrl,
+        note_type: 'pdf',
+        color: 'green',
+        project_id: window._activeProjectId || null,
+        created_at: new Date().toISOString()
+      });
+      
+      // Save to asset_inbox
+      await fetch(SB_URL + '/rest/v1/asset_inbox', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          cloudinary_url: publicUrl,
+          file_name: file.name || 'document.pdf',
+          file_type: 'pdf',
+          project_id: window._activeProjectId || null,
+          status: 'pending',
+          uploaded_by: 'beni',
+          created_at: new Date().toISOString()
+        })
+      });
+      done++;
+    } catch(e) { toast('❌ ' + (e.message||'שגיאה'), 'error'); console.error('PDF upload:', e); }
+  }
+  input.value = '';
+  if (done > 0) toast('✅ ' + done + ' PDF נשמרו ביומן חכם');
+}
+
 async function quickUploadFromHome(input, type) {
   var files = Array.from(input.files || []);
   if (!files.length) return;
@@ -562,6 +623,8 @@ async function quickUploadFromHome(input, type) {
       fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
+      if (isVideo) fd.append('resource_type', 'video');
+      if (isAudio) fd.append('resource_type', 'video'); // Cloudinary uses 'video' for audio too
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Cloudinary error ' + res.status);
@@ -578,7 +641,7 @@ async function quickUploadFromHome(input, type) {
         headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
           cloudinary_url: displayUrl || data.secure_url,
-          file_name:      file.name || fname,
+          file_name:      file.name || ((isVideo?'video_':isAudio?'voice_':'photo_') + Date.now()),
           file_type:      isAudio ? 'audio' : isVideo ? 'video' : 'image',
           thumbnail_url:  thumbUrl || null,
           project_id:     window._activeProjectId || null,
@@ -592,7 +655,7 @@ async function quickUploadFromHome(input, type) {
       // ALSO save to beni_notes so it appears immediately in יומן חכם
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       await sb.from('beni_notes').insert({
-        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || fname)),
+        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()))),
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
         photo_url: displayUrl || data.secure_url,
         note_type: noteType,
