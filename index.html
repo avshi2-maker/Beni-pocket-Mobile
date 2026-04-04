@@ -227,10 +227,10 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <!-- Quick upload buttons — directly from home -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
         <label style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);display:block;">
-          <div style="font-size:26px;margin-bottom:4px;">📸</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">צלם / גלריה</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תמונה · וידאו</div>
-          <input type="file" accept="image/*,video/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'photo')">
+          <div style="font-size:26px;margin-bottom:4px;">📷</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">צלם עכשיו</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">פתח מצלמה</div>
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'photo')">
         </label>
         <label style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,0.3);display:block;">
           <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
@@ -240,15 +240,15 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         </label>
         <label style="background:linear-gradient(135deg,#134e4a,#0d9488);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(13,148,136,0.3);display:block;">
           <div style="font-size:26px;margin-bottom:4px;">📄</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">מסמך / PDF</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תוכנית · דוח</div>
-          <input type="file" accept=".pdf,.doc,.docx,image/*" style="display:none;" onchange="quickUploadFromHome(this,'doc')">
+          <div style="font-size:12px;font-weight:800;color:#fff;">תמונת מסמך</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">צלם דף / תוכנית</div>
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'doc')">
         </label>
         <label style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.3);display:block;">
-          <div style="font-size:26px;margin-bottom:4px;">📁</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">בחר מהגלריה</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">כל סוג קובץ</div>
-          <input type="file" accept="image/*,video/*,audio/*,.pdf" multiple style="display:none;" onchange="quickUploadFromHome(this,'any')">
+          <div style="font-size:26px;margin-bottom:4px;">🖼️</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">גלריה</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תמונות · וידאו</div>
+          <input type="file" accept="image/*,video/*" multiple style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
       </div>
 
@@ -443,6 +443,21 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   </div>
 </div>
 
+<!-- PREVIEW BEFORE UPLOAD MODAL -->
+<div class="modal-bg" id="preview-modal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;">
+    <div class="modal-title">📋 אשר העלאה</div>
+    <div id="preview-thumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;max-height:180px;overflow-y:auto;"></div>
+    <div id="preview-count" style="font-size:12px;color:var(--text3);margin-bottom:10px;text-align:center;"></div>
+    <div class="form-label">הערה (אופציונלי)</div>
+    <input class="inp" id="preview-caption" placeholder="על מה מדובר? ליקוי / חומר / אתר..." style="margin-bottom:14px;">
+    <div style="display:flex;gap:8px;">
+      <button class="ca primary" style="flex:2;padding:12px;font-size:14px;font-weight:900;" onclick="confirmUpload()">📤 העלה</button>
+      <button class="ca" style="flex:1;padding:12px;" onclick="closeModal('preview-modal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <!-- TEXT MEMO MODAL -->
 <div class="modal-bg" id="text-modal">
   <div class="modal">
@@ -471,6 +486,52 @@ const CLD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/u
 window.APP = { config: {} };
 
 // Quick upload from home screen — adds to sync queue and uploads immediately
+var _pendingUploadFiles = [];
+var _pendingUploadType  = 'photo';
+
+function previewBeforeUpload(input) {
+  var files = Array.from(input.files || []);
+  if (!files.length) return;
+  _pendingUploadFiles = files;
+  _pendingUploadType  = 'any';
+  var thumbs = document.getElementById('preview-thumbs');
+  var count  = document.getElementById('preview-count');
+  var cap    = document.getElementById('preview-caption');
+  thumbs.innerHTML = '';
+  cap.value = '';
+  files.forEach(function(f) {
+    var isVideo = f.type.startsWith('video/');
+    var div = document.createElement('div');
+    div.style.cssText = 'width:80px;height:80px;border-radius:8px;overflow:hidden;background:#1e1e35;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;';
+    if (isVideo) {
+      div.textContent = '🎬';
+    } else {
+      var img = document.createElement('img');
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      var reader = new FileReader();
+      reader.onload = function(e) { img.src = e.target.result; };
+      reader.readAsDataURL(f);
+      div.appendChild(img);
+    }
+    thumbs.appendChild(div);
+  });
+  count.textContent = files.length + ' קבצים נבחרו';
+  document.getElementById('preview-modal').classList.add('open');
+  input.value = '';
+}
+
+async function confirmUpload() {
+  var caption = document.getElementById('preview-caption').value.trim();
+  closeModal('preview-modal');
+  if (!_pendingUploadFiles.length) return;
+  // Create a fake input object to reuse quickUploadFromHome logic
+  var fakeInput = { files: _pendingUploadFiles, value: '' };
+  window._uploadCaption = caption;
+  await quickUploadFromHome(fakeInput, _pendingUploadType);
+  window._uploadCaption = '';
+  _pendingUploadFiles = [];
+}
+
 async function quickUploadFromHome(input, type) {
   var files = Array.from(input.files || []);
   if (!files.length) return;
@@ -519,7 +580,7 @@ async function quickUploadFromHome(input, type) {
       // ALSO save to beni_notes so it appears immediately in יומן חכם
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       await sb.from('beni_notes').insert({
-        note_text: (noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || fname),
+        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || fname)),
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
         photo_url: data.secure_url,
         note_type: noteType,
