@@ -556,44 +556,23 @@ async function quickUploadFromHome(input, type) {
       var isVideo = file.type.startsWith('video/');
       var isAudio = file.type.startsWith('audio/');
       var folder  = isAudio ? 'beni_voice' : 'beni_field';
-      // Use correct endpoint per file type
-      var endpoint = isVideo || isAudio
-        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
-        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
-      // Detect actual file type — don't force mp4 on non-mp4 Android videos
-      var origType = file.type || '';
-      var ext   = isAudio ? 'mp3' : isVideo ? (origType.includes('mp4') ? 'mp4' : 'mp4') : 'jpg';
-      var ftype = isAudio ? 'audio/mpeg' : isVideo ? (origType || 'video/mp4') : 'image/jpeg';
-      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now() + '.' + ext;
+      // Use /auto/upload — handles all file types with one endpoint
+      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
       var fd = new FormData();
-      // For video: use original file without type override to preserve format
-      if (isVideo) {
-        fd.append('file', file);
-      } else {
-        fd.append('file', new File([file], fname, { type: ftype }));
-      }
+      fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
-      // For images (including HEIC): request JPG conversion via eager transform
-      if (!isVideo && !isAudio) {
-        fd.append('eager', 'f_jpg,q_auto,w_1200');
-        fd.append('eager_async', 'false');
-      }
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Cloudinary error ' + res.status);
       toast('✅ ענן OK — שומר ב-Supabase...');
-      // Use eager JPG version for HEIC preview if available
-      var displayUrl = data.secure_url;
-      if (!isVideo && !isAudio && data.eager && data.eager[0] && data.eager[0].secure_url) {
-        displayUrl = data.eager[0].secure_url; // JPG version from eager transform
-      } else if (!isVideo && !isAudio) {
-        // Force JPG via Cloudinary URL transformation
-        displayUrl = data.secure_url.replace('/upload/', '/upload/f_jpg,q_auto,w_1200/');
-      }
+      // Build display URL - force JPG for images via URL transformation (works on HEIC too)
+      var displayUrl = (!isVideo && !isAudio)
+        ? data.secure_url.replace('/upload/', '/upload/f_jpg,q_auto,w_1200/')
+        : data.secure_url;
       var thumbUrl = isVideo
         ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,so_1/')
-        : (!isAudio ? displayUrl.replace('/upload/', '/upload/w_200,h_200,c_fill/').replace('/upload/f_jpg,q_auto,w_1200/', '/upload/w_200,h_200,c_fill/') : '');
+        : (!isAudio ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,f_jpg/')  : '');
       var inboxRes = await fetch(SB_URL + '/rest/v1/asset_inbox', {
         method: 'POST',
         headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
