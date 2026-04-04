@@ -258,10 +258,14 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div id="home-pending"><div class="empty">טוען...</div></div>
 
       <div class="section-title">סיכום יום</div>
-      <button class="big-btn btn-eod" onclick="switchTab('eod')" style="margin-top:0;">
+      <button class="big-btn btn-eod" onclick="switchTab('eod')" style="margin-bottom:12px;">
         <span class="bico">🧠</span>
-        <div class="btxt"><span class="bmain">שלח למערכת ניהול עסקי — בני פרסקי</span><span class="bsub">AI מרכז שיחות+מזכרים+תמונות+סרטונים+מדידות+יומן → ניתוח ודוחות לפי פרויקטים, ייעדים ותוכניות</span></div>
+        <div class="btxt">
+          <span class="bmain">שלח למערכת ניהול עסקי — בני פרסקי</span>
+          <span class="bsub">AI מרכז שיחות+מזכרים+תמונות+יומן → ניתוח ודוחות</span>
+        </div>
       </button>
+
     </div>
 
     <!-- CALLS -->
@@ -398,13 +402,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div class="ni">✅</div><div class="nl">משימות</div>
       <div class="nav-badge" id="badge-tasks" style="display:none">0</div>
     </div>
-    <div class="nav-item" onclick="switchTab('eod')" id="nav-eod">
-      <div class="ni">📤</div><div class="nl">שלח</div>
-    </div>
-    <div class="nav-item" onclick="switchTab('sync')" id="nav-sync">
-      <div class="ni">🔄</div><div class="nl">סנכרן</div>
-      <div class="nav-badge" id="badge-sync" style="display:none">0</div>
-    </div>
+
   </div>
 
   <!-- PHOTO NOTE MODAL -->
@@ -570,26 +568,41 @@ window._activeProjectId   = localStorage.getItem('beni_active_project_id')   || 
 window._activeProjectName = localStorage.getItem('beni_active_project_name') || '';
 
 async function loadProjectsForSelector() {
-  try {
-    var { data: projects, error: pErr } = await sbQ('projects', 'status=eq.active&select=id,project_name&order=project_name.asc');
-    if (pErr && pErr.message) throw new Error(pErr.message);
-    projects = projects || [];
-    var sel = document.getElementById('active-project-sel');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">⬇️ בחר פרויקט פעיל</option>';
-    projects.forEach(function(p) {
-      var opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.project_name;
-      if (p.id === window._activeProjectId) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    // Update header display
-    if (window._activeProjectName) {
-      var hproj = document.getElementById('h-proj');
-      if (hproj) hproj.textContent = '🏗️ ' + window._activeProjectName;
+  // Retry up to 3 times — DataCloneError from 1Password usually clears after 1st attempt
+  for (var attempt = 0; attempt < 3; attempt++) {
+    try {
+      var result = await sb
+        .from('projects')
+        .select('id,project_name')
+        .eq('status','active')
+        .order('project_name', { ascending: true });
+      var projects = (result.data || []);
+      var sel = document.getElementById('active-project-sel');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">⬇️ בחר פרויקט פעיל</option>';
+      projects.forEach(function(p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.project_name;
+        if (p.id === window._activeProjectId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      if (window._activeProjectName) {
+        var hproj = document.getElementById('h-proj');
+        if (hproj) hproj.textContent = '🏗️ ' + window._activeProjectName;
+      }
+      return; // success — stop retrying
+    } catch(e) {
+      var isCloneErr = e && (e.name === 'DataCloneError' || (e.message||'').includes('postMessage') || (e.message||'').includes('cloned'));
+      if (isCloneErr && attempt < 2) {
+        await new Promise(function(r){ setTimeout(r, 1000); }); // wait 1s and retry
+        continue;
+      }
+      // Not a DataCloneError or out of retries — give up silently
+      console.warn('loadProjects failed:', e.message || e);
+      return;
     }
-  } catch(e) { console.error('loadProjects:', e); }
+  }
 }
 
 function setActiveProject(projectId) {
@@ -690,7 +703,7 @@ async function init() {
   } catch(e) {}
   await Promise.all([loadHomePending(), loadCalls(), loadVoiceMemos(), loadTasks(), loadEODCounts()]);
     // Load projects separately after main boot to avoid DataCloneError timing
-    setTimeout(loadProjectsForSelector, 500);
+    setTimeout(loadProjectsForSelector, 1500);
 }
 
 function updateClock() {
