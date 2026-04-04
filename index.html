@@ -560,26 +560,45 @@ async function quickUploadFromHome(input, type) {
       var endpoint = isVideo || isAudio
         ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
         : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
-      var ext   = isAudio ? 'mp3' : isVideo ? 'mp4' : 'jpg';
-      var ftype = isAudio ? 'audio/mpeg' : isVideo ? 'video/mp4' : 'image/jpeg';
+      // Detect actual file type — don't force mp4 on non-mp4 Android videos
+      var origType = file.type || '';
+      var ext   = isAudio ? 'mp3' : isVideo ? (origType.includes('mp4') ? 'mp4' : 'mp4') : 'jpg';
+      var ftype = isAudio ? 'audio/mpeg' : isVideo ? (origType || 'video/mp4') : 'image/jpeg';
       var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now() + '.' + ext;
       var fd = new FormData();
-      // Re-wrap with standard mime type — required for Cloudinary preset validation
-      fd.append('file', new File([file], fname, { type: ftype }));
+      // For video: use original file without type override to preserve format
+      if (isVideo) {
+        fd.append('file', file);
+      } else {
+        fd.append('file', new File([file], fname, { type: ftype }));
+      }
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
+      // For images (including HEIC): request JPG conversion via eager transform
+      if (!isVideo && !isAudio) {
+        fd.append('eager', 'f_jpg,q_auto,w_1200');
+        fd.append('eager_async', 'false');
+      }
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Cloudinary error ' + res.status);
       toast('✅ ענן OK — שומר ב-Supabase...');
+      // Use eager JPG version for HEIC preview if available
+      var displayUrl = data.secure_url;
+      if (!isVideo && !isAudio && data.eager && data.eager[0] && data.eager[0].secure_url) {
+        displayUrl = data.eager[0].secure_url; // JPG version from eager transform
+      } else if (!isVideo && !isAudio) {
+        // Force JPG via Cloudinary URL transformation
+        displayUrl = data.secure_url.replace('/upload/', '/upload/f_jpg,q_auto,w_1200/');
+      }
       var thumbUrl = isVideo
         ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,so_1/')
-        : (!isAudio ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill/') : '');
+        : (!isAudio ? displayUrl.replace('/upload/', '/upload/w_200,h_200,c_fill/').replace('/upload/f_jpg,q_auto,w_1200/', '/upload/w_200,h_200,c_fill/') : '');
       var inboxRes = await fetch(SB_URL + '/rest/v1/asset_inbox', {
         method: 'POST',
         headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
-          cloudinary_url: data.secure_url,
+          cloudinary_url: displayUrl || data.secure_url,
           file_name:      file.name || fname,
           file_type:      isAudio ? 'audio' : isVideo ? 'video' : 'image',
           thumbnail_url:  thumbUrl || null,
@@ -596,7 +615,7 @@ async function quickUploadFromHome(input, type) {
       await sb.from('beni_notes').insert({
         note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || fname)),
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
-        photo_url: data.secure_url,
+        photo_url: displayUrl || data.secure_url,
         note_type: noteType,
         project_id: window._activeProjectId || null,
         created_at: new Date().toISOString()
@@ -1459,7 +1478,7 @@ async function uploadSyncQueue() {
         method: 'POST',
         headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
-          cloudinary_url: data.secure_url,
+          cloudinary_url: displayUrl || data.secure_url,
           file_name:      item.name,
           file_type:      item.type,
           thumbnail_url:  thumbUrl,
