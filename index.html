@@ -552,6 +552,7 @@ async function quickUploadFromHome(input, type) {
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
     try {
+      toast('☁️ שולח לענן: ' + (file.name||'קובץ').substring(0,20));
       var isVideo = file.type.startsWith('video/');
       var isAudio = file.type.startsWith('audio/');
       var folder  = isAudio ? 'beni_voice' : 'beni_field';
@@ -569,11 +570,12 @@ async function quickUploadFromHome(input, type) {
       fd.append('folder', folder);
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
-      if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Upload failed');
+      if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Cloudinary error ' + res.status);
+      toast('✅ ענן OK — שומר ב-Supabase...');
       var thumbUrl = isVideo
         ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,so_1/')
         : (!isAudio ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill/') : '');
-      await fetch(SB_URL + '/rest/v1/asset_inbox', {
+      var inboxRes = await fetch(SB_URL + '/rest/v1/asset_inbox', {
         method: 'POST',
         headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
@@ -581,12 +583,14 @@ async function quickUploadFromHome(input, type) {
           file_name:      file.name || fname,
           file_type:      isAudio ? 'audio' : isVideo ? 'video' : 'image',
           thumbnail_url:  thumbUrl || null,
-          project_id:     window._activeProjectId,
+          project_id:     window._activeProjectId || null,
           status:         'pending',
           uploaded_by:    'beni',
           created_at:     new Date().toISOString()
         })
       });
+      if (!inboxRes.ok) { var err = await inboxRes.text(); throw new Error('Supabase inbox: ' + inboxRes.status + ' ' + err.substring(0,80)); }
+      toast('📥 נשמר בתיבת נכנסים ✅');
       // ALSO save to beni_notes so it appears immediately in יומן חכם
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       await sb.from('beni_notes').insert({
