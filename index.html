@@ -152,14 +152,24 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 <div id="app">
 
   <!-- HEADER -->
-  <div id="header" style="background:#1a3d5c;border-bottom:1px solid rgba(201,168,76,0.3);">
-    <div>
-      <div class="h-title" style="font-size:17px;font-weight:900;color:#fde68a;">👷 בני פוקט</div>
-      <div class="h-proj" id="h-proj" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;">📍 טוען...</div>
+  <div id="header" style="background:#1a3d5c;border-bottom:1px solid rgba(201,168,76,0.3);flex-direction:column;gap:6px;padding:10px 14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+      <div>
+        <div class="h-title" style="font-size:17px;font-weight:900;color:#fde68a;">👷 בני פוקט</div>
+        <div class="h-proj" id="h-proj" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;">📍 טוען...</div>
+      </div>
+      <div style="text-align:left;">
+        <div class="h-time" id="h-time" style="font-size:18px;font-weight:900;color:#c9a84c;">--:--</div>
+        <div id="h-date" style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;"></div>
+      </div>
     </div>
-    <div style="text-align:left;">
-      <div class="h-time" id="h-time" style="font-size:18px;font-weight:900;color:#c9a84c;">--:--</div>
-      <div id="h-date" style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;"></div>
+    <!-- Project selector — every item Beni creates gets tagged to this project -->
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <span style="font-size:11px;color:#fde68a;font-weight:900;white-space:nowrap;">🏗️</span>
+      <select id="active-project-sel" onchange="setActiveProject(this.value)"
+        style="flex:1;background:rgba(0,0,0,0.3);border:1.5px solid rgba(201,168,76,0.5);color:#fde68a;padding:6px 10px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;direction:rtl;font-weight:700;">
+        <option value="">⬇️ בחר פרויקט פעיל</option>
+      </select>
     </div>
   </div>
 
@@ -433,6 +443,89 @@ const CLD_PRESET = 'beni_field';
 const CLD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
 
 window.APP = { config: {} };
+
+// Suppress DataCloneError from 1Password / browser extensions
+window.addEventListener('unhandledrejection', function(e) {
+  if (e.reason && (e.reason.name === 'DataCloneError' ||
+      (e.reason.message||'').includes('postMessage') ||
+      (e.reason.message||'').includes('cloned'))) { e.preventDefault(); }
+});
+
+// sbQ — safe Supabase read: fetch with XHR fallback
+function sbQ(tableName, queryString) {
+  var url = SB_URL + '/rest/v1/' + tableName + (queryString ? '?' + queryString : '');
+  var hdrs = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Accept': 'application/json' };
+  return fetch(url, { method: 'GET', headers: hdrs, mode: 'cors' })
+    .then(function(r) {
+      return r.json().then(function(d) {
+        if (r.ok) return { data: Array.isArray(d) ? d : (d.data || []), error: null };
+        return { data: [], error: { message: d.message || r.statusText } };
+      });
+    })
+    .catch(function() {
+      return new Promise(function(resolve) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.setRequestHeader('apikey', SB_KEY);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.timeout = 15000;
+        xhr.onload = function() {
+          try {
+            var d = JSON.parse(xhr.responseText);
+            resolve(xhr.status < 300 ? { data: Array.isArray(d) ? d : (d.data||[]), error: null } : { data: [], error: { message: d.message || xhr.responseText } });
+          } catch(e) { resolve({ data: [], error: { message: 'parse error' } }); }
+        };
+        xhr.onerror  = function() { resolve({ data: [], error: { message: 'Network error' } }); };
+        xhr.ontimeout= function() { resolve({ data: [], error: { message: 'Timeout' } }); };
+        xhr.send();
+      });
+    });
+}
+window._activeProjectId   = localStorage.getItem('beni_active_project_id')   || null;
+window._activeProjectName = localStorage.getItem('beni_active_project_name') || '';
+
+async function loadProjectsForSelector() {
+  try {
+    var { data: projects, error: pErr } = await sbQ('projects', 'status=eq.active&select=id,project_name&order=project_name.asc');
+    if (pErr && pErr.message) throw new Error(pErr.message);
+    projects = projects || [];
+    var sel = document.getElementById('active-project-sel');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">⬇️ בחר פרויקט פעיל</option>';
+    projects.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.project_name;
+      if (p.id === window._activeProjectId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // Update header display
+    if (window._activeProjectName) {
+      var hproj = document.getElementById('h-proj');
+      if (hproj) hproj.textContent = '🏗️ ' + window._activeProjectName;
+    }
+  } catch(e) { console.error('loadProjects:', e); }
+}
+
+function setActiveProject(projectId) {
+  var sel = document.getElementById('active-project-sel');
+  var name = sel ? (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '') : '';
+  window._activeProjectId   = projectId || null;
+  window._activeProjectName = name || '';
+  if (projectId) {
+    localStorage.setItem('beni_active_project_id',   projectId);
+    localStorage.setItem('beni_active_project_name', name);
+    var hproj = document.getElementById('h-proj');
+    if (hproj) hproj.textContent = '🏗️ ' + name;
+    toast('✅ פרויקט פעיל: ' + name);
+  } else {
+    localStorage.removeItem('beni_active_project_id');
+    localStorage.removeItem('beni_active_project_name');
+    var hproj = document.getElementById('h-proj');
+    if (hproj) hproj.textContent = '📍 ללא פרויקט פעיל';
+  }
+}
 let ANTHROPIC_KEY = null;
 let currentTab = 'home';
 let recInterval = null;
@@ -512,6 +605,8 @@ async function init() {
     }
   } catch(e) {}
   await Promise.all([loadHomePending(), loadCalls(), loadVoiceMemos(), loadTasks(), loadEODCounts()]);
+    // Load projects separately after main boot to avoid DataCloneError timing
+    setTimeout(loadProjectsForSelector, 500);
 }
 
 function updateClock() {
@@ -719,7 +814,7 @@ async function saveCall() {
   const note  = document.getElementById('call-note').value.trim();
   if (!name && !phone) { toast('הכנס שם או מספר'); return; }
   try {
-    await sb.from('call_log').insert({ caller_name: name || 'לא ידוע', phone: phone || null, notes: note || null, direction: callDirection, created_at: new Date().toISOString() });
+    await sb.from('call_log').insert({ caller_name: name || 'לא ידוע', phone: phone || null, notes: note || null, direction: callDirection, project_id: window._activeProjectId || null, created_at: new Date().toISOString() });
     closeModal('call-modal');
     toast('✅ שיחה נשמרה');
     // Auto-create task if missed call with note
@@ -840,6 +935,8 @@ async function stopRec(e) {
       note_text: '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0'),
       color: 'purple',
       photo_url: audioUrl,
+      note_type: 'audio',
+      project_id: window._activeProjectId || null,
       created_at: new Date().toISOString()
     });
 
@@ -847,6 +944,7 @@ async function stopRec(e) {
     await sb.from('voice_memos').insert({
       transcript: audioUrl, duration_sec: dur,
       ai_summary: 'הקלטה קולית — לחץ להפעלה',
+      project_id: window._activeProjectId || null,
       is_processed: false, created_at: new Date().toISOString()
     });
 
@@ -986,6 +1084,8 @@ async function savePhotoMemo() {
       note_text: note,
       color: isVideo ? 'purple' : 'blue',
       photo_url: mediaUrl,
+      note_type: isVideo ? 'video' : 'photo',
+      project_id: window._activeProjectId || null,
       created_at: new Date().toISOString()
     });
     if (dbErr) { toast('שגיאת שמירה: ' + dbErr.message); return; }
@@ -1005,7 +1105,7 @@ function openTextMemo() {
 async function saveTextMemo() {
   const text = document.getElementById('text-memo-inp').value.trim();
   if (!text) return;
-  await sb.from('beni_notes').insert({ note_text: text, color: 'yellow', created_at: new Date().toISOString() });
+  await sb.from('beni_notes').insert({ note_text: text, color: 'yellow', note_type: 'text', project_id: window._activeProjectId || null, created_at: new Date().toISOString() });
   closeModal('text-modal');
   toast('💾 נשמר');
   loadHomePending(); loadEODCounts();
@@ -1182,6 +1282,7 @@ async function uploadSyncQueue() {
           file_type:      item.type,
           thumbnail_url:  thumbUrl,
           duration_sec:   item.duration || null,
+          project_id:     window._activeProjectId || null,
           status:         'pending',
           uploaded_by:    'beni',
           created_at:     new Date().toISOString()
