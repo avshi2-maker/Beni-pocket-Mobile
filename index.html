@@ -152,7 +152,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 <div id="app">
 
   <!-- HEADER -->
-  <div id="header" style="background:#1a3d5c;border-bottom:1px solid rgba(201,168,76,0.3);flex-direction:column;gap:6px;padding:10px 14px;">
+  <div id="header" style="background:#1a3d5c;border-bottom:1px solid rgba(201,168,76,0.3);display:flex;flex-direction:column;gap:6px;padding:10px 14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
       <div>
         <div class="h-title" style="font-size:17px;font-weight:900;color:#fde68a;">👷 בני פוקט</div>
@@ -167,7 +167,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
     <div style="display:flex;align-items:center;gap:8px;width:100%;">
       <span style="font-size:11px;color:#fde68a;font-weight:900;white-space:nowrap;">🏗️</span>
       <select id="active-project-sel" onchange="setActiveProject(this.value)"
-        style="flex:1;background:rgba(0,0,0,0.3);border:1.5px solid rgba(201,168,76,0.5);color:#fde68a;padding:6px 10px;border-radius:8px;font-family:Heebo,sans-serif;font-size:12px;direction:rtl;font-weight:700;">
+        style="flex:1;background:#1a3d5c;border:2px solid #c9a84c;color:#fde68a;padding:10px 12px;border-radius:10px;font-family:Heebo,sans-serif;font-size:14px;direction:rtl;font-weight:700;-webkit-appearance:menulist;appearance:menulist;min-height:44px;cursor:pointer;">
         <option value="">⬇️ בחר פרויקט פעיל</option>
       </select>
     </div>
@@ -223,6 +223,34 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <span class="bico">✍️</span>
         <div class="btxt"><span class="bmain">מזכר מהיר בהקלדה ושמירה</span><span class="bsub">הקלד — נשמר מיד למערכת</span></div>
       </button>
+
+      <!-- Quick upload buttons — directly from home -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <label style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">📸</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">צלם / גלריה</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תמונה · וידאו</div>
+          <input type="file" accept="image/*,video/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'photo')">
+        </label>
+        <label style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,0.3);display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">הקלט קול</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">מזכר קולי</div>
+          <input type="file" accept="audio/*" style="display:none;" onchange="quickUploadFromHome(this,'audio')">
+        </label>
+        <label style="background:linear-gradient(135deg,#134e4a,#0d9488);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(13,148,136,0.3);display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">📄</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">מסמך / PDF</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תוכנית · דוח</div>
+          <input type="file" accept=".pdf,.doc,.docx,image/*" style="display:none;" onchange="quickUploadFromHome(this,'doc')">
+        </label>
+        <label style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.3);display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">📁</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">בחר מהגלריה</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">כל סוג קובץ</div>
+          <input type="file" accept="image/*,video/*,audio/*,.pdf" multiple style="display:none;" onchange="quickUploadFromHome(this,'any')">
+        </label>
+      </div>
 
 
       <div class="divider"></div>
@@ -443,6 +471,62 @@ const CLD_PRESET = 'beni_field';
 const CLD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
 
 window.APP = { config: {} };
+
+// Quick upload from home screen — adds to sync queue and uploads immediately
+async function quickUploadFromHome(input, type) {
+  var files = Array.from(input.files || []);
+  if (!files.length) return;
+  if (!window._activeProjectId) {
+    toast('⚠️ בחר פרויקט פעיל תחילה');
+    return;
+  }
+  toast('📤 מעלה ' + files.length + ' קבצים...');
+  var done = 0;
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    try {
+      var isVideo = file.type.startsWith('video/');
+      var isAudio = file.type.startsWith('audio/');
+      var folder  = isAudio ? 'beni_voice' : 'beni_field';
+      var endpoint = isAudio || isVideo
+        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
+      var ext  = isAudio ? '.mp3' : isVideo ? '.mp4' : '.jpg';
+      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now() + ext;
+      var ftype = isAudio ? 'audio/mpeg' : isVideo ? 'video/mp4' : 'image/jpeg';
+      var fd = new FormData();
+      fd.append('file', new File([file], fname, { type: ftype }));
+      fd.append('upload_preset', CLD_PRESET);
+      fd.append('folder', folder);
+      var res  = await fetch(endpoint, { method: 'POST', body: fd });
+      var data = await res.json();
+      if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Upload failed');
+      var thumbUrl = isVideo
+        ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill,so_1/')
+        : (!isAudio ? data.secure_url.replace('/upload/', '/upload/w_200,h_200,c_fill/') : '');
+      await fetch(SB_URL + '/rest/v1/asset_inbox', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          cloudinary_url: data.secure_url,
+          file_name:      file.name || fname,
+          file_type:      isAudio ? 'audio' : isVideo ? 'video' : 'image',
+          thumbnail_url:  thumbUrl || null,
+          project_id:     window._activeProjectId,
+          status:         'pending',
+          uploaded_by:    'beni',
+          created_at:     new Date().toISOString()
+        })
+      });
+      done++;
+    } catch(e) { toast('❌ שגיאה: ' + e.message); }
+  }
+  input.value = '';
+  if (done > 0) {
+    toast('✅ ' + done + ' קבצים נשלחו לתיבת הנכנסים');
+    loadEODCounts();
+  }
+}
 
 // Suppress DataCloneError from 1Password / browser extensions
 window.addEventListener('unhandledrejection', function(e) {
