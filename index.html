@@ -224,32 +224,40 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <div class="btxt"><span class="bmain">מזכר מהיר בהקלדה ושמירה</span><span class="bsub">הקלד — נשמר מיד למערכת</span></div>
       </button>
 
-      <!-- Quick upload buttons — directly from home -->
+      <!-- Quick upload buttons — ALL go through preview modal first -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-        <label style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);display:block;">
+
+        <!-- 📷 Photo camera -->
+        <label style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
           <div style="font-size:26px;margin-bottom:4px;">📷</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">צלם עכשיו</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">צלם תמונה</div>
           <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">פתח מצלמה</div>
-          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'photo')">
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
-        <label style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,0.3);display:block;">
-          <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">הקלט קול</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">מזכר קולי</div>
-          <input type="file" accept="audio/*" style="display:none;" onchange="quickUploadFromHome(this,'audio')">
+
+        <!-- 🎬 Video camera -->
+        <label style="background:linear-gradient(135deg,#4c1d95,#7c3aed);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
+          <div style="font-size:26px;margin-bottom:4px;">🎬</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">צלם וידאו</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">פתח מצלמה</div>
+          <input type="file" accept="video/*" capture="environment" style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
-        <label style="background:linear-gradient(135deg,#134e4a,#0d9488);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(13,148,136,0.3);display:block;">
-          <div style="font-size:26px;margin-bottom:4px;">📄</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">תמונת מסמך</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">צלם דף / תוכנית</div>
-          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="quickUploadFromHome(this,'doc')">
-        </label>
-        <label style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.3);display:block;">
+
+        <!-- 🖼️ Gallery -->
+        <label style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
           <div style="font-size:26px;margin-bottom:4px;">🖼️</div>
           <div style="font-size:12px;font-weight:800;color:#fff;">גלריה</div>
           <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תמונות · וידאו</div>
           <input type="file" accept="image/*,video/*" multiple style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
+
+        <!-- 🎙️ Voice memo (mic hold) -->
+        <label style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;" onclick="switchTab('home'); setTimeout(function(){ document.getElementById('mic-btn') && document.getElementById('mic-btn').scrollIntoView({behavior:'smooth'}); },200);">
+          <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">הקלטת קול</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">לחץ והחזק</div>
+        </label>
+
       </div>
 
 
@@ -547,16 +555,14 @@ async function quickUploadFromHome(input, type) {
       var isVideo = file.type.startsWith('video/');
       var isAudio = file.type.startsWith('audio/');
       var folder  = isAudio ? 'beni_voice' : 'beni_field';
-      var endpoint = isAudio || isVideo
-        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
-        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
-      var ext  = isAudio ? '.mp3' : isVideo ? '.mp4' : '.jpg';
-      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now() + ext;
-      var ftype = isAudio ? 'audio/mpeg' : isVideo ? 'video/mp4' : 'image/jpeg';
+      // Use /auto/upload — works for image, video, audio without preset type restrictions
+      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
+      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now();
       var fd = new FormData();
-      fd.append('file', new File([file], fname, { type: ftype }));
+      fd.append('file', file);  // keep original file — no re-wrapping
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
+      fd.append('public_id', fname);
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Upload failed');
