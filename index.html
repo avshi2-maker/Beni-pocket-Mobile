@@ -555,14 +555,18 @@ async function quickUploadFromHome(input, type) {
       var isVideo = file.type.startsWith('video/');
       var isAudio = file.type.startsWith('audio/');
       var folder  = isAudio ? 'beni_voice' : 'beni_field';
-      // Use /auto/upload — works for image, video, audio without preset type restrictions
-      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
-      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now();
+      // Use correct endpoint per file type
+      var endpoint = isVideo || isAudio
+        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
+      var ext   = isAudio ? 'mp3' : isVideo ? 'mp4' : 'jpg';
+      var ftype = isAudio ? 'audio/mpeg' : isVideo ? 'video/mp4' : 'image/jpeg';
+      var fname = (isAudio ? 'voice_' : isVideo ? 'video_' : 'photo_') + Date.now() + '.' + ext;
       var fd = new FormData();
-      fd.append('file', file);  // keep original file — no re-wrapping
+      // Re-wrap with standard mime type — required for Cloudinary preset validation
+      fd.append('file', new File([file], fname, { type: ftype }));
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
-      fd.append('public_id', fname);
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Upload failed');
@@ -594,7 +598,7 @@ async function quickUploadFromHome(input, type) {
         created_at: new Date().toISOString()
       });
       done++;
-    } catch(e) { toast('❌ שגיאה: ' + e.message); console.error(e); }
+    } catch(e) { toast('❌ ' + (e.message||'שגיאה לא ידועה'), 'error'); console.error('upload error:', e); }
   }
   input.value = '';
   if (done > 0) {
