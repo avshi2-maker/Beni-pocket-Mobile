@@ -777,10 +777,10 @@ async function init() {
     if (APP.config.manager_name) {
       document.getElementById('h-proj').textContent = '👷 ' + APP.config.manager_name;
     }
-  } catch(e) {}
+    // Load projects in same context as app_config — avoids DataCloneError
+    await loadProjectsForSelector();
+  } catch(e) { console.warn('init config:', e.message); }
   await Promise.all([loadHomePending(), loadCalls(), loadVoiceMemos(), loadTasks(), loadEODCounts()]);
-    // Load projects separately after main boot to avoid DataCloneError timing
-    setTimeout(loadProjectsForSelector, 1500);
 }
 
 function updateClock() {
