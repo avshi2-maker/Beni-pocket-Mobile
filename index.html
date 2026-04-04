@@ -475,8 +475,8 @@ async function quickUploadFromHome(input, type) {
   var files = Array.from(input.files || []);
   if (!files.length) return;
   if (!window._activeProjectId) {
-    toast('⚠️ בחר פרויקט פעיל תחילה');
-    return;
+    toast('⚠️ ממליץ לבחור פרויקט — מעלה ללא שיוך');
+    // Continue anyway — items land in מגוון fallout tab
   }
   toast('📤 מעלה ' + files.length + ' קבצים...');
   var done = 0;
@@ -516,12 +516,22 @@ async function quickUploadFromHome(input, type) {
           created_at:     new Date().toISOString()
         })
       });
+      // ALSO save to beni_notes so it appears immediately in יומן חכם
+      var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
+      await sb.from('beni_notes').insert({
+        note_text: (noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || fname),
+        color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
+        photo_url: data.secure_url,
+        note_type: noteType,
+        project_id: window._activeProjectId || null,
+        created_at: new Date().toISOString()
+      });
       done++;
-    } catch(e) { toast('❌ שגיאה: ' + e.message); }
+    } catch(e) { toast('❌ שגיאה: ' + e.message); console.error(e); }
   }
   input.value = '';
   if (done > 0) {
-    toast('✅ ' + done + ' קבצים נשלחו לתיבת הנכנסים');
+    toast('✅ ' + done + ' קבצים נשמרו ביומן חכם');
     loadEODCounts();
   }
 }
