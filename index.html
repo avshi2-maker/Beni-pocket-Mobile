@@ -251,12 +251,12 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
           <input type="file" accept="image/*,video/*,audio/*" multiple style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
 
-        <!-- 🎙️ Voice memo (mic hold) -->
-        <button onclick="switchTab('home'); setTimeout(function(){ var mb=document.getElementById('mic-btn'); if(mb) mb.scrollIntoView({behavior:'smooth',block:'center'}); },300);"
+        <!-- 🎙️ Voice — direct to native recorder -->
+        <button onclick="showToast('פתח את אפליקציית ההקלטה בנייד → הקלט → שמור → חזור לכאן → גלריה', 'success');"
           style="background:linear-gradient(135deg,#78350f,#d97706);border:none;border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;width:100%;">
           <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
           <div style="font-size:12px;font-weight:800;color:#fff;">הקלטת קול</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">לחץ והחזק על המיקרופון</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">הקלט באפליקציה → שמור → גלריה</div>
         </button>
 
         <!-- 📄 PDF → Supabase storage directly -->
@@ -500,6 +500,114 @@ const CLD_CLOUD = 'dqdku88vv';
 const CLD_PRESET = 'beni_field';
 const CLD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
 
+
+function formatElevenLabsTranscript(data) {
+  // ElevenLabs returns: { words: [{text, type, speaker_id, start, end}], transcript: "..." }
+  if (!data) return '';
+  
+  // Try word-level with speaker diarization
+  if (data.words && data.words.length) {
+    var lines = [];
+    var currentSpeaker = null;
+    var currentLine = '';
+    var currentStart = 0;
+    
+    data.words.forEach(function(w) {
+      if (w.type === 'spacing') return;
+      var speaker = w.speaker_id || 'Speaker';
+      var speakerLabel = speaker === 'speaker_0' ? 'דובר 1' : speaker === 'speaker_1' ? 'דובר 2' : speaker;
+      
+      if (speaker !== currentSpeaker) {
+        if (currentLine.trim()) {
+          var ts = Math.floor(currentStart);
+          var mm = Math.floor(ts/60), ss = ts%60;
+          lines.push('[' + String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0') + '] ' + speakerLabel + ': ' + currentLine.trim());
+        }
+        currentSpeaker = speaker;
+        currentLine = '';
+        currentStart = w.start || 0;
+      }
+      currentLine += (currentLine ? ' ' : '') + (w.text || '');
+    });
+    
+    if (currentLine.trim()) {
+      var ts2 = Math.floor(currentStart);
+      var mm2 = Math.floor(ts2/60), ss2 = ts2%60;
+      var spLabel = currentSpeaker === 'speaker_0' ? 'דובר 1' : currentSpeaker === 'speaker_1' ? 'דובר 2' : currentSpeaker || 'דובר';
+      lines.push('[' + String(mm2).padStart(2,'0') + ':' + String(ss2).padStart(2,'0') + '] ' + spLabel + ': ' + currentLine.trim());
+    }
+    
+    if (lines.length) return lines.join('\n');
+  }
+  
+  // Fallback to plain transcript
+  return data.transcript || data.text || '';
+}
+
+function showTranscriptModal(transcript, filename) {
+  // Remove existing modal
+  var existing = document.getElementById('transcript-modal-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'transcript-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:20px;';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#1e1e35;border-radius:20px 20px 16px 16px;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;font-family:Heebo,sans-serif;direction:rtl;padding:20px;';
+
+  // Header
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+  hdr.innerHTML = '<div style="font-size:15px;font-weight:900;color:#c4b5fd;">📝 תמלול הקלטה</div>';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;';
+  closeBtn.onclick = function() { overlay.remove(); };
+  hdr.appendChild(closeBtn);
+  box.appendChild(hdr);
+
+  // Filename
+  if (filename) {
+    var fn = document.createElement('div');
+    fn.style.cssText = 'font-size:11px;color:#555;margin-bottom:10px;';
+    fn.textContent = '🎙️ ' + filename;
+    box.appendChild(fn);
+  }
+
+  // Transcript text
+  var txt = document.createElement('div');
+  txt.style.cssText = 'font-size:13px;color:#e2e8f0;line-height:1.8;background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;margin-bottom:14px;white-space:pre-wrap;';
+  txt.textContent = transcript;
+  box.appendChild(txt);
+
+  // Action buttons
+  var btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+
+  // Copy button
+  var copyBtn = document.createElement('button');
+  copyBtn.textContent = '📋 העתק';
+  copyBtn.style.cssText = 'flex:1;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:12px;border-radius:10px;cursor:pointer;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;';
+  copyBtn.onclick = function() {
+    navigator.clipboard.writeText(transcript).then(function(){ toast('✅ הועתק'); });
+  };
+  btns.appendChild(copyBtn);
+
+  // Close button
+  var doneBtn = document.createElement('button');
+  doneBtn.textContent = '✅ סגור';
+  doneBtn.style.cssText = 'flex:1;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);color:#86efac;padding:12px;border-radius:10px;cursor:pointer;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;';
+  doneBtn.onclick = function() { overlay.remove(); };
+  btns.appendChild(doneBtn);
+
+  box.appendChild(btns);
+  overlay.appendChild(box);
+  // Close on backdrop tap
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 window.APP = { config: {} };
 
 // Quick upload from home screen — adds to sync queue and uploads immediately
@@ -659,20 +767,59 @@ async function quickUploadFromHome(input, type) {
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       var fileTranscript = '';
       var whisperKey2 = APP && APP.config && APP.config.openai_key;
-      if (isAudio && whisperKey2) {
+      if (isAudio) {
+        var elKey = APP && APP.config && APP.config.elevenlabs_key;
+        var whisperKey2 = APP && APP.config && APP.config.openai_key;
         try {
-          toast('🤖 מתמלל הקלטה...');
-          var wfd2 = new FormData();
-          wfd2.append('file', file, file.name || 'audio.m4a');
-          wfd2.append('model', 'whisper-1');
-          wfd2.append('language', 'he');
-          wfd2.append('response_format', 'text');
-          var wres2 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd2
-          });
-          if (wres2.ok) fileTranscript = (await wres2.text()).trim();
-          if (fileTranscript) toast('✅ תומלל: ' + fileTranscript.substring(0,40) + '...');
-        } catch(we2) { console.warn('Whisper gallery:', we2.message); }
+          toast('🎙️ מתמלל עם ElevenLabs — עלול לקחת 20-40 שניות...');
+          var efd = new FormData();
+          efd.append('file', file, file.name || 'audio.m4a');
+          efd.append('model_id', 'scribe_v1');
+          efd.append('language_code', 'heb');
+          efd.append('diarize', 'true');
+          efd.append('timestamps_granularity', 'segment');
+          var eres = null;
+          if (elKey) {
+            eres = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+              method: 'POST',
+              headers: { 'xi-api-key': elKey },
+              body: efd
+            });
+          }
+          if (eres && eres.ok) {
+            var edata = await eres.json();
+            // Build formatted transcript with speaker labels
+            fileTranscript = formatElevenLabsTranscript(edata);
+            if (fileTranscript) showTranscriptModal(fileTranscript, file.name);
+          } else if (elKey && eres) {
+            var eErr = await eres.json().catch(function(){ return {}; });
+            toast('❌ ElevenLabs: ' + (eErr.detail || eErr.message || eres.status));
+            // Fallback to Whisper if available
+            if (whisperKey2) {
+              toast('🔄 מנסה Whisper...');
+              var wfd2 = new FormData();
+              wfd2.append('file', file, file.name || 'audio.m4a');
+              wfd2.append('model', 'whisper-1');
+              wfd2.append('language', 'he');
+              wfd2.append('response_format', 'text');
+              var wres2 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd2
+              });
+              if (wres2.ok) { fileTranscript = (await wres2.text()).trim(); if (fileTranscript) showTranscriptModal(fileTranscript, file.name); }
+            }
+          } else if (!elKey && whisperKey2) {
+            toast('⚠️ אין מפתח ElevenLabs — משתמש ב-Whisper');
+            var wfd3 = new FormData();
+            wfd3.append('file', file, file.name || 'audio.m4a');
+            wfd3.append('model', 'whisper-1');
+            wfd3.append('language', 'he');
+            wfd3.append('response_format', 'text');
+            var wres3 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+              method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd3
+            });
+            if (wres3.ok) { fileTranscript = (await wres3.text()).trim(); if (fileTranscript) showTranscriptModal(fileTranscript, file.name); }
+          }
+        } catch(we2) { toast('❌ שגיאת תמלול: ' + we2.message); console.error('transcription error:', we2); }
       }
       var noteTextFinal = fileTranscript
         ? '🎙️ ' + fileTranscript
