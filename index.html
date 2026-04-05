@@ -767,63 +767,8 @@ async function quickUploadFromHome(input, type) {
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       var fileTranscript = '';
       var whisperKey2 = APP && APP.config && APP.config.openai_key;
-      if (isAudio) {
-        var elKey = APP && APP.config && APP.config.elevenlabs_key;
-        var whisperKey2 = APP && APP.config && APP.config.openai_key;
-        try {
-          toast('🎙️ מתמלל עם ElevenLabs — עלול לקחת 20-40 שניות...');
-          var efd = new FormData();
-          efd.append('file', file, file.name || 'audio.m4a');
-          efd.append('model_id', 'scribe_v1');
-          efd.append('language_code', 'heb');
-          efd.append('diarize', 'true');
-          efd.append('timestamps_granularity', 'segment');
-          var eres = null;
-          if (elKey) {
-            eres = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-              method: 'POST',
-              headers: { 'xi-api-key': elKey },
-              body: efd
-            });
-          }
-          if (eres && eres.ok) {
-            var edata = await eres.json();
-            // Build formatted transcript with speaker labels
-            fileTranscript = formatElevenLabsTranscript(edata);
-            if (fileTranscript) showTranscriptModal(fileTranscript, file.name);
-          } else if (elKey && eres) {
-            var eErr = await eres.json().catch(function(){ return {}; });
-            toast('❌ ElevenLabs: ' + (eErr.detail || eErr.message || eres.status));
-            // Fallback to Whisper if available
-            if (whisperKey2) {
-              toast('🔄 מנסה Whisper...');
-              var wfd2 = new FormData();
-              wfd2.append('file', file, file.name || 'audio.m4a');
-              wfd2.append('model', 'whisper-1');
-              wfd2.append('language', 'he');
-              wfd2.append('response_format', 'text');
-              var wres2 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-                method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd2
-              });
-              if (wres2.ok) { fileTranscript = (await wres2.text()).trim(); if (fileTranscript) showTranscriptModal(fileTranscript, file.name); }
-            }
-          } else if (!elKey && whisperKey2) {
-            toast('⚠️ אין מפתח ElevenLabs — משתמש ב-Whisper');
-            var wfd3 = new FormData();
-            wfd3.append('file', file, file.name || 'audio.m4a');
-            wfd3.append('model', 'whisper-1');
-            wfd3.append('language', 'he');
-            wfd3.append('response_format', 'text');
-            var wres3 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-              method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd3
-            });
-            if (wres3.ok) { fileTranscript = (await wres3.text()).trim(); if (fileTranscript) showTranscriptModal(fileTranscript, file.name); }
-          }
-        } catch(we2) { toast('❌ שגיאת תמלול: ' + we2.message); console.error('transcription error:', we2); }
-      }
-      var noteTextFinal = fileTranscript
-        ? '🎙️ ' + fileTranscript
-        : (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()+'.m4a')));
+      var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
+      var noteTextFinal = (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now())));
       await sb.from('beni_notes').insert({
         note_text: noteTextFinal,
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
@@ -832,17 +777,16 @@ async function quickUploadFromHome(input, type) {
         project_id: window._activeProjectId || null,
         created_at: new Date().toISOString()
       });
-      // Save transcript to voice_memos if audio
       if (isAudio) {
         await sb.from('voice_memos').insert({
-          transcript: fileTranscript || (displayUrl || data.secure_url),
-          ai_summary: fileTranscript ? fileTranscript.substring(0,100) : (file.name||'הקלטה'),
+          transcript: displayUrl || data.secure_url,
+          ai_summary: file.name || 'הקלטה',
           project_id: window._activeProjectId || null,
-          is_processed: !!fileTranscript,
+          is_processed: false,
           created_at: new Date().toISOString()
         });
       }
-      done++;
+            done++;
     } catch(e) { toast('❌ ' + (e.message||'שגיאה לא ידועה'), 'error'); console.error('upload error:', e); }
   }
   input.value = '';
@@ -1353,35 +1297,9 @@ async function stopRec(e) {
     const audioUrl = data.secure_url;
     const dur = recSeconds;
 
-    // ── Transcribe immediately using Whisper — blob is still in memory ──
-    var transcript = '';
-    var whisperKey = APP && APP.config && APP.config.openai_key;
-    if (whisperKey) {
-      try {
-        document.getElementById('mic-status').textContent = '🤖 מתמלל...';
-        var wfd = new FormData();
-        // Use the original webm blob directly — no fetch needed, no CORS
-        wfd.append('file', audioBlob, 'audio.webm');
-        wfd.append('model', 'whisper-1');
-        wfd.append('language', 'he');
-        wfd.append('response_format', 'text');
-        var wres = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + whisperKey },
-          body: wfd
-        });
-        if (wres.ok) {
-          transcript = (await wres.text()).trim();
-          toast('✅ תומלל: ' + transcript.substring(0, 40) + '...');
-        }
-      } catch(we) { console.warn('Whisper failed:', we.message); }
-    }
+    var noteText = '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0');
 
-    var noteText = transcript
-      ? '🎙️ ' + transcript
-      : '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0');
-
-    // Save to beni_notes
+    // Save to beni_notes — transcription done in CRM
     const { error: nErr } = await sb.from('beni_notes').insert({
       note_text: noteText,
       color: 'purple',
@@ -1391,19 +1309,19 @@ async function stopRec(e) {
       created_at: new Date().toISOString()
     });
 
-    // Save to voice_memos with real transcript
+    // Save to voice_memos — transcription done in CRM
     await sb.from('voice_memos').insert({
-      transcript: transcript || audioUrl,
+      transcript: audioUrl,
       duration_sec: dur,
-      ai_summary: transcript ? transcript.substring(0, 100) : 'הקלטה קולית — לחץ להפעלה',
+      ai_summary: 'הקלטה קולית — תמלל ב-CRM',
       project_id: window._activeProjectId || null,
-      is_processed: !!transcript,
+      is_processed: false,
       created_at: new Date().toISOString()
     });
 
     if (nErr) { toast('שגיאת שמירה: ' + nErr.message); }
     else {
-      toast(transcript ? '✅ הקלטה תומללה ונשמרה' : '✅ הקלטה נשמרה — ' + dur + ' שניות');
+      toast('✅ הקלטה נשמרה — תמלל ב-CRM');
       loadVoiceMemos(); loadEODCounts();
     }
   } catch(err) {
