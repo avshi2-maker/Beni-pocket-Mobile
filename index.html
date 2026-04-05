@@ -252,11 +252,12 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         </label>
 
         <!-- 🎙️ Voice memo (mic hold) -->
-        <label style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;" onclick="switchTab('home'); setTimeout(function(){ document.getElementById('mic-btn') && document.getElementById('mic-btn').scrollIntoView({behavior:'smooth'}); },200);">
+        <button onclick="switchTab('home'); setTimeout(function(){ var mb=document.getElementById('mic-btn'); if(mb) mb.scrollIntoView({behavior:'smooth',block:'center'}); },300);"
+          style="background:linear-gradient(135deg,#78350f,#d97706);border:none;border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;width:100%;">
           <div style="font-size:26px;margin-bottom:4px;">🎙️</div>
           <div style="font-size:12px;font-weight:800;color:#fff;">הקלטת קול</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">לחץ והחזק</div>
-        </label>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">לחץ והחזק על המיקרופון</div>
+        </button>
 
         <!-- 📄 PDF → Supabase storage directly -->
         <label style="background:linear-gradient(135deg,#134e4a,#0d9488);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
