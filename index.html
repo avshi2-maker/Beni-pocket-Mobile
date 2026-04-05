@@ -723,19 +723,21 @@ async function quickUploadFromHome(input, type) {
     var file = files[i];
     try {
       toast('☁️ שולח לענן: ' + (file.name||'קובץ').substring(0,20));
-      var isVideo = file.type.startsWith('video/');
-      var isAudio = file.type.startsWith('audio/');
+      // Detect type by MIME + extension (Samsung has empty MIME type)
+      var fname2  = (file.name || '').toLowerCase();
+      var isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|3gp|webm|m4v)$/i.test(fname2);
+      var isAudio = file.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|flac|3gp|aac)$/i.test(fname2);
+      if (isVideo && isAudio) isAudio = false; // 3gp — treat as video if both match
       var folder  = isAudio ? 'beni_voice' : 'beni_field';
-      // Use /auto/upload — handles all file types with one endpoint
-      var endpoint = 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload';
+      // resource_type MUST be in the URL — FormData resource_type is ignored by Cloudinary
+      var endpoint = isVideo || isAudio
+        ? 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload'
+        : 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload';
       var fd = new FormData();
       fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
-      // Pass original filename as context so we can recover format later
       if (file.name) fd.append('context', 'original_filename=' + file.name);
-      if (isVideo) fd.append('resource_type', 'video');
-      if (isAudio) fd.append('resource_type', 'video'); // Cloudinary uses 'video' for audio too
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
       var data = await res.json();
       if (!res.ok || !data.secure_url) throw new Error(data.error ? data.error.message : 'Cloudinary error ' + res.status);
