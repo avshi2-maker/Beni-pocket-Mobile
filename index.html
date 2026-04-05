@@ -184,7 +184,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <div style="font-size:12px;color:rgba(255,255,255,0.92);line-height:1.8;">
           צלם תמונות · סרטונים · פתקים בכתב יד · כל מסמך שאתה צריך<br>
           ע"י שימוש ביישומון בנייד (צילום / הקלטה)<br>
-          <strong style="color:#fff;">בסוף היום — הכל יתממשק למערכת ניהול עסקי בני פרסקי ✅</strong>
+          <strong style="color:#fff;">בסוף היום — הפעל סייר קבצים ותסנכרן עם היומן הראשי במשרד ✅</strong>
         </div>
       </div>
 
@@ -243,11 +243,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
           <input type="file" accept="video/*" capture="environment" style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
 
-        <!-- 🖼️ Gallery -->
+        <!-- 📁 File Explorer — all file types -->
         <label style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;display:block;">
-          <div style="font-size:26px;margin-bottom:4px;">🖼️</div>
-          <div style="font-size:12px;font-weight:800;color:#fff;">גלריה</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;">תמונות · וידאו</div>
+          <div style="font-size:26px;margin-bottom:4px;">📁</div>
+          <div style="font-size:12px;font-weight:800;color:#fff;">סייר קבצים</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;line-height:1.4;">תמונה · סרט · קול<br>הקלטות שיחות</div>
           <input type="file" accept="image/*,video/*,audio/*" multiple style="display:none;" onchange="previewBeforeUpload(this)">
         </label>
 
@@ -275,13 +275,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div id="home-pending"><div class="empty">טוען...</div></div>
 
       <div class="section-title">סיכום יום</div>
-      <button class="big-btn btn-eod" onclick="switchTab('eod')" style="margin-bottom:12px;">
-        <span class="bico">🧠</span>
-        <div class="btxt">
-          <span class="bmain">שלח למערכת ניהול עסקי — בני פרסקי</span>
-          <span class="bsub">AI מרכז שיחות+מזכרים+תמונות+יומן → ניתוח ודוחות</span>
-        </div>
-      </button>
+      
 
     </div>
 
@@ -666,7 +660,7 @@ async function uploadPDFToSupabase(input) {
     var file = files[i];
     try {
       // Upload directly to Supabase storage — 'app-assets' bucket, pdfs folder
-      var path = 'pdfs/beni_' + Date.now() + '_' + (file.name || 'doc.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+      var path = 'pdfs/' + Date.now() + '_' + (file.name || 'doc.pdf').replace(/[^a-zA-Z0-9._\u05D0-\u05EA\-]/g, '_');
       toast('☁️ שולח: ' + file.name.substring(0,25));
       var { data: storageData, error: storageErr } = await sb.storage
         .from('app-assets')
