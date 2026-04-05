@@ -623,6 +623,8 @@ async function quickUploadFromHome(input, type) {
       fd.append('file', file);
       fd.append('upload_preset', CLD_PRESET);
       fd.append('folder', folder);
+      // Pass original filename as context so we can recover format later
+      if (file.name) fd.append('context', 'original_filename=' + file.name);
       if (isVideo) fd.append('resource_type', 'video');
       if (isAudio) fd.append('resource_type', 'video'); // Cloudinary uses 'video' for audio too
       var res  = await fetch(endpoint, { method: 'POST', body: fd });
@@ -655,7 +657,7 @@ async function quickUploadFromHome(input, type) {
       // ALSO save to beni_notes so it appears immediately in יומן חכם
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
       await sb.from('beni_notes').insert({
-        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()))),
+        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()+'.m4a'))),
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
         photo_url: displayUrl || data.secure_url,
         note_type: noteType,
