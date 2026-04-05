@@ -655,16 +655,46 @@ async function quickUploadFromHome(input, type) {
       });
       if (!inboxRes.ok) { var err = await inboxRes.text(); throw new Error('Supabase inbox: ' + inboxRes.status + ' ' + err.substring(0,80)); }
       toast('📥 נשמר בתיבת נכנסים ✅');
-      // ALSO save to beni_notes so it appears immediately in יומן חכם
+      // Transcribe audio files immediately — file blob is still in memory
       var noteType = isAudio ? 'audio' : isVideo ? 'video' : 'photo';
+      var fileTranscript = '';
+      var whisperKey2 = APP && APP.config && APP.config.openai_key;
+      if (isAudio && whisperKey2) {
+        try {
+          toast('🤖 מתמלל הקלטה...');
+          var wfd2 = new FormData();
+          wfd2.append('file', file, file.name || 'audio.m4a');
+          wfd2.append('model', 'whisper-1');
+          wfd2.append('language', 'he');
+          wfd2.append('response_format', 'text');
+          var wres2 = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST', headers: { 'Authorization': 'Bearer ' + whisperKey2 }, body: wfd2
+          });
+          if (wres2.ok) fileTranscript = (await wres2.text()).trim();
+          if (fileTranscript) toast('✅ תומלל: ' + fileTranscript.substring(0,40) + '...');
+        } catch(we2) { console.warn('Whisper gallery:', we2.message); }
+      }
+      var noteTextFinal = fileTranscript
+        ? '🎙️ ' + fileTranscript
+        : (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()+'.m4a')));
       await sb.from('beni_notes').insert({
-        note_text: (window._uploadCaption || '') || ((noteType === 'audio' ? '🎙️ ' : noteType === 'video' ? '🎬 ' : '📸 ') + (file.name || (noteType+'_'+Date.now()+'.m4a'))),
+        note_text: noteTextFinal,
         color: isAudio ? 'purple' : isVideo ? 'purple' : 'blue',
         photo_url: displayUrl || data.secure_url,
         note_type: noteType,
         project_id: window._activeProjectId || null,
         created_at: new Date().toISOString()
       });
+      // Save transcript to voice_memos if audio
+      if (isAudio) {
+        await sb.from('voice_memos').insert({
+          transcript: fileTranscript || (displayUrl || data.secure_url),
+          ai_summary: fileTranscript ? fileTranscript.substring(0,100) : (file.name||'הקלטה'),
+          project_id: window._activeProjectId || null,
+          is_processed: !!fileTranscript,
+          created_at: new Date().toISOString()
+        });
+      }
       done++;
     } catch(e) { toast('❌ ' + (e.message||'שגיאה לא ידועה'), 'error'); console.error('upload error:', e); }
   }
@@ -1176,9 +1206,37 @@ async function stopRec(e) {
     const audioUrl = data.secure_url;
     const dur = recSeconds;
 
-    // Save to beni_notes with audio URL — CRM will show play button
+    // ── Transcribe immediately using Whisper — blob is still in memory ──
+    var transcript = '';
+    var whisperKey = APP && APP.config && APP.config.openai_key;
+    if (whisperKey) {
+      try {
+        document.getElementById('mic-status').textContent = '🤖 מתמלל...';
+        var wfd = new FormData();
+        // Use the original webm blob directly — no fetch needed, no CORS
+        wfd.append('file', audioBlob, 'audio.webm');
+        wfd.append('model', 'whisper-1');
+        wfd.append('language', 'he');
+        wfd.append('response_format', 'text');
+        var wres = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + whisperKey },
+          body: wfd
+        });
+        if (wres.ok) {
+          transcript = (await wres.text()).trim();
+          toast('✅ תומלל: ' + transcript.substring(0, 40) + '...');
+        }
+      } catch(we) { console.warn('Whisper failed:', we.message); }
+    }
+
+    var noteText = transcript
+      ? '🎙️ ' + transcript
+      : '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0');
+
+    // Save to beni_notes
     const { error: nErr } = await sb.from('beni_notes').insert({
-      note_text: '🎙️ הקלטה קולית — ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0'),
+      note_text: noteText,
       color: 'purple',
       photo_url: audioUrl,
       note_type: 'audio',
@@ -1186,17 +1244,19 @@ async function stopRec(e) {
       created_at: new Date().toISOString()
     });
 
-    // Save to voice_memos
+    // Save to voice_memos with real transcript
     await sb.from('voice_memos').insert({
-      transcript: audioUrl, duration_sec: dur,
-      ai_summary: 'הקלטה קולית — לחץ להפעלה',
+      transcript: transcript || audioUrl,
+      duration_sec: dur,
+      ai_summary: transcript ? transcript.substring(0, 100) : 'הקלטה קולית — לחץ להפעלה',
       project_id: window._activeProjectId || null,
-      is_processed: false, created_at: new Date().toISOString()
+      is_processed: !!transcript,
+      created_at: new Date().toISOString()
     });
 
     if (nErr) { toast('שגיאת שמירה: ' + nErr.message); }
     else {
-      toast('✅ הקלטה נשמרה — ' + dur + ' שניות');
+      toast(transcript ? '✅ הקלטה תומללה ונשמרה' : '✅ הקלטה נשמרה — ' + dur + ' שניות');
       loadVoiceMemos(); loadEODCounts();
     }
   } catch(err) {
