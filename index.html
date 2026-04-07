@@ -668,8 +668,25 @@ async function uploadPDFToSupabase(input) {
       toast('☁️ שולח: ' + file.name.substring(0,25));
       var { data: storageData, error: storageErr } = await sb.storage
         .from('app-assets')
-        .upload(path, file, { contentType: 'application/pdf', upsert: false });
-      if (storageErr) throw new Error('Storage: ' + storageErr.message);
+        .upload(path, file, { contentType: 'application/pdf', upsert: true });
+      if (storageErr) {
+        // Fallback: try Cloudinary if Supabase storage fails
+        toast('⚠️ Supabase storage שגיאה — מנסה Cloudinary...');
+        var fd2 = new FormData();
+        fd2.append('file', file);
+        fd2.append('upload_preset', CLD_PRESET);
+        fd2.append('folder', 'beni_docs');
+        var cldRes = await fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/raw/upload', { method: 'POST', body: fd2 });
+        var cldData = await cldRes.json();
+        if (!cldRes.ok || !cldData.secure_url) throw new Error('Storage: ' + storageErr.message + ' | Cloudinary: ' + (cldData.error ? cldData.error.message : cldRes.status));
+        // Use Cloudinary URL instead
+        var publicUrl = cldData.secure_url;
+        toast('✅ PDF הועלה ל-Cloudinary...');
+        await sb.from('beni_notes').insert({ note_text: '📄 ' + (file.name || 'מסמך PDF'), photo_url: publicUrl, note_type: 'pdf', color: 'green', project_id: window._activeProjectId || null, created_at: new Date().toISOString() });
+        await fetch(SB_URL + '/rest/v1/asset_inbox', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ cloudinary_url: publicUrl, file_name: file.name || 'document.pdf', file_type: 'pdf', project_id: window._activeProjectId || null, status: 'pending', uploaded_by: 'beni', created_at: new Date().toISOString() }) });
+        done++;
+        continue;
+      }
       
       // Get public URL
       var { data: urlData } = sb.storage.from('app-assets').getPublicUrl(path);
